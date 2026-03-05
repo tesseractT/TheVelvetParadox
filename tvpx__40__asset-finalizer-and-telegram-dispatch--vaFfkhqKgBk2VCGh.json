@@ -540,13 +540,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=SYSTEM\nYou are TVPX__LLM__Caption_Alchemist for The Velvet Paradox.\n\nYour job is to write a restrained, premium caption pack.\n\nRules:\n- Suggest meaning; do not over-explain.\n- Do not describe the image literally unless in alt text.\n- Avoid vague mysticism, pseudo-poetry, and cliché.\n- Keep hashtags curated.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"caption_hook\": \"...\",\n  \"caption_body\": \"...\",\n  \"hashtags\": [\"...\"],\n  \"alt_text\": \"...\",\n  \"keywords\": [\"...\"]\n}\n\nUSER\nCreative context:\n- Concept ID: {{ $json.concept_id }}\n- Brand: {{ $json.ctx.brand_name }}\n- Color asset URL: {{ $json.assets.color.drive_view_url }}\n- B&W asset URL: {{ $json.assets.bw.drive_view_url }}\n\nConcept thesis:\n{{ $json.family.color.prompt_raw || $json.family.color.prompt || $json.concept_id }}\n\nWrite copy that feels lucid, tactile, and quietly uncanny."
+              "message": "=You are TVPX__LLM__Caption_Alchemist for The Velvet Paradox.\n\nYour job is to write a restrained, premium caption pack.\n\nRules:\n- Suggest meaning; do not over-explain.\n- Do not describe the image literally unless in alt text.\n- Avoid vague mysticism, pseudo-poetry, and cliché.\n- Keep hashtags curated.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"caption_hook\": \"...\",\n  \"caption_body\": \"...\",\n  \"hashtags\": [\"...\"],\n  \"alt_text\": \"...\",\n  \"keywords\": [\"...\"]\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
-        "batching": {}
+        "batching": {},
+        "text": "=Creative context:\n- Concept ID: {{ $json.concept_id }}\n- Brand: {{ $json.ctx.brand_name }}\n- Color asset URL: {{ $json.assets.color.drive_view_url }}\n- B&W asset URL: {{ $json.assets.bw.drive_view_url }}\n\nConcept thesis:\n{{ $json.family.color.prompt_raw || $json.family.color.prompt || $json.concept_id }}\n\nWrite copy that feels lucid, tactile, and quietly uncanny."
       },
       "id": "589726b5-5553-40ef-a835-cc92c77b0536",
       "name": "LLM Caption Alchemist",

@@ -206,13 +206,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=SYSTEM\nYou are TVPX__LLM__Series_Variation_Designer for The Velvet Paradox.\n\nYour job is to produce a coherent variation plan inside the same visual universe.\n\nRules:\n- Preserve identity, concept thesis, symbolic logic, emotional temperature, and abstraction band.\n- Vary only controlled axes: atmosphere, distance, framing, light behavior, material emphasis, accent placement, ritual density.\n- Do not introduce random new objects.\n- Return valid JSON only.\n- Output exactly the requested number of variations.\n\nReturn exactly:\n{\n  \"series_group_id\": \"...\",\n  \"continuity_rules\": {\n    \"must_preserve\": [\"...\"],\n    \"must_avoid\": [\"...\"],\n    \"composition_dna\": \"...\",\n    \"abstraction_band\": [5.8, 6.8]\n  },\n  \"variations\": [\n    {\n      \"variation_index\": 1,\n      \"variation_instruction\": \"...\",\n      \"prompt_delta\": \"...\",\n      \"palette_shift\": \"...\",\n      \"atmosphere_shift\": \"...\",\n      \"intensity_change\": \"...\"\n    }\n  ]\n}\n\nUSER\nRequested count: {{ $json.series_request.count }}\nUser instruction: {{ $json.series_request.instruction }}\n\nParent asset:\n{{ JSON.stringify($json.parent.asset, null, 2) }}\n\nParent concept:\n{{ JSON.stringify($json.parent.concept, null, 2) }}\n\nParent series DNA:\n{{ JSON.stringify($json.parent.series_dna, null, 2) }}\n\nPreserve family resemblance."
+              "message": "=You are TVPX__LLM__Series_Variation_Designer for The Velvet Paradox.\n\nYour job is to produce a coherent variation plan inside the same visual universe.\n\nRules:\n- Preserve identity, concept thesis, symbolic logic, emotional temperature, and abstraction band.\n- Vary only controlled axes: atmosphere, distance, framing, light behavior, material emphasis, accent placement, ritual density.\n- Do not introduce random new objects.\n- Return valid JSON only.\n- Output exactly the requested number of variations.\n\nReturn exactly:\n{\n  \"series_group_id\": \"...\",\n  \"continuity_rules\": {\n    \"must_preserve\": [\"...\"],\n    \"must_avoid\": [\"...\"],\n    \"composition_dna\": \"...\",\n    \"abstraction_band\": [5.8, 6.8]\n  },\n  \"variations\": [\n    {\n      \"variation_index\": 1,\n      \"variation_instruction\": \"...\",\n      \"prompt_delta\": \"...\",\n      \"palette_shift\": \"...\",\n      \"atmosphere_shift\": \"...\",\n      \"intensity_change\": \"...\"\n    }\n  ]\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
-        "batching": {}
+        "batching": {},
+        "text": "=Requested count: {{ $json.series_request.count }}\nUser instruction: {{ $json.series_request.instruction }}\n\nParent asset:\n{{ JSON.stringify($json.parent.asset, null, 2) }}\n\nParent concept:\n{{ JSON.stringify($json.parent.concept, null, 2) }}\n\nParent series DNA:\n{{ JSON.stringify($json.parent.series_dna, null, 2) }}\n\nPreserve family resemblance."
       },
       "id": "87bc97cb-7f53-41c4-86f0-69d9d9529ca9",
       "name": "LLM Series Variation Designer",

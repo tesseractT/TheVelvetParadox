@@ -153,13 +153,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=SYSTEM\nYou are TVPX__LLM__Video_Motion_Translator for The Velvet Paradox.\n\nYour job is to translate a still image concept into a future video motion brief.\n\nRules:\n- Preserve composition identity, symbolic logic, tactile texture, and abstraction band.\n- Motion should feel slow, ceremonial, inevitable.\n- No cuts, no new objects, no scene changes, no morphing.\n- Prefer subtle parallax, drift, micro-dolly, breathing light, and minimal atmospheric motion.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"motion_prompt\": \"...\",\n  \"camera_motion_profile\": \"...\",\n  \"parallax_priority\": \"...\",\n  \"scene_breathing_notes\": \"...\",\n  \"avoid_motion_artifacts\": [\"...\"],\n  \"duration_hint\": \"5-7s\"\n}\n\nUSER\nMotion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nSource asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nTranslate the still into motion without breaking its dignity."
+              "message": "=You are TVPX__LLM__Video_Motion_Translator for The Velvet Paradox.\n\nYour job is to translate a still image concept into a future video motion brief.\n\nRules:\n- Preserve composition identity, symbolic logic, tactile texture, and abstraction band.\n- Motion should feel slow, ceremonial, inevitable.\n- No cuts, no new objects, no scene changes, no morphing.\n- Prefer subtle parallax, drift, micro-dolly, breathing light, and minimal atmospheric motion.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"motion_prompt\": \"...\",\n  \"camera_motion_profile\": \"...\",\n  \"parallax_priority\": \"...\",\n  \"scene_breathing_notes\": \"...\",\n  \"avoid_motion_artifacts\": [\"...\"],\n  \"duration_hint\": \"5-7s\"\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
-        "batching": {}
+        "batching": {},
+        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nSource asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nTranslate the still into motion without breaking its dignity."
       },
       "id": "6ce26d7c-c804-47ec-83f4-3875cc292e14",
       "name": "LLM Video Motion Translator",
