@@ -47,7 +47,7 @@
       "id": "2c69023a-f4b4-4510-9f98-03897d3ca05c",
       "name": "Has Concept Id",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -1680,
         256
@@ -322,7 +322,7 @@
       "id": "cd976680-9755-49ff-a180-6803c24255c6",
       "name": "Is Color Variant",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         688,
         256

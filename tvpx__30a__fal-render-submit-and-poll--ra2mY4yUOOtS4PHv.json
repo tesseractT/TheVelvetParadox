@@ -252,7 +252,7 @@
       "id": "7567b19e-d611-4683-bb12-a7aae81b4b72",
       "name": "Is Completed",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -960,
         -16
@@ -274,7 +274,7 @@
       "id": "c1d4d2f6-f53a-458e-8085-cdada81f8df5",
       "name": "Is Failed",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -960,
         560
@@ -309,7 +309,7 @@
       "id": "0a3c01f3-4050-42d9-9343-cc8b3b25e66b",
       "name": "Is Timed Out",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -736,
         176

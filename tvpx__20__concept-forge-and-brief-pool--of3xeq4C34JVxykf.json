@@ -89,7 +89,7 @@
       "id": "a636e536-7400-49fd-9e75-c8f40afe508c",
       "name": "Has Fragments",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -608,
         160
@@ -482,7 +482,7 @@
       "id": "8bb3c891-424a-491f-98c9-0a3976e0e139",
       "name": "Approve Concept",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         3296,
         304
