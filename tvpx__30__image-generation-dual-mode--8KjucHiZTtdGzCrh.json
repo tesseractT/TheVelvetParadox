@@ -254,7 +254,9 @@
           "mode": "list",
           "cachedResultName": "gpt-5.2"
         },
-        "options": {}
+        "options": {
+          "responseFormat": "json_object"
+        }
       },
       "id": "3872ab30-a67d-4a4c-922a-dd946e582c1a",
       "name": "OpenAI Director Model",
@@ -279,12 +281,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Final_Render_Prompt_Smith for The Velvet Paradox.\n\nYour job is to convert a vetted concept row into a premium image-generation prompt.\n\nRules:\n- Keep the scene representational and photographically legible.\n- Preserve material honesty, tactile surfaces, and cinematic light behavior.\n- Avoid stock tropes, corporate gloss, generic portrait language, and adjective bloat.\n- Build one strong master prompt and one strong negative prompt.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"aspect_ratio\": \"4:5\",\n  \"image_size\": \"1024x1280\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\"\n  }\n}\n\nUSER\nConcept row:\n- Concept thesis: {{ $json.concept_row.concept_thesis }}\n- Symbolic tension: {{ $json.concept_row.symbolic_tension }}\n- Material anchor: {{ $json.concept_row.material_anchor }}\n- Spatial directive: {{ $json.concept_row.spatial_directive }}\n- Abstraction target: {{ $json.concept_row.abstraction_target }}\n\nSeries DNA:\n{{ $json.concept_row.series_dna_json }}\n\nGuardrails:\n{{ $json.concept_row.prompt_guardrails_json }}\n\nWrite a render prompt that feels expensive, specific, and cinematic."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "61b6b408-6177-4910-a734-d81b26a06790",
       "name": "LLM Render Prompt Smith",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         -112,
         256
@@ -803,6 +806,66 @@
         -2128,
         816
       ]
+    },
+    {
+      "id": "09dc3ece-12de-4c4a-b0c1-c4faca36bb7b",
+      "name": "Director Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        688
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "grok-4-1-fast-reasoning",
+          "cachedResultName": "grok-4-1-fast-reasoning"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      }
+    },
+    {
+      "id": "4175db3d-cca7-4968-be83-0764e2948f67",
+      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+      "type": "@n8n/n8n-nodes-langchain.modelSelector",
+      "typeVersion": 1,
+      "position": [
+        224,
+        584
+      ],
+      "parameters": {
+        "rules": {
+          "rule": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "ffda4e2b-a5e8-4766-88c5-4342fe4e1f1c",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
+                    "rightValue": "xai"
+                  }
+                ]
+              },
+              "modelIndex": 1
+            }
+          ]
+        },
+        "numberInputs": 2
+      }
     }
   ],
   "connections": {
@@ -1041,6 +1104,28 @@
       ]
     },
     "OpenAI Director Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
       "ai_languageModel": [
         [
           {

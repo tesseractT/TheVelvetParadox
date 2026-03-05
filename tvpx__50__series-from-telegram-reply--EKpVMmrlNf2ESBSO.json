@@ -184,7 +184,9 @@
           "mode": "list",
           "cachedResultName": "gpt-5.2"
         },
-        "options": {}
+        "options": {
+          "responseFormat": "json_object"
+        }
       },
       "id": "0237d211-cbee-4118-83ef-344c55c9b8c8",
       "name": "OpenAI Series Model",
@@ -209,12 +211,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Series_Variation_Designer for The Velvet Paradox.\n\nYour job is to produce a coherent variation plan inside the same visual universe.\n\nRules:\n- Preserve identity, concept thesis, symbolic logic, emotional temperature, and abstraction band.\n- Vary only controlled axes: atmosphere, distance, framing, light behavior, material emphasis, accent placement, ritual density.\n- Do not introduce random new objects.\n- Return valid JSON only.\n- Output exactly the requested number of variations.\n\nReturn exactly:\n{\n  \"series_group_id\": \"...\",\n  \"continuity_rules\": {\n    \"must_preserve\": [\"...\"],\n    \"must_avoid\": [\"...\"],\n    \"composition_dna\": \"...\",\n    \"abstraction_band\": [5.8, 6.8]\n  },\n  \"variations\": [\n    {\n      \"variation_index\": 1,\n      \"variation_instruction\": \"...\",\n      \"prompt_delta\": \"...\",\n      \"palette_shift\": \"...\",\n      \"atmosphere_shift\": \"...\",\n      \"intensity_change\": \"...\"\n    }\n  ]\n}\n\nUSER\nRequested count: {{ $json.series_request.count }}\nUser instruction: {{ $json.series_request.instruction }}\n\nParent asset:\n{{ JSON.stringify($json.parent.asset, null, 2) }}\n\nParent concept:\n{{ JSON.stringify($json.parent.concept, null, 2) }}\n\nParent series DNA:\n{{ JSON.stringify($json.parent.series_dna, null, 2) }}\n\nPreserve family resemblance."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "87bc97cb-7f53-41c4-86f0-69d9d9529ca9",
       "name": "LLM Series Variation Designer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         -224,
         352
@@ -535,6 +538,66 @@
       ],
       "id": "ddc07f29-e54f-4554-8e37-455833fb67d8",
       "name": "Upsert Series Lineage"
+    },
+    {
+      "id": "697b469f-89c5-4baa-83d6-46c3bc5437b9",
+      "name": "Series Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        -152,
+        784
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "grok-4-1-fast-reasoning",
+          "cachedResultName": "grok-4-1-fast-reasoning"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      }
+    },
+    {
+      "id": "3e7454ce-3b7f-42fb-b3cb-d5f45165222f",
+      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+      "type": "@n8n/n8n-nodes-langchain.modelSelector",
+      "typeVersion": 1,
+      "position": [
+        120,
+        680
+      ],
+      "parameters": {
+        "rules": {
+          "rule": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "86400276-549e-424b-8ac9-8b1527d96337",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
+                    "rightValue": "xai"
+                  }
+                ]
+              },
+              "modelIndex": 1
+            }
+          ]
+        },
+        "numberInputs": 2
+      }
     }
   ],
   "connections": {
@@ -719,7 +782,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "LLM Series Variation Designer",
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -743,6 +806,28 @@
           {
             "node": "Next Variation",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Series Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Series Variation Designer",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]

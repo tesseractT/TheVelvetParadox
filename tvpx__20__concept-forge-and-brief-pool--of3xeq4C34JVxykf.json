@@ -255,7 +255,9 @@
           "mode": "list",
           "cachedResultName": "gpt-5.2"
         },
-        "options": {}
+        "options": {
+          "responseFormat": "json_object"
+        }
       },
       "id": "a07bb513-dc85-4880-8c86-c07d3ddc9bda",
       "name": "OpenAI Director Model",
@@ -280,12 +282,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Theme_Seizer for The Velvet Paradox.\n\nYour job is to extract latent visual themes, symbolic matter, and emotional pressure from source text.\n\nCreative baseline:\n- Keep the world readable and representational.\n- Make it strange through semantic destabilization, not random surrealism.\n- Favor theatrical centrality, charged negative space, tactile surfaces, fog/haze/chiaroscuro, muted cinematic tonality, and rare purposeful saturation punctures.\n- Prefer tension, ritual, memory, fracture, residue, identity shift, sacred-uncanny contrast, and material specificity.\n\nRules:\n- Return valid JSON only.\n- No markdown.\n- No image prompts yet.\n- Prefer concrete nouns, verbs, and conditions over abstract filler.\n\nReturn exactly:\n{\n  \"themes\": [\"...\"],\n  \"symbols\": [\"...\"],\n  \"emotional_axis\": {\n    \"polarity\": \"...\",\n    \"temperature\": \"...\",\n    \"mood\": \"...\"\n  },\n  \"material_candidates\": [\"...\"],\n  \"spatial_candidates\": [\"...\"],\n  \"notes\": \"...\"\n}\n\nUSER\nSource packet:\n- Trace: {{ $json.ctx.trace_id }}\n- Source ID: {{ $json.bundle.source_id }}\n- Crawl Run: {{ $json.bundle.crawl_run_id }}\n- Source URL: {{ $json.source.source_url || $json.source.url || '' }}\n- Target abstraction band: {{ $json.ctx.target_abstraction_min }} to {{ $json.ctx.target_abstraction_max }}\n\nExcerpt block:\n{{ $json.bundle.excerpt_block }}\n\nExtract the highest-signal latent themes for image generation."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "3d1ed93b-ab1d-449a-b598-a629f282eb23",
       "name": "LLM Theme Seizer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         -160,
         304
@@ -312,12 +315,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Symbolic_Tension_Constructor for The Velvet Paradox.\n\nYour job is to compress extracted themes into one paradox-rich, visually shootable concept.\n\nRules:\n- Stay representational.\n- Build contradiction with meaning, not nonsense.\n- Prefer ritual stillness, tactile material metaphors, frontal or iconic staging pressure.\n- Do not write an image prompt.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"concept_thesis\": \"...\",\n  \"symbolic_tension\": \"...\",\n  \"visible_metaphor\": \"...\",\n  \"invisible_meaning\": \"...\",\n  \"material_anchor\": \"...\",\n  \"spatial_hint\": \"...\",\n  \"avoid_literalism_notes\": \"...\"\n}\n\nUSER\nTheme packet:\n{{ JSON.stringify($json.theme_seizer, null, 2) }}\n\nSource excerpt block:\n{{ $json.bundle.excerpt_block }}\n\nSynthesize one strong concept, not multiple weak options."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "8c12c68a-2141-4f70-aef1-fc89512c67ee",
       "name": "LLM Symbolic Tension",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         416,
         304
@@ -344,12 +348,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Abstraction_Balancer.\n\nYour job is to choose how strange the image becomes while preserving legibility.\n\nRules:\n- Default target range is 5.8 to 6.8.\n- Use only meaningful abstraction mechanisms.\n- Preserve photographic plausibility.\n- Return valid JSON only.\n\nAllowed mechanisms:\n- symbolic substitution\n- fragmentation / doubling\n- surreal juxtaposition\n- atmospheric erasure\n- frontal tableau staging\n- selective chromatic unreality\n\nReturn exactly:\n{\n  \"abstraction_target\": 6.2,\n  \"abstraction_mechanisms\": [\"...\"],\n  \"realism_floor\": \"...\",\n  \"surreal_pressure\": \"...\",\n  \"do_not_exceed_notes\": \"...\"\n}\n\nUSER\nConcept packet:\n{{ JSON.stringify($json.symbolic_tension, null, 2) }}\n\nBrand target band:\n- Min: {{ $json.ctx.target_abstraction_min }}\n- Max: {{ $json.ctx.target_abstraction_max }}\n\nPick the narrowest effective abstraction lift."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "243231f7-e01e-4da0-bd7b-479ff09f94e7",
       "name": "LLM Abstraction Balancer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         992,
         304
@@ -376,12 +381,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Composition_Architect.\n\nYour job is to design the spatial logic of the image.\n\nRules:\n- Use composition like a director.\n- Bias toward iconic centrality only when it increases force.\n- Use negative space as psychological pressure.\n- Balance rigid scaffolding with organic softness.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"subject_count\": 1,\n  \"focal_strategy\": \"...\",\n  \"framing_bias\": \"...\",\n  \"negative_space_strategy\": \"...\",\n  \"foreground_midground_background\": \"...\",\n  \"texture_stack\": [\"...\"],\n  \"composition_notes\": \"...\"\n}\n\nUSER\nConcept packet:\n{{ JSON.stringify($json.symbolic_tension, null, 2) }}\n\nAbstraction packet:\n{{ JSON.stringify($json.abstraction, null, 2) }}\n\nDesign a composition that intensifies symbolic tension without overcrowding the frame."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "9dc28733-c813-4eee-b97b-6f8e7311cace",
       "name": "LLM Composition Architect",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         1568,
         304
@@ -408,12 +414,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Chromatic_Atmosphere_Director for The Velvet Paradox.\n\nYour job is to define palette behavior and tonal mood.\n\nRules:\n- Default to a muted cinematic base.\n- Allow rare, meaningful accent saturation.\n- Ensure the B&W translation preserves emotional architecture.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"color_mode\": \"muted-cinematic\",\n  \"base_palette\": [\"...\"],\n  \"accent_palette\": [\"...\"],\n  \"luminance_behavior\": \"...\",\n  \"bw_translation_notes\": \"...\",\n  \"atmosphere_notes\": \"...\"\n}\n\nUSER\nTheme packet:\n{{ JSON.stringify($json.theme_seizer, null, 2) }}\n\nConcept packet:\n{{ JSON.stringify($json.symbolic_tension, null, 2) }}\n\nComposition packet:\n{{ JSON.stringify($json.composition, null, 2) }}\n\nBuild palette logic, not just color names."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "6b08c6f4-9c90-43be-bafa-a9d6ecd43c25",
       "name": "LLM Chromatic Director",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         2144,
         304
@@ -440,12 +447,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Quality_Critic.\n\nYour job is to protect budget and creative ceiling.\n\nReject:\n- stock-like\n- generic\n- visually muddy\n- over-literal\n- symbolically shallow\n- incoherent\n\nReward:\n- tactile realism\n- symbolic density\n- cinematic restraint\n- memorable composition\n- controlled abstraction\n\nRules:\n- Be strict.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"approve\": true,\n  \"score\": 0.0,\n  \"brand_fit\": 0.0,\n  \"novelty\": 0.0,\n  \"visual_viability\": 0.0,\n  \"rejection_reason\": \"\",\n  \"improvement_notes\": \"\"\n}\n\nUSER\nEvaluate this full concept packet:\n\nTheme:\n{{ JSON.stringify($json.theme_seizer, null, 2) }}\n\nSymbolic tension:\n{{ JSON.stringify($json.symbolic_tension, null, 2) }}\n\nAbstraction:\n{{ JSON.stringify($json.abstraction, null, 2) }}\n\nComposition:\n{{ JSON.stringify($json.composition, null, 2) }}\n\nChromatic:\n{{ JSON.stringify($json.chromatic, null, 2) }}\n\nScore for actual image-making strength, not literary cleverness."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "d7b725e4-cd11-493a-be0f-33d6de07bfbb",
       "name": "LLM Quality Critic",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         2720,
         304
@@ -980,6 +988,66 @@
         3744,
         400
       ]
+    },
+    {
+      "id": "2879c324-5a2f-468f-9999-7d43e5d9d0ef",
+      "name": "Director Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        736
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "grok-4-1-fast-reasoning",
+          "cachedResultName": "grok-4-1-fast-reasoning"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      }
+    },
+    {
+      "id": "9d97aaa7-09e1-48cb-b2b7-718c593fb458",
+      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+      "type": "@n8n/n8n-nodes-langchain.modelSelector",
+      "typeVersion": 1,
+      "position": [
+        176,
+        632
+      ],
+      "parameters": {
+        "rules": {
+          "rule": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "867290df-46ce-4e82-8b68-80f2ae40269b",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
+                    "rightValue": "xai"
+                  }
+                ]
+              },
+              "modelIndex": 1
+            }
+          ]
+        },
+        "numberInputs": 2
+      }
     }
   ],
   "connections": {
@@ -1251,6 +1319,28 @@
       ]
     },
     "OpenAI Director Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
       "ai_languageModel": [
         [
           {

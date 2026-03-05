@@ -518,7 +518,9 @@
           "mode": "list",
           "cachedResultName": "gpt-5.2"
         },
-        "options": {}
+        "options": {
+          "responseFormat": "json_object"
+        }
       },
       "id": "b6a61c9b-6e26-467f-a357-dae52ee23c70",
       "name": "OpenAI Caption Model",
@@ -543,12 +545,13 @@
               "message": "=SYSTEM\nYou are TVPX__LLM__Caption_Alchemist for The Velvet Paradox.\n\nYour job is to write a restrained, premium caption pack.\n\nRules:\n- Suggest meaning; do not over-explain.\n- Do not describe the image literally unless in alt text.\n- Avoid vague mysticism, pseudo-poetry, and cliché.\n- Keep hashtags curated.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"caption_hook\": \"...\",\n  \"caption_body\": \"...\",\n  \"hashtags\": [\"...\"],\n  \"alt_text\": \"...\",\n  \"keywords\": [\"...\"]\n}\n\nUSER\nCreative context:\n- Concept ID: {{ $json.concept_id }}\n- Brand: {{ $json.ctx.brand_name }}\n- Color asset URL: {{ $json.assets.color.drive_view_url }}\n- B&W asset URL: {{ $json.assets.bw.drive_view_url }}\n\nConcept thesis:\n{{ $json.family.color.prompt_raw || $json.family.color.prompt || $json.concept_id }}\n\nWrite copy that feels lucid, tactile, and quietly uncanny."
             }
           ]
-        }
+        },
+        "promptType": "define"
       },
       "id": "589726b5-5553-40ef-a835-cc92c77b0536",
       "name": "LLM Caption Alchemist",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1,
+      "typeVersion": 1.7,
       "position": [
         2048,
         0
@@ -697,6 +700,66 @@
         }
       },
       "continueOnFail": true
+    },
+    {
+      "id": "7bbd54e2-6b56-416f-b698-20c0cd1cffcd",
+      "name": "Caption Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        432
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "grok-4-1-fast-reasoning",
+          "cachedResultName": "grok-4-1-fast-reasoning"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      }
+    },
+    {
+      "id": "9192d6c0-91f9-4326-8ab7-4334e25bd3d3",
+      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+      "type": "@n8n/n8n-nodes-langchain.modelSelector",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        328
+      ],
+      "parameters": {
+        "rules": {
+          "rule": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "1b489298-de99-41ec-81e5-95d05e83f772",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
+                    "rightValue": "xai"
+                  }
+                ]
+              },
+              "modelIndex": 1
+            }
+          ]
+        },
+        "numberInputs": 2
+      }
     }
   ],
   "connections": {
@@ -1005,6 +1068,28 @@
       ]
     },
     "OpenAI Caption Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Caption Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
       "ai_languageModel": [
         [
           {
