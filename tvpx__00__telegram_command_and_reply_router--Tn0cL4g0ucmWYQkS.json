@@ -94,7 +94,7 @@
       "id": "b6e2d48d-77fb-4f96-b72d-19da5d21c6a3",
       "name": "To Series Reply",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -1040,
         416
@@ -138,7 +138,7 @@
       "id": "7b6dbb4c-f2f4-41e8-8ac0-3bacc7dca940",
       "name": "To Source Crawl",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -1040,
         640
@@ -182,7 +182,7 @@
       "id": "15063211-34e7-41b4-91d4-28a7fa25d237",
       "name": "To Primary Generation",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 2,
+      "typeVersion": 1,
       "position": [
         -1040,
         1472
