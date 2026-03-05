@@ -265,21 +265,13 @@
       "position": [
         -96,
         528
-      ]
-    },
-    {
-      "parameters": {
-        "model": "grok-4-1-fast-reasoning",
-        "options": {}
-      },
-      "id": "59343d9a-61c1-4ed9-8663-790bdaf99939",
-      "name": "xAI Critic Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
-      "typeVersion": 1,
-      "position": [
-        2800,
-        528
-      ]
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
     },
     {
       "parameters": {
@@ -844,10 +836,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__30__Image Generation Dual Mode",
+          "value": "8KjucHiZTtdGzCrh",
           "mode": "list",
           "cachedResultName": "TVPX__30__Image Generation Dual Mode",
-          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__30__Image Generation Dual Mode"
+          "cachedResultUrl": "/workflow/8KjucHiZTtdGzCrh"
         },
         "options": {
           "waitForSubWorkflow": false
@@ -1287,13 +1279,7 @@
             "node": "LLM Chromatic Director",
             "type": "ai_languageModel",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "xAI Critic Model": {
-      "ai_languageModel": [
-        [
+          },
           {
             "node": "LLM Quality Critic",
             "type": "ai_languageModel",

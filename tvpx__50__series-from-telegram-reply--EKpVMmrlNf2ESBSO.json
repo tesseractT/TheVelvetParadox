@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__50)\n * Expected inbound shape from Router:\n * {\n *   ctx, tg: { chat_id, message_id, reply_to_message_id, text }, input\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst tg = incoming.tg || incoming.message || {};\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: 'telegram',\n  route_mode: 'reply_series',\n  received_at: now,\n\n  // defaults for series\n  series_default_count: Number(baseCtx.series_default_count || incoming.series_default_count || 4),\n  series_max_count: Number(baseCtx.series_max_count || incoming.series_max_count || 8)\n};\n\nconst chatId = String(tg.chat_id || tg.chat?.id || '').trim();\nconst replyToId = String(tg.reply_to_message_id || tg.reply_to_message?.message_id || '').trim();\nconst text = String(tg.text || tg.caption || '').trim();\n\nif (!chatId) throw new Error('TVPX__50: Missing tg.chat_id');\nif (!replyToId) throw new Error('TVPX__50: Missing tg.reply_to_message_id (must be a reply to an image message)');\n\nreturn [{\n  json: {\n    ctx,\n    tg: {\n      chat_id: chatId,\n      reply_to_message_id: Number(replyToId),\n      text\n    },\n    input: incoming.input || incoming\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__50)\n * Expected inbound shape from Router:\n * {\n *   ctx, tg: { chat_id, message_id, reply_to_message_id, text }, input\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst tg = incoming.tg || incoming.message || {};\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: 'telegram',\n  route_mode: 'reply_series',\n  received_at: now,\n  telegram_chat_id: String(tg.chat_id || tg.chat?.id || '').trim() || null,\n\n  // defaults for series\n  series_default_count: Number(baseCtx.series_default_count || incoming.series_default_count || 4),\n  series_max_count: Number(baseCtx.series_max_count || incoming.series_max_count || 8)\n};\n\nconst chatId = String(tg.chat_id || tg.chat?.id || '').trim();\nconst replyToId = String(tg.reply_to_message_id || tg.reply_to_message?.message_id || '').trim();\nconst text = String(tg.text || tg.caption || '').trim();\n\nif (!chatId) throw new Error('TVPX__50: Missing tg.chat_id');\nif (!replyToId) throw new Error('TVPX__50: Missing tg.reply_to_message_id (must be a reply to an image message)');\n\nreturn [{\n  json: {\n    ctx,\n    tg: {\n      chat_id: chatId,\n      reply_to_message_id: Number(replyToId),\n      text\n    },\n    input: incoming.input || incoming\n  }\n}];"
       },
       "id": "205efb23-60c9-498f-9a1f-15d998ea8b77",
       "name": "Initialize Envelope",
@@ -192,7 +192,13 @@
       "position": [
         -152,
         576
-      ]
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
     },
     {
       "parameters": {
@@ -317,10 +323,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__30__Image Generation Dual Mode",
+          "value": "8KjucHiZTtdGzCrh",
           "mode": "list",
           "cachedResultName": "TVPX__30__Image Generation Dual Mode",
-          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__30__Image Generation Dual Mode"
+          "cachedResultUrl": "/workflow/8KjucHiZTtdGzCrh"
         },
         "options": {
           "waitForSubWorkflow": false
@@ -381,12 +387,27 @@
         "matchType": "allConditions",
         "filters": {
           "conditions": [
-            {}
+            {
+              "keyName": "lineage_id",
+              "keyValue": "={{$json.lineage.lineage_id}}"
+            }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "lineage_id": "={{$json.lineage.lineage_id}}",
+            "series_group_id": "={{$json.lineage.series_group_id}}",
+            "root_asset_id": "={{$json.lineage.root_asset_id}}",
+            "parent_asset_id": "={{$json.lineage.parent_asset_id}}",
+            "child_asset_id": "={{$json.lineage.child_asset_id}}",
+            "parent_concept_id": "={{$json.lineage.parent_concept_id}}",
+            "child_concept_id": "={{$json.lineage.child_concept_id}}",
+            "variation_index": "={{$json.lineage.variation_index}}",
+            "variation_instruction": "={{$json.lineage.variation_instruction}}",
+            "continuity_rules_json": "={{$json.lineage.continuity_rules_json}}",
+            "created_at": "={{$json.lineage.created_at}}"
+          },
           "matchingColumns": [],
           "schema": [
             {
@@ -512,7 +533,7 @@
         160
       ],
       "id": "ddc07f29-e54f-4554-8e37-455833fb67d8",
-      "name": "Upsert row(s)"
+      "name": "Upsert Series Lineage"
     }
   ],
   "connections": {
@@ -686,7 +707,7 @@
       "main": [
         [
           {
-            "node": "Upsert row(s)",
+            "node": "Upsert Series Lineage",
             "type": "main",
             "index": 0
           }
@@ -704,22 +725,22 @@
         ]
       ]
     },
-    "Upsert row(s)": {
+    "Next Variation": {
       "main": [
         [
           {
-            "node": "Next Variation",
+            "node": "Loop Variations",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Next Variation": {
+    "Upsert Series Lineage": {
       "main": [
         [
           {
-            "node": "Loop Variations",
+            "node": "Next Variation",
             "type": "main",
             "index": 0
           }

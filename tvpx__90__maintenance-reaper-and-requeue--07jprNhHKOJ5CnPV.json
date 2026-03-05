@@ -105,10 +105,10 @@
         "operation": "update",
         "dataTableId": {
           "__rl": true,
-          "value": "REPLACE_WITH_ID__tvpx_concept_pool",
+          "value": "gVpNusMuiqbDU3pK",
           "mode": "list",
           "cachedResultName": "tvpx_concept_pool",
-          "cachedResultUrl": "/projects/REPLACE_PROJECT_ID/datatables/REPLACE_WITH_ID__tvpx_concept_pool"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
         },
         "matchType": "allConditions",
         "filters": {
@@ -231,7 +231,8 @@
               "keyValue": "running"
             }
           ]
-        }
+        },
+        "matchType": "anyCondition"
       },
       "id": "29707145-4d53-4ea9-895a-bbc45572950c",
       "name": "Get In Flight Jobs",

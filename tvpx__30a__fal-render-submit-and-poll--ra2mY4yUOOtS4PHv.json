@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__30A)\n * Bulletproof normalization for a single fal render job.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\n// Required inputs\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\nconst variant = String(incoming.render_variant || incoming.variant_key || '').trim();\nconst prompt = String(incoming.prompt || '').trim();\nconst neg = String(incoming.negative_prompt || '').trim();\n\nif (!conceptId) throw new Error('TVPX__30A: Missing concept_id.');\nif (!variant) throw new Error('TVPX__30A: Missing render_variant (color|bw).');\nif (prompt.length < 40) throw new Error('TVPX__30A: prompt too short / missing.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  poll_interval_seconds: Number(baseCtx.poll_interval_seconds || incoming.poll_interval_seconds || 8)\n};\n\nconst controls = (incoming.provider_controls && typeof incoming.provider_controls === 'object') ? incoming.provider_controls : {};\n\nconst imageSize = String(controls.image_size || incoming.image_size || baseCtx.image_size || '1024x1280');\nconst background = String(controls.background || incoming.background || baseCtx.background || 'opaque');\nconst quality = String(controls.quality || incoming.quality || baseCtx.quality || 'high');\nconst outputFormat = String(controls.output_format || incoming.output_format || baseCtx.output_format || 'png');\n\n// Provider endpoint key: keep configurable per project later; default to proven legacy still endpoint\nconst endpointUrl = String(incoming.fal_endpoint_url || baseCtx.fal_endpoint_url || 'https://queue.fal.run/fal-ai/gpt-image-1.5');\n\n// Make one robust prompt body: keep negative guidance inside prompt to avoid provider schema mismatch\nconst finalPrompt = neg\n  ? `${prompt}\\n\\nAVOID (negative guidance): ${neg}`\n  : prompt;\n\nconst jobId = `tvpx_job_${fnv1a(`${traceId}::${conceptId}::${variant}::${now}`)}`;\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      job_id: jobId,\n      concept_id: conceptId,\n      render_variant: variant,\n      provider_name: 'fal',\n      endpoint_url: endpointUrl,\n      request: {\n        prompt: finalPrompt,\n        image_size: imageSize,\n        background,\n        quality,\n        num_images: 1,\n        output_format: outputFormat,\n        sync_mode: false\n      },\n      // Keep original prompt + negative separately for audit\n      prompt_raw: prompt,\n      negative_prompt_raw: neg\n    }\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__30A)\n * Bulletproof normalization for a single fal render job.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\n// Required inputs\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\nconst variant = String(incoming.render_variant || incoming.variant_key || '').trim();\nconst prompt = String(incoming.prompt || '').trim();\nconst neg = String(incoming.negative_prompt || '').trim();\n\nif (!conceptId) throw new Error('TVPX__30A: Missing concept_id.');\nif (!variant) throw new Error('TVPX__30A: Missing render_variant (color|bw).');\nif (prompt.length < 40) throw new Error('TVPX__30A: prompt too short / missing.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  poll_interval_seconds: Number(baseCtx.poll_interval_seconds || incoming.poll_interval_seconds || 8)\n};\n\nconst controls = (incoming.provider_controls && typeof incoming.provider_controls === 'object') ? incoming.provider_controls : {};\n\nconst imageSize = String(controls.image_size || incoming.image_size || baseCtx.image_size || '1024x1280');\nconst background = String(controls.background || incoming.background || baseCtx.background || 'opaque');\nconst quality = String(controls.quality || incoming.quality || baseCtx.quality || 'high');\nconst outputFormat = String(controls.output_format || incoming.output_format || baseCtx.output_format || 'png');\n\n// Provider endpoint key: keep configurable per project later; default to proven legacy still endpoint\nconst endpointUrl = String(incoming.fal_endpoint_url || baseCtx.fal_endpoint_url || 'https://queue.fal.run/fal-ai/gpt-image-1.5');\n\n// Make one robust prompt body: keep negative guidance inside prompt to avoid provider schema mismatch\nconst finalPrompt = neg\n  ? `${prompt}\\n\\nAVOID (negative guidance): ${neg}`\n  : prompt;\n\nconst jobId = `tvpx_job_${fnv1a(`${traceId}::${conceptId}::${variant}::${now}`)}`;\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      job_id: jobId,\n      concept_id: conceptId,\n      render_variant: variant,\n      provider_name: 'fal',\n      endpoint_url: endpointUrl,\n      request: {\n        prompt: finalPrompt,\n        image_size: imageSize,\n        background,\n        quality,\n        num_images: 1,\n        output_format: outputFormat,\n        sync_mode: false\n      },\n      // Keep original prompt + negative separately for audit\n      prompt_raw: prompt,\n      negative_prompt_raw: neg\n    }\n  }\n}];"
       },
       "id": "cc050267-f722-4d9e-a7b1-304179b93724",
       "name": "Initialize Envelope",
@@ -89,6 +89,15 @@
         "options": {
           "response": {},
           "timeout": 120000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{$json.ctx.fal_api_key ? 'Key ' + $json.ctx.fal_api_key : ''}}"
+            }
+          ]
         }
       },
       "id": "8f01a30c-75b8-4061-be37-1c7d411dcf87",
@@ -98,7 +107,10 @@
       "position": [
         -2528,
         256
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 4000
     },
     {
       "parameters": {
@@ -188,6 +200,15 @@
         "options": {
           "response": {},
           "timeout": 120000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{$json.ctx.fal_api_key ? 'Key ' + $json.ctx.fal_api_key : ''}}"
+            }
+          ]
         }
       },
       "id": "0b982c81-b1d7-451e-bead-e1f8935e8942",
@@ -197,7 +218,10 @@
       "position": [
         -1408,
         80
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 4000
     },
     {
       "parameters": {
@@ -471,7 +495,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/** Finalize Timed Out */\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst poll = $json.poll;\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    error_text: `Timed out after ${poll.tries} polls.`,\n    failed_at: new Date().toISOString()\n  }\n}];"
+        "jsCode": "/** Finalize Timed Out */\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst poll = $json.poll;\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    error_text: `Timed out after ${poll.tries} polls.`,\n    poll_count: Number(poll.tries || 0),\n    failed_at: new Date().toISOString()\n  }\n}];"
       },
       "id": "66c434f8-275d-4ae8-9711-9b42bfbdd470",
       "name": "Finalize Timed Out",
@@ -507,7 +531,7 @@
             "state": "timed_out",
             "completed_at": "={{$json.failed_at}}",
             "error_text": "={{$json.error_text}}",
-            "poll_count": "={{$json.ctx.poll_max}}"
+            "poll_count": "={{$json.poll_count || $json.ctx.poll_max}}"
           },
           "matchingColumns": [],
           "schema": [

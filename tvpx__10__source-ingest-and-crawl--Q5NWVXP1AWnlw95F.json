@@ -383,7 +383,8 @@
     },
     {
       "parameters": {
-        "resource": "datasetItems"
+        "resource": "datasetItems",
+        "datasetId": "={{$items(\"Normalize Apify Run Output\")[0].json.crawl_run_update.dataset_id}}"
       },
       "id": "821514f1-84ea-4e45-86a4-c1de85dccf33",
       "name": "Apify Get Dataset Items",
@@ -650,10 +651,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__20__Concept Forge And Brief Pool",
+          "value": "of3xeq4C34JVxykf",
           "mode": "list",
           "cachedResultName": "TVPX__20__Concept Forge And Brief Pool",
-          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__20__Concept Forge And Brief Pool"
+          "cachedResultUrl": "/workflow/of3xeq4C34JVxykf"
         },
         "options": {
           "waitForSubWorkflow": false

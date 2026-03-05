@@ -79,7 +79,18 @@
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "EKpVMmrlNf2ESBSO",
+          "mode": "list",
+          "cachedResultName": "TVPX__50__Series From Telegram Reply",
+          "cachedResultUrl": "/workflow/EKpVMmrlNf2ESBSO"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
       "id": "b6e2d48d-77fb-4f96-b72d-19da5d21c6a3",
       "name": "To Series Reply",
       "type": "n8n-nodes-base.executeWorkflow",
@@ -87,19 +98,6 @@
       "position": [
         -1040,
         416
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Envelope Guard B — ensures we exit this branch with the same envelope.\nconst j = $json || {};\nreturn [{ json: { ctx: j.ctx || {}, tg: j.tg || {}, input: j.input || {}, carry: j.carry || {} } }];\n"
-      },
-      "id": "7ffa0f67-9100-4e7c-8964-792fd7484cb1",
-      "name": "Envelope Guard B",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -144,
-        864
       ]
     },
     {
@@ -125,7 +123,18 @@
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Q5NWVXP1AWnlw95F",
+          "mode": "list",
+          "cachedResultName": "TVPX__10__Source Ingest And Crawl",
+          "cachedResultUrl": "/workflow/Q5NWVXP1AWnlw95F"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
       "id": "7b6dbb4c-f2f4-41e8-8ac0-3bacc7dca940",
       "name": "To Source Crawl",
       "type": "n8n-nodes-base.executeWorkflow",
@@ -133,19 +142,6 @@
       "position": [
         -1040,
         640
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Envelope Guard C\nconst j = $json || {};\nreturn [{ json: { ctx: j.ctx || {}, tg: j.tg || {}, input: j.input || {}, carry: j.carry || {} } }];\n"
-      },
-      "id": "f2ba0d59-9196-4d93-9baa-9b1bf25210dc",
-      "name": "Envelope Guard C",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        80,
-        960
       ]
     },
     {
@@ -171,7 +167,18 @@
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "8KjucHiZTtdGzCrh",
+          "mode": "list",
+          "cachedResultName": "TVPX__30__Image Generation Dual Mode",
+          "cachedResultUrl": "/workflow/8KjucHiZTtdGzCrh"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
       "id": "15063211-34e7-41b4-91d4-28a7fa25d237",
       "name": "To Primary Generation",
       "type": "n8n-nodes-base.executeWorkflow",
@@ -179,19 +186,6 @@
       "position": [
         -1040,
         1472
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Envelope Guard D\nconst j = $json || {};\nreturn [{ json: { ctx: j.ctx || {}, tg: j.tg || {}, input: j.input || {}, carry: j.carry || {} } }];\n"
-      },
-      "id": "2c599218-7639-4375-bf97-bbe935744f53",
-      "name": "Envelope Guard D",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        304,
-        1056
       ]
     },
     {
@@ -255,7 +249,7 @@
       "main": [
         [
           {
-            "node": "Envelope Guard B",
+            "node": "To Series Reply",
             "type": "main",
             "index": 0
           }
@@ -273,7 +267,7 @@
       "main": [
         [
           {
-            "node": "Envelope Guard C",
+            "node": "To Source Crawl",
             "type": "main",
             "index": 0
           }
@@ -291,7 +285,7 @@
       "main": [
         [
           {
-            "node": "Envelope Guard D",
+            "node": "To Primary Generation",
             "type": "main",
             "index": 0
           }

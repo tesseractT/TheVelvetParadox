@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__40)\n * Expected input from Workflow 30:\n * {\n *   ctx, concept_id, asset_family_id,\n *   family: { color: { image_url, ... }, bw: { image_url, ... } }\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'asset_finalize_dispatch',\n  received_at: now,\n\n  // telegram + drive routing (prefer upstream ctx overrides)\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || baseCtx.chat_id || '').trim() || null,\n  drive_id: String(baseCtx.drive_id || incoming.drive_id || '').trim() || null,\n  drive_folder_id: String(baseCtx.drive_folder_id || incoming.drive_folder_id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nif (!conceptId) throw new Error('TVPX__40: Missing concept_id.');\nif (!ctx.asset_family_id) ctx.asset_family_id = `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst fam = incoming.family || {};\nconst color = fam.color || {};\nconst bw = fam.bw || {};\n\nconst colorUrl = String(color.image_url || color.provider_image_url || '').trim();\nconst bwUrl = String(bw.image_url || bw.provider_image_url || '').trim();\nif (!colorUrl || !bwUrl) {\n  throw new Error('TVPX__40: Missing color or bw image_url from generation results.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color: { ...color, image_url: colorUrl },\n      bw: { ...bw, image_url: bwUrl }\n    }\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__40)\n * Expected input from Workflow 30:\n * {\n *   ctx, concept_id, asset_family_id,\n *   family: { color: { image_url, ... }, bw: { image_url, ... } }\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'asset_finalize_dispatch',\n  received_at: now,\n\n  // telegram + drive routing (prefer upstream ctx overrides)\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || baseCtx.chat_id || '').trim() || null,\n  drive_id: String(baseCtx.drive_id || incoming.drive_id || '').trim() || null,\n  drive_folder_id: String(baseCtx.drive_folder_id || incoming.drive_folder_id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nif (!conceptId) throw new Error('TVPX__40: Missing concept_id.');\nif (!ctx.asset_family_id) ctx.asset_family_id = `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst fam = incoming.family || {};\nconst color = fam.color || {};\nconst bw = fam.bw || {};\n\nconst colorUrl = String(color.image_url || color.provider_image_url || '').trim();\nconst bwUrl = String(bw.image_url || bw.provider_image_url || '').trim();\nif (!colorUrl || !bwUrl) {\n  throw new Error('TVPX__40: Missing color or bw image_url from generation results.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color: { ...color, image_url: colorUrl },\n      bw: { ...bw, image_url: bwUrl }\n    }\n  }\n}];"
       },
       "id": "0ea173b1-0d9d-43c3-a8db-e03cbbf78041",
       "name": "Initialize Envelope",
@@ -123,7 +123,8 @@
     {
       "parameters": {
         "name": "={{$json.filename}}",
-        "options": {}
+        "options": {},
+        "authentication": "oAuth2"
       },
       "id": "7dcec58b-23ba-4c41-b1c3-36c0034fdfca",
       "name": "Upload Color To Google Drive",
@@ -132,7 +133,13 @@
       "position": [
         -1312,
         0
-      ]
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qf75UASR5hw79O6L",
+          "name": "Google Drive account"
+        }
+      }
     },
     {
       "parameters": {
@@ -219,7 +226,8 @@
           "id": "nXE4YlrFVa15bP8Q",
           "name": "videoGenForSocialBot"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -283,7 +291,8 @@
       "position": [
         -192,
         0
-      ]
+      ],
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -428,7 +437,14 @@
         1376,
         0
       ],
-      "webhookId": "be31dd81-7325-4220-bbbd-7f98cb0c2604"
+      "webhookId": "be31dd81-7325-4220-bbbd-7f98cb0c2604",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -492,7 +508,8 @@
       "position": [
         1824,
         0
-      ]
+      ],
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -511,7 +528,13 @@
       "position": [
         2128,
         224
-      ]
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
     },
     {
       "parameters": {
@@ -673,7 +696,8 @@
           "id": "nXE4YlrFVa15bP8Q",
           "name": "videoGenForSocialBot"
         }
-      }
+      },
+      "continueOnFail": true
     }
   ],
   "connections": {

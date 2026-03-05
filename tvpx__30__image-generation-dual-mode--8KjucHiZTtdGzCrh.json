@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__30)\n * - Normalizes inbound payloads\n * - Ensures ctx exists\n * - Ensures concept_id is optional (we can pick one)\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\nconst familyId = baseCtx.asset_family_id || `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'image_generate_dual',\n  received_at: now,\n\n  // optional knobs\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1280'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15)\n};\n\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    concept_id: conceptId || null\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__30)\n * - Normalizes inbound payloads\n * - Ensures ctx exists\n * - Ensures concept_id is optional (we can pick one)\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\nconst familyId = baseCtx.asset_family_id || `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'image_generate_dual',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || incoming.chat_id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n\n  // optional knobs\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1280'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15)\n};\n\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    concept_id: conceptId || null\n  }\n}];"
       },
       "id": "80c99f0a-153f-4f31-baa2-49cdc56075bf",
       "name": "Initialize Envelope",
@@ -264,7 +264,13 @@
       "position": [
         -48,
         480
-      ]
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
     },
     {
       "parameters": {
@@ -348,10 +354,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll",
+          "value": "ra2mY4yUOOtS4PHv",
           "mode": "list",
           "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
-          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll"
+          "cachedResultUrl": "/workflow/ra2mY4yUOOtS4PHv"
         },
         "options": {
           "waitForSubWorkflow": true
@@ -364,16 +370,19 @@
       "position": [
         912,
         160
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll",
+          "value": "ra2mY4yUOOtS4PHv",
           "mode": "list",
           "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
-          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll"
+          "cachedResultUrl": "/workflow/ra2mY4yUOOtS4PHv"
         },
         "options": {
           "waitForSubWorkflow": true
@@ -386,7 +395,10 @@
       "position": [
         912,
         352
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -419,13 +431,13 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__40__Asset Finalizer And Telegram Dispatch",
+          "value": "vaFfkhqKgBk2VCGh",
           "mode": "list",
           "cachedResultName": "TVPX__40__Asset Finalizer And Telegram Dispatch",
-          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__40__Asset Finalizer And Telegram Dispatch"
+          "cachedResultUrl": "/workflow/vaFfkhqKgBk2VCGh"
         },
         "options": {
-          "waitForSubWorkflow": false
+          "waitForSubWorkflow": true
         }
       },
       "id": "026f6384-9683-47b6-8c14-774b5a1e701b",
@@ -435,7 +447,10 @@
       "position": [
         1584,
         256
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -470,8 +485,7 @@
             "state": "rendered",
             "updated_at": "={{$now}}",
             "last_used_at": "={{$now}}",
-            "used_count": "={{Number($json.concept_row.used_count || 0) + 1}}",
-            "abstraction_target": 0
+            "used_count": "={{Number($json.concept_row.used_count || 0) + 1}}"
           },
           "matchingColumns": [],
           "schema": [
