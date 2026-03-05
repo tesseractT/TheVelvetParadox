@@ -316,13 +316,14 @@
     },
     {
       "parameters": {
-        "mode": "mergeByIndex",
+        "mode": "combine",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "6393330e-d8b0-441e-949a-438d68ef5cea",
       "name": "Merge Context And Apify Run",
       "type": "n8n-nodes-base.merge",
-      "typeVersion": 2,
+      "typeVersion": 3.2,
       "position": [
         1008,
         176

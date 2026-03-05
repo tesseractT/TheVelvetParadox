@@ -400,13 +400,14 @@
     },
     {
       "parameters": {
-        "mode": "mergeByIndex",
+        "mode": "append",
+        "numberInputs": 2,
         "options": {}
       },
       "id": "fc179617-83dc-4a38-bc99-6267f0df287b",
       "name": "Merge Color And B W",
       "type": "n8n-nodes-base.merge",
-      "typeVersion": 2,
+      "typeVersion": 3.2,
       "position": [
         1136,
         256

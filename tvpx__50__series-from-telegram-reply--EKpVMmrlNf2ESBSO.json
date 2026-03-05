@@ -150,13 +150,14 @@
     },
     {
       "parameters": {
-        "mode": "mergeByIndex",
+        "mode": "combine",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "ae38f51a-67cb-47e4-84c9-b8733147af38",
       "name": "Merge Parent Asset And Concept",
       "type": "n8n-nodes-base.merge",
-      "typeVersion": 2,
+      "typeVersion": 3.2,
       "position": [
         -672,
         352
