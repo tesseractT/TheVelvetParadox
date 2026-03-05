@@ -34,20 +34,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
-              "operation": "equals",
-              "value2": "true"
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "25ba065f-95b7-40e5-9f00-1e835c6d8209",
       "name": "Has Telegram Chat Id",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -2432,
         0

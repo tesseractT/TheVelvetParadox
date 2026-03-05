@@ -76,20 +76,30 @@
     {
       "parameters": {
         "conditions": {
-          "number": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{Array.isArray($json.fragments) ? $json.fragments.length : 0}}",
-              "operation": "larger",
-              "value2": 0
+              "id": "number_1",
+              "leftValue": "={{Array.isArray($json.fragments) ? $json.fragments.length : 0}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "a636e536-7400-49fd-9e75-c8f40afe508c",
       "name": "Has Fragments",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -608,
         160
@@ -457,32 +467,48 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.critic.approve ? 'true' : 'false'}}",
-              "operation": "equals",
-              "value2": "true"
-            }
-          ],
-          "number": [
-            {
-              "value1": "={{$json.critic.score}}",
-              "operation": "largerEqual",
-              "value2": 7.2
+              "id": "string_1",
+              "leftValue": "={{$json.critic.approve ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             },
             {
-              "value1": "={{$json.critic.brand_fit}}",
-              "operation": "largerEqual",
-              "value2": 7
+              "id": "number_1",
+              "leftValue": "={{$json.critic.score}}",
+              "rightValue": 7.2,
+              "operator": {
+                "type": "number",
+                "operation": "largerEqual"
+              }
+            },
+            {
+              "id": "number_2",
+              "leftValue": "={{$json.critic.brand_fit}}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "largerEqual"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "8bb3c891-424a-491f-98c9-0a3976e0e139",
       "name": "Approve Concept",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         3296,
         304

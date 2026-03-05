@@ -239,20 +239,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.job.polled_status}}",
-              "operation": "equals",
-              "value2": "COMPLETED"
+              "id": "string_1",
+              "leftValue": "={{$json.job.polled_status}}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "7567b19e-d611-4683-bb12-a7aae81b4b72",
       "name": "Is Completed",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -960,
         -16
@@ -261,20 +271,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.job.polled_status}}",
-              "operation": "equals",
-              "value2": "FAILED"
+              "id": "string_1",
+              "leftValue": "={{$json.job.polled_status}}",
+              "rightValue": "FAILED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "c1d4d2f6-f53a-458e-8085-cdada81f8df5",
       "name": "Is Failed",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -960,
         560
@@ -296,20 +316,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.timed_out ? 'true' : 'false'}}",
-              "operation": "equals",
-              "value2": "true"
+              "id": "string_1",
+              "leftValue": "={{$json.timed_out ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "0a3c01f3-4050-42d9-9343-cc8b3b25e66b",
       "name": "Is Timed Out",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -736,
         176

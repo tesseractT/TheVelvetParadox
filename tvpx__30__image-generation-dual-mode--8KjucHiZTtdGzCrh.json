@@ -34,20 +34,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.concept_id ? 'true' : 'false'}}",
-              "operation": "equals",
-              "value2": "true"
+              "id": "string_1",
+              "leftValue": "={{$json.concept_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "2c69023a-f4b4-4510-9f98-03897d3ca05c",
       "name": "Has Concept Id",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -1680,
         256
@@ -309,20 +319,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.render_variant}}",
-              "operation": "equals",
-              "value2": "color"
+              "id": "string_1",
+              "leftValue": "={{$json.render_variant}}",
+              "rightValue": "color",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "cd976680-9755-49ff-a180-6803c24255c6",
       "name": "Is Color Variant",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         688,
         256

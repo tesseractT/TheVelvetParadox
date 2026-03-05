@@ -59,20 +59,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.ctx.route_mode}}",
-              "operation": "equals",
-              "value2": "reply_series"
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.route_mode}}",
+              "rightValue": "reply_series",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "de0d1d6a-1acd-4333-94ca-e0d4985e0187",
       "name": "If Reply Series",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -368,
         960
@@ -103,20 +113,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.ctx.route_mode}}",
-              "operation": "equals",
-              "value2": "crawl"
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.route_mode}}",
+              "rightValue": "crawl",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "66cb1ae3-3478-4874-8059-27a01f907f25",
       "name": "If Crawl",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         -144,
         1056
@@ -147,20 +167,30 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{$json.ctx.route_mode}}",
-              "operation": "equals",
-              "value2": "direct_generate"
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.route_mode}}",
+              "rightValue": "direct_generate",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
       "id": "aa26b239-5356-4057-b97f-5bed0de8321d",
       "name": "If Direct Generate",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         80,
         1152
