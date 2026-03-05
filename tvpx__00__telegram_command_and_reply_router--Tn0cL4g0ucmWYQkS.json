@@ -1,0 +1,347 @@
+{
+  "updatedAt": "2026-03-05T20:11:28.715Z",
+  "createdAt": "2026-03-05T13:47:38.063Z",
+  "id": "Tn0cL4g0ucmWYQkS",
+  "name": "TVPX__00__Telegram_Command_And_Reply_Router",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "59a87435-cd4c-4baf-b4b6-c94e20d74168",
+      "name": "Inbound Updates",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        960
+      ],
+      "webhookId": "776675db-4f74-41b7-aa39-5e6936b97ef5",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function safeString(v) {\n  if (v === null || v === undefined) return '';\n  return typeof v === 'string' ? v : String(v);\n}\n\nfunction nowIso() {\n  return new Date().toISOString();\n}\n\nfunction quickId(prefix) {\n  const t = Date.now().toString(36);\n  const r = Math.random().toString(36).slice(2, 10);\n  return `${prefix}_${t}_${r}`;\n}\n\nconst u = $json || {};\nconst msg = (u.message && typeof u.message === 'object') ? u.message : {};\n\nconst chatId = msg?.chat?.id ?? null;\nconst messageId = msg?.message_id ?? null;\nconst replyToId = msg?.reply_to_message?.message_id ?? null;\n\nconst hasPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;\nconst photo = hasPhoto ? msg.photo[msg.photo.length - 1] : null;\n\nconst text = safeString(msg.text || msg.caption).trim();\n\nconst existingCtx = (u.ctx && typeof u.ctx === 'object') ? u.ctx : {};\nconst traceId = safeString(existingCtx.trace_id) || quickId('tvpx');\n\nconst commandMatch = text.match(/^\\/(\\w+)\\s*(.*)$/);\nconst cmd = commandMatch ? commandMatch[1].toLowerCase() : '';\nconst cmdArgs = commandMatch ? safeString(commandMatch[2]).trim() : '';\n\nlet routeMode = 'help';\n\nif (replyToId) {\n  // Allow /series or freeform reply variations; downstream parser decides if instruction is usable.\n  routeMode = 'reply_series';\n} else if (/^\\/(crawl|refresh|reseed)\\b/i.test(text)) {\n  routeMode = 'crawl';\n} else if (text.length > 0 || hasPhoto) {\n  routeMode = 'direct_generate';\n}\n\nreturn [{\n  json: {\n    ctx: {\n      project_ns: 'TVPX',\n      brand_name: 'The Velvet Paradox',\n      trace_id: traceId,\n      triggered_at: nowIso(),\n      trigger_mode: 'telegram',\n      route_mode: routeMode,\n      command: cmd,\n      command_args: cmdArgs\n    },\n    tg: {\n      chat_id: chatId,\n      message_id: messageId,\n      reply_to_message_id: replyToId,\n      text,\n      has_photo: hasPhoto,\n      photo: photo ? {\n        file_id: photo.file_id,\n        file_unique_id: photo.file_unique_id,\n        width: photo.width,\n        height: photo.height\n      } : null\n    },\n    input: {\n      raw_update: u\n    },\n    carry: {\n      aesthetic_goal: {\n        theatrical_centrality_bias: true,\n        semantic_destabilization_bias: true,\n        tactile_surface_priority: true,\n        muted_cinematic_base_palette: true,\n        saturation_spike_allowed: true,\n        abstraction_target_default: 6.2\n      }\n    }\n  }\n}];"
+      },
+      "id": "4715cdc6-1fc1-4f45-aa18-5948faef01a7",
+      "name": "Normalize Inbound Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Envelope Guard A — re-emit only the canonical envelope keys.\n// This prevents accidental data loss from upstream nodes.\n\nconst j = $json || {};\n\nfunction mustObj(v) {\n  return (v && typeof v === 'object') ? v : {};\n}\n\nreturn [{\n  json: {\n    ctx: mustObj(j.ctx),\n    tg: mustObj(j.tg),\n    input: mustObj(j.input),\n    carry: mustObj(j.carry)\n  }\n}];\n"
+      },
+      "id": "aa751abe-b890-4dd6-825b-1c3ed5b4191c",
+      "name": "Envelope Guard A",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.ctx.route_mode}}",
+              "operation": "equals",
+              "value2": "reply_series"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "de0d1d6a-1acd-4333-94ca-e0d4985e0187",
+      "name": "If Reply Series",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        960
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "b6e2d48d-77fb-4f96-b72d-19da5d21c6a3",
+      "name": "To Series Reply",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Envelope Guard B — ensures we exit this branch with the same envelope.\nconst j = $json || {};\nreturn [{ json: { ctx: j.ctx || {}, tg: j.tg || {}, input: j.input || {}, carry: j.carry || {} } }];\n"
+      },
+      "id": "7ffa0f67-9100-4e7c-8964-792fd7484cb1",
+      "name": "Envelope Guard B",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.ctx.route_mode}}",
+              "operation": "equals",
+              "value2": "crawl"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "66cb1ae3-3478-4874-8059-27a01f907f25",
+      "name": "If Crawl",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        1056
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7b6dbb4c-f2f4-41e8-8ac0-3bacc7dca940",
+      "name": "To Source Crawl",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Envelope Guard C\nconst j = $json || {};\nreturn [{ json: { ctx: j.ctx || {}, tg: j.tg || {}, input: j.input || {}, carry: j.carry || {} } }];\n"
+      },
+      "id": "f2ba0d59-9196-4d93-9baa-9b1bf25210dc",
+      "name": "Envelope Guard C",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.ctx.route_mode}}",
+              "operation": "equals",
+              "value2": "direct_generate"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa26b239-5356-4057-b97f-5bed0de8321d",
+      "name": "If Direct Generate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        80,
+        1152
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "15063211-34e7-41b4-91d4-28a7fa25d237",
+      "name": "To Primary Generation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Envelope Guard D\nconst j = $json || {};\nreturn [{ json: { ctx: j.ctx || {}, tg: j.tg || {}, input: j.input || {}, carry: j.carry || {} } }];\n"
+      },
+      "id": "2c599218-7639-4375-bf97-bbe935744f53",
+      "name": "Envelope Guard D",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.tg.chat_id}}",
+        "text": "={{(() => {\n  const brand = $json?.ctx?.brand_name || 'The Velvet Paradox';\n  const trace = $json?.ctx?.trace_id || '';\n  return [\n    `${brand} — Router ready.`,\n    '',\n    'Commands:',\n    '• /crawl — refresh sources',\n    '• /refresh — alias of /crawl',\n    '• /reseed — rebuild concept pool',\n    '',\n    'Generate:',\n    '• Send text (or a photo + caption) to generate a new image pair (Color + B&W).',\n    '',\n    'Series:',\n    '• Reply to a generated image with /series 4',\n    '• Or: /series 3 more fog',\n    '• Or: /series 5 tighter framing',\n    '',\n    `Trace: ${trace}`\n  ].join('\\n');\n})()}}",
+        "additionalFields": {}
+      },
+      "id": "3ea33eb4-1613-4eac-8bc6-2035a4ba8dfa",
+      "name": "Send Help",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        304,
+        1248
+      ],
+      "webhookId": "34f68bf2-ede2-4734-9900-7f2bd0209ae6",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Inbound Updates": {
+      "main": [
+        [
+          {
+            "node": "Normalize Inbound Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Inbound Update": {
+      "main": [
+        [
+          {
+            "node": "Envelope Guard A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envelope Guard A": {
+      "main": [
+        [
+          {
+            "node": "If Reply Series",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Reply Series": {
+      "main": [
+        [
+          {
+            "node": "Envelope Guard B",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Crawl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Crawl": {
+      "main": [
+        [
+          {
+            "node": "Envelope Guard C",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Direct Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Direct Generate": {
+      "main": [
+        [
+          {
+            "node": "Envelope Guard D",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Help",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "51f8bd72-6a0d-4d19-812e-37a3c6a61e1a",
+  "activeVersionId": null,
+  "versionCounter": 59,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T13:47:38.063Z",
+      "createdAt": "2026-03-05T13:47:38.063Z",
+      "role": "workflow:owner",
+      "workflowId": "Tn0cL4g0ucmWYQkS",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

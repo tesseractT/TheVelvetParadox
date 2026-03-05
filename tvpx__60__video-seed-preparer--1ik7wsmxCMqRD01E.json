@@ -1,0 +1,440 @@
+{
+  "updatedAt": "2026-03-05T20:15:35.856Z",
+  "createdAt": "2026-03-05T16:30:11.594Z",
+  "id": "1ik7wsmxCMqRD01E",
+  "name": "TVPX__60__Video Seed Preparer",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b4bd5919-4855-4c34-98c2-c4dc29cd7f26",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        344
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope (TVPX__60)\n * Minimal schema to import reliably.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 4000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: baseCtx.trigger_mode || 'internal',\n  route_mode: 'video_seed_prepare',\n  received_at: now\n};\n\nreturn [{ json: { ctx, input: incoming.input || incoming } }];"
+      },
+      "id": "d1de80e1-46a5-4eb0-b901-000250456c7c",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        344
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IQPfZFZ9krMbQRcA",
+          "mode": "list",
+          "cachedResultName": "tvpx_video_seed_queue",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/IQPfZFZ9krMbQRcA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "keyValue": "queued"
+            }
+          ]
+        }
+      },
+      "id": "7cdfd855-4cf5-443e-89a5-2aaf8a57692a",
+      "name": "Get Queued Video Seeds",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        344
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Reattach Context After Seed Fetch\n * Emits one item per seed: { ctx, seed }\n */\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst rows = $input.all().map(i => i.json);\n\nreturn rows.map(r => ({ json: { ctx, seed: r } }));"
+      },
+      "id": "24628386-7df5-4871-8e28-2639e047a454",
+      "name": "Reattach Context After Seeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        344
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f8fd5bee-6e2c-48d8-836e-900f1aee6dc6",
+      "name": "Loop Seeds",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -976,
+        344
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "EMrgSDBhBwr8SiT9",
+          "mode": "list",
+          "cachedResultName": "tvpx_asset_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/EMrgSDBhBwr8SiT9"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "asset_id",
+              "keyValue": "={{$json.seed.asset_id}}"
+            }
+          ]
+        }
+      },
+      "id": "5d56ef90-2dbe-479c-b722-f6d9b9931b9f",
+      "name": "Get Source Asset",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $items('Reattach Context After Seeds', 0, 0)[$itemIndex]?.json || $json || {};\nconst ctx = current.ctx || {};\nconst seed = current.seed || {};\n\nconst assetRow = $json || {};\nif (!assetRow || typeof assetRow !== 'object') {\n  throw new Error('TVPX__60: source asset row missing.');\n}\n\nconst stillUrl = String(seed.still_image_drive_url || assetRow.drive_view_url || '').trim();\nif (!stillUrl) {\n  throw new Error('TVPX__60: missing still image URL.');\n}\n\nconst guardrails = {\n  pace: 'slow',\n  camera: ['glide', 'hover', 'micro-dolly'],\n  preserve: [\n    'composition identity',\n    'symbolic logic',\n    'lighting mood',\n    'tactile textures',\n    'abstraction band 5.8-6.8'\n  ],\n  avoid: [\n    'scene changes',\n    'fast cuts',\n    'hyperactive motion',\n    'rubbery morphing',\n    'new objects'\n  ]\n};\n\nreturn [{\n  json: {\n    ctx,\n    seed,\n    asset: assetRow,\n    motion_brief: {\n      still_reference_url: stillUrl,\n      concept_id: String(seed.concept_id || assetRow.concept_id || '').trim(),\n      prompt_final: String(assetRow.prompt_final || '').trim(),\n      guardrails\n    }\n  }\n}];"
+      },
+      "id": "9d058922-ac78-42fe-be7b-aba4e00e62e6",
+      "name": "Assemble Motion Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.1",
+        "options": {}
+      },
+      "id": "af6c7cca-9f2a-4477-ad10-a7ab3c6c2132",
+      "name": "OpenAI Motion Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -232,
+        320
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=SYSTEM\nYou are TVPX__LLM__Video_Motion_Translator for The Velvet Paradox.\n\nYour job is to translate a still image concept into a future video motion brief.\n\nRules:\n- Preserve composition identity, symbolic logic, tactile texture, and abstraction band.\n- Motion should feel slow, ceremonial, inevitable.\n- No cuts, no new objects, no scene changes, no morphing.\n- Prefer subtle parallax, drift, micro-dolly, breathing light, and minimal atmospheric motion.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"motion_prompt\": \"...\",\n  \"camera_motion_profile\": \"...\",\n  \"parallax_priority\": \"...\",\n  \"scene_breathing_notes\": \"...\",\n  \"avoid_motion_artifacts\": [\"...\"],\n  \"duration_hint\": \"5-7s\"\n}\n\nUSER\nMotion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nSource asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nTranslate the still into motion without breaking its dignity."
+            }
+          ]
+        }
+      },
+      "id": "6ce26d7c-c804-47ec-83f4-3875cc292e14",
+      "name": "LLM Video Motion Translator",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('Parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim()\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    try {\n      return JSON.parse(slice);\n    } catch (err) {\n      throw new Error(`Parser: invalid salvaged JSON. ${err.message}`);\n    }\n  }\n\n  throw new Error('Parser: could not find a valid JSON object.');\n}\n\nconst BASE_NODE = 'Assemble Motion Brief';\nconst OUT_KEY = 'motion';\n\nconst base = $items(BASE_NODE)[0]?.json;\nif (!base) {\n  throw new Error(`Parser: base node \"${BASE_NODE}\" returned no data.`);\n}\n\nconst parsed = parseStrictJson($json);\n\n// Per-output hardening\nif (OUT_KEY === 'critic') {\n  parsed.approve = Boolean(parsed.approve);\n  for (const key of ['score', 'brand_fit', 'novelty', 'visual_viability']) {\n    parsed[key] = Number(parsed[key] || 0);\n  }\n}\n\nif (OUT_KEY === 'abstraction') {\n  let a = Number(parsed.abstraction_target || 6.2);\n  const min = Number(base.ctx?.target_abstraction_min || 5.8);\n  const max = Number(base.ctx?.target_abstraction_max || 6.8);\n  if (!Number.isFinite(a)) a = 6.2;\n  a = Math.max(min, Math.min(max, a));\n  parsed.abstraction_target = Math.round(a * 10) / 10;\n}\n\nif (OUT_KEY === 'render_spec') {\n  parsed.image_size = String(parsed.image_size || base.ctx?.image_size || '1024x1280');\n  parsed.provider_controls = (parsed.provider_controls && typeof parsed.provider_controls === 'object')\n    ? parsed.provider_controls\n    : {};\n  parsed.provider_controls.quality = String(parsed.provider_controls.quality || base.ctx?.quality || 'high');\n  parsed.provider_controls.background = String(parsed.provider_controls.background || base.ctx?.background || 'opaque');\n  parsed.provider_controls.output_format = String(parsed.provider_controls.output_format || base.ctx?.output_format || 'png');\n}\n\nif (OUT_KEY === 'caption_pack') {\n  parsed.hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\n  parsed.keywords = Array.isArray(parsed.keywords) ? parsed.keywords : [];\n}\n\nif (OUT_KEY === 'series_plan') {\n  parsed.variations = Array.isArray(parsed.variations) ? parsed.variations : [];\n}\n\nreturn [{\n  json: {\n    ...base,\n    [OUT_KEY]: parsed\n  }\n}];"
+      },
+      "id": "330b1e43-9470-4822-b8f4-97ae242f43d1",
+      "name": "Parse Motion JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/** Build Update Payload */\nconst j = $json;\nconst now = new Date().toISOString();\nreturn [{\n  json: {\n    ctx: j.ctx,\n    update: {\n      video_seed_id: String(j.seed.video_seed_id || '').trim(),\n      motion_prompt: String(j.motion.motion_prompt || '').trim(),\n      camera_motion_profile: String(j.motion.camera_motion_profile || '').trim(),\n      duration_hint: String(j.motion.duration_hint || j.seed.duration_hint || '5-7s'),\n      state: 'prepared',\n      consumed_at: now\n    }\n  }\n}];"
+      },
+      "id": "9ce7d49b-b513-4e62-982a-e097e84de1d1",
+      "name": "Build Prepared Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IQPfZFZ9krMbQRcA",
+          "mode": "list",
+          "cachedResultName": "tvpx_video_seed_queue",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/IQPfZFZ9krMbQRcA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "video_seed_id",
+              "keyValue": "={{$json.update.video_seed_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "motion_prompt": "={{$json.update.motion_prompt}}",
+            "camera_motion_profile": "={{$json.update.camera_motion_profile}}",
+            "duration_hint": "={{$json.update.duration_hint}}",
+            "state": "={{$json.update.state}}",
+            "consumed_at": "={{$json.update.consumed_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "26f7480b-35c5-4170-9abb-4aa3e22bded4",
+      "name": "Update Seed Prepared",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        496,
+        96
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "fa554cd1-ae32-472d-876f-69c364cf4298",
+      "name": "Next Seed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        344
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Get Queued Video Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Queued Video Seeds": {
+      "main": [
+        [
+          {
+            "node": "Reattach Context After Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach Context After Seeds": {
+      "main": [
+        [
+          {
+            "node": "Loop Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Seeds": {
+      "main": [
+        [
+          {
+            "node": "Next Seed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Source Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Source Asset": {
+      "main": [
+        [
+          {
+            "node": "Assemble Motion Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Motion Brief": {
+      "main": [
+        [
+          {
+            "node": "LLM Video Motion Translator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Video Motion Translator": {
+      "main": [
+        [
+          {
+            "node": "Parse Motion JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Motion JSON": {
+      "main": [
+        [
+          {
+            "node": "Build Prepared Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prepared Update": {
+      "main": [
+        [
+          {
+            "node": "Update Seed Prepared",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Seed Prepared": {
+      "main": [
+        [
+          {
+            "node": "Next Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Motion Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Video Motion Translator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Seed": {
+      "main": [
+        [
+          {
+            "node": "Loop Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d892e7df-6b98-48dd-b103-4d2a6b6f2388",
+  "activeVersionId": null,
+  "versionCounter": 20,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T16:30:11.594Z",
+      "createdAt": "2026-03-05T16:30:11.594Z",
+      "role": "workflow:owner",
+      "workflowId": "1ik7wsmxCMqRD01E",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

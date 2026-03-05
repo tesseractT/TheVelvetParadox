@@ -1,0 +1,988 @@
+{
+  "updatedAt": "2026-03-05T20:13:48.038Z",
+  "createdAt": "2026-03-05T13:57:34.571Z",
+  "id": "Q5NWVXP1AWnlw95F",
+  "name": "TVPX__10__Source Ingest And Crawl",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "1a9d81f7-2f98-4153-a5e2-65479aa0ff23",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        272
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "fe59054e-717d-4381-9aac-f22820d4089a",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope\n * - Normalizes inbound payloads from Schedule or ExecuteWorkflowTrigger\n * - Ensures ctx exists and survives external node outputs via explicit ctx holds + merges\n * - No env vars; all state flows through json + DataTables\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\n// Preserve any ctx already provided\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: baseCtx.trigger_mode || (incoming.message ? 'telegram' : 'schedule'),\n  route_mode: baseCtx.route_mode || 'crawl',\n  run_started_at: now,\n  // Optional knobs (safe defaults)\n  crawl_profile: baseCtx.crawl_profile || incoming.crawl_profile || 'default',\n  max_pages_per_source: Number(baseCtx.max_pages_per_source || incoming.max_pages_per_source || 50),\n  max_fragments_per_page: Number(baseCtx.max_fragments_per_page || incoming.max_fragments_per_page || 8),\n  max_fragment_chars: Number(baseCtx.max_fragment_chars || incoming.max_fragment_chars || 2200)\n};\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    // Telegram payload may exist upstream; keep it but do not rely on it here\n    tg: incoming.tg || incoming.message || {}\n  }\n}];"
+      },
+      "id": "b7f80be5-f6b9-49ec-8900-a35a120bf7a9",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "T3ws14nAvLePi5js",
+          "mode": "list",
+          "cachedResultName": "tvpx_source_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/T3ws14nAvLePi5js"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "crawl_enabled",
+              "condition": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "d2bd7acd-e8bc-497f-af89-9587108cf509",
+      "name": "Get Active Sources",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Reattach Context After Get Sources\n * DataTable nodes may output rows without our envelope.\n * We rebuild items as { ctx, sourceRow }.\n */\n\nconst incoming = $items('Initialize Envelope')[0].json;\nconst ctx = incoming.ctx;\n\nreturn $input.all().map(item => {\n  return {\n    json: {\n      ctx,\n      source: item.json,\n      carry: incoming.carry || {},\n      input: incoming.input || {}\n    }\n  };\n});"
+      },
+      "id": "729dc540-087a-4e4f-8de6-5eca2b9f327a",
+      "name": "Reattach Context After Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9dbb216f-9374-4704-a797-9fa1aef6b95c",
+      "name": "Loop Sources",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -112,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Crawl Run Record\n * Creates crawl_run_id + minimal ledger seed\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json;\nconst ctx = j.ctx;\nconst source = j.source || {};\n\nconst now = new Date().toISOString();\nconst sourceId = String(source.source_id || source.id || source.dt_row_id || '').trim();\nconst sourceUrl = String(source.source_url || source.url || '').trim();\n\nif (!sourceId || !sourceUrl) {\n  throw new Error(`Missing source_id or source_url. Got source_id='${sourceId}' source_url='${sourceUrl}'`);\n}\n\nconst crawlRunId = `tvpx_cr_${fnv1a(ctx.trace_id + '::' + sourceId + '::' + now)}`;\n\nreturn [{\n  json: {\n    ctx: { ...ctx, crawl_run_id: crawlRunId, source_id: sourceId },\n    source,\n    crawl_run: {\n      crawl_run_id: crawlRunId,\n      trace_id: ctx.trace_id,\n      source_id: sourceId,\n      trigger_mode: ctx.trigger_mode,\n      status: 'started',\n      started_at: now\n    }\n  }\n}];"
+      },
+      "id": "75a85458-4743-43af-a37c-020af0a97a65",
+      "name": "Build Crawl Run Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "yWenhwOARipjjBIq",
+          "mode": "list",
+          "cachedResultName": "tvpx_crawl_run_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/yWenhwOARipjjBIq"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "crawl_run_id",
+              "keyValue": "={{$json.crawl_run.crawl_run_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "crawl_run_id": "={{$json.crawl_run.crawl_run_id}}",
+            "trace_id": "={{$json.crawl_run.trace_id}}",
+            "source_id": "={{$json.crawl_run.source_id}}",
+            "trigger_mode": "={{$json.crawl_run.trigger_mode}}",
+            "status": "={{$json.crawl_run.status}}",
+            "started_at": "={{$json.crawl_run.started_at}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "crawl_run_id",
+              "displayName": "crawl_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trigger_mode",
+              "displayName": "trigger_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "apify_run_id",
+              "displayName": "apify_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "dataset_id",
+              "displayName": "dataset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "page_count",
+              "displayName": "page_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "raw_item_count",
+              "displayName": "raw_item_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_text",
+              "displayName": "error_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0667efcb-b7b8-4366-a636-f179d962cc54",
+      "name": "Write Crawl Run Start",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        336,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseJsonSafe(value, fallback) {\n  if (value === null || value === undefined || value === '') return fallback;\n  if (typeof value === 'object') return value;\n  try {\n    return JSON.parse(String(value));\n  } catch {\n    return fallback;\n  }\n}\n\nconst j = $json || {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? j.ctx : {};\nconst source = (j.source && typeof j.source === 'object') ? j.source : {};\n\nconst sourceUrl = String(source.source_url || source.url || '').trim();\nif (!sourceUrl) {\n  throw new Error('TVPX__10 / Build Apify Request Body: source_url is required.');\n}\n\nconst actorId = String(source.apify_actor_id || '').trim();\nif (!actorId) {\n  throw new Error('TVPX__10 / Build Apify Request Body: source.apify_actor_id is required.');\n}\n\nconst crawlProfile = String(source.crawl_profile || ctx.crawl_profile || 'default').trim();\nconst maxPages = Math.max(1, Math.min(Number(source.max_pages || ctx.max_pages_per_source || 50), 500));\n\nconst apifyInput = {\n  startUrls: [{ url: sourceUrl }],\n  maxPagesPerCrawl: maxPages,\n  includeUrlGlobs: parseJsonSafe(source.include_url_globs, undefined),\n  excludeUrlGlobs: parseJsonSafe(source.exclude_url_globs, undefined),\n  proxyConfiguration: parseJsonSafe(source.proxy_json, undefined),\n  userData: {\n    tvpx: {\n      trace_id: ctx.trace_id,\n      crawl_run_id: ctx.crawl_run_id,\n      source_id: ctx.source_id,\n      crawl_profile: crawlProfile,\n      brand_name: ctx.brand_name\n    }\n  }\n};\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    apify: {\n      actor_id: actorId,\n      input: apifyInput\n    }\n  }\n}];"
+      },
+      "id": "ccd1777f-fd24-41df-8cf5-10ec876505ec",
+      "name": "Build Apify Request Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "actorId": "={{$json.apify.actor_id}}",
+        "customBody": "={{$json.apify.input}}",
+        "timeout": 360,
+        "memory": 2048
+      },
+      "id": "ee9da2b8-3f40-4dd2-83cd-cdd6b072a9ab",
+      "name": "Apify Run Crawler",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        784,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "mergeByIndex",
+        "options": {}
+      },
+      "id": "6393330e-d8b0-441e-949a-438d68ef5cea",
+      "name": "Merge Context And Apify Run",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $json || {};\nconst seed = $items('Build Apify Request Body')[0]?.json || {};\n\nconst ctx = (seed.ctx && typeof seed.ctx === 'object') ? seed.ctx : {};\nconst source = (seed.source && typeof seed.source === 'object') ? seed.source : {};\n\nconst apifyRunId = String(run.id || run.runId || run.data?.id || '').trim();\nconst datasetId = String(run.defaultDatasetId || run.data?.defaultDatasetId || run.datasetId || '').trim();\n\nif (!datasetId) {\n  throw new Error('TVPX__10 / Normalize Apify Run Output: missing dataset ID from Apify run result.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_update: {\n      crawl_run_id: String(ctx.crawl_run_id || '').trim(),\n      apify_run_id: apifyRunId,\n      dataset_id: datasetId,\n      status: 'running'\n    }\n  }\n}];"
+      },
+      "id": "4886b1f2-a2f2-4e47-80f7-65e810bf2e5d",
+      "name": "Normalize Apify Run Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "yWenhwOARipjjBIq",
+          "mode": "list",
+          "cachedResultName": "tvpx_crawl_run_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/yWenhwOARipjjBIq"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "crawl_run_id",
+              "keyValue": "={{$json.crawl_run_update.crawl_run_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "apify_run_id": "={{$json.crawl_run_update.apify_run_id}}",
+            "dataset_id": "={{$json.crawl_run_update.dataset_id}}",
+            "status": "={{$json.crawl_run_update.status}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c2fefec7-1717-4fd1-85c6-c13dfa4f7c34",
+      "name": "Update Crawl Ledger With Run",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "datasetItems"
+      },
+      "id": "821514f1-84ea-4e45-86a4-c1de85dccf33",
+      "name": "Apify Get Dataset Items",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Normalize Crawl Items\n * Converts dataset items into canonical pages with {url,title,text}\n * Assumes each item includes url/title/text-like fields; adapt mapping here to your actor output.\n */\n\nconst base = $items('Normalize Apify Run Output')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\n\nconst items = $input.all().map(i => i.json);\n\n// Actor outputs vary; try common patterns.\nconst pages = items.map((it, idx) => {\n  const url = String(it.url || it.pageUrl || it.request?.url || it.requestUrl || '').trim();\n  const title = String(it.title || it.pageTitle || it.metadata?.title || '').trim();\n  const text = String(it.text || it.content || it.pageText || it.markdown || it.bodyText || '').trim();\n  return { url, title, text, index: idx };\n}).filter(p => p.url && p.text);\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_id: ctx.crawl_run_id,\n    pages\n  }\n}];"
+      },
+      "id": "2b3fee92-698e-4b3a-b7fa-82e9ab61cdd4",
+      "name": "Normalize Crawl Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Chunk And Clean Text\n * - Retains legacy chunking/payload concept\n * - Produces fragment items shaped for tvpx_text_fragment_bank\n * - Keeps creative goal: extracts \"charged\" paragraphs, tension words, material cues\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nfunction clean(s) {\n  return String(s || '')\n    .replace(/\\r/g, '')\n    .replace(/[\\t ]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nfunction splitParagraphs(text) {\n  return clean(text)\n    .split(/\\n\\n+/)\n    .map(p => clean(p))\n    .filter(Boolean);\n}\n\n// Simple signal scoring: prioritizes paragraphs likely to produce Velvet Paradox concepts.\nconst SIGNAL = [\n  'pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain',\n  'residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile',\n  'ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'\n];\n\nfunction scorePara(p) {\n  const t = p.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (t.includes(w)) score += 1;\n  // reward tactile material language\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle)/i.test(p)) score += 2;\n  return score;\n}\n\nconst j = $json;\nconst ctx = j.ctx;\nconst source = j.source;\nconst pages = Array.isArray(j.pages) ? j.pages : [];\n\nconst maxFragChars = Number(ctx.max_fragment_chars || 2200);\nconst maxFragsPerPage = Number(ctx.max_fragments_per_page || 8);\n\nconst out = [];\n\nfor (const page of pages) {\n  const paras = splitParagraphs(page.text);\n  // pick best paragraphs first, then pack into fragments\n  const ranked = paras\n    .map((p, idx) => ({ p, idx, s: scorePara(p) }))\n    .sort((a,b) => b.s - a.s);\n\n  const chosen = ranked.slice(0, Math.min(ranked.length, maxFragsPerPage * 3)).map(x => x.p);\n\n  // pack into fragments up to maxFragChars\n  let buf = '';\n  let chunkIndex = 0;\n\n  for (const p of chosen) {\n    const add = buf ? (buf + '\\n\\n' + p) : p;\n    if (add.length > maxFragChars && buf) {\n      const cleaned = clean(buf);\n      const hash = fnv1a(`${ctx.trace_id}::${ctx.crawl_run_id}::${page.url}::${chunkIndex}::${cleaned}`);\n      out.push({\n        ctx,\n        source,\n        fragment: {\n          fragment_id: `tvpx_fg_${hash}`,\n          crawl_run_id: ctx.crawl_run_id,\n          source_id: ctx.source_id,\n          page_url: page.url,\n          page_title: page.title || '',\n          chunk_index: chunkIndex,\n          fragment_hash: hash,\n          raw_text: buf,\n          cleaned_text: cleaned,\n          token_estimate: Math.ceil(cleaned.length / 4),\n          qa_status: 'clean'\n        }\n      });\n      buf = p;\n      chunkIndex += 1;\n      if (chunkIndex >= maxFragsPerPage) break;\n    } else {\n      buf = add;\n    }\n  }\n\n  if (buf && chunkIndex < maxFragsPerPage) {\n    const cleaned = clean(buf);\n    const hash = fnv1a(`${ctx.trace_id}::${ctx.crawl_run_id}::${page.url}::${chunkIndex}::${cleaned}`);\n    out.push({\n      ctx,\n      source,\n      fragment: {\n        fragment_id: `tvpx_fg_${hash}`,\n        crawl_run_id: ctx.crawl_run_id,\n        source_id: ctx.source_id,\n        page_url: page.url,\n        page_title: page.title || '',\n        chunk_index: chunkIndex,\n        fragment_hash: hash,\n        raw_text: buf,\n        cleaned_text: cleaned,\n        token_estimate: Math.ceil(cleaned.length / 4),\n        qa_status: 'clean'\n      }\n    });\n  }\n}\n\nif (!out.length) {\n  // Still proceed, but ledger will mark empty.\n  return [{ json: { ctx, source, fragments: [], empty: true } }];\n}\n\nreturn out.map(o => ({ json: o }));"
+      },
+      "id": "22f08a87-ef1d-4729-9f7f-104dbe78eb33",
+      "name": "Chunk And Clean Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "DOpMQGynGFn8U3vb",
+          "mode": "list",
+          "cachedResultName": "tvpx_text_fragment_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DOpMQGynGFn8U3vb"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fragment_id",
+              "keyValue": "={{$json.fragment.fragment_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fragment_id": "={{$json.fragment.fragment_id}}",
+            "crawl_run_id": "={{$json.fragment.crawl_run_id}}",
+            "source_id": "={{$json.fragment.source_id}}",
+            "page_url": "={{$json.fragment.page_url}}",
+            "page_title": "={{$json.fragment.page_title}}",
+            "chunk_index": "={{$json.fragment.chunk_index}}",
+            "fragment_hash": "={{$json.fragment.fragment_hash}}",
+            "raw_text": "={{$json.fragment.raw_text}}",
+            "cleaned_text": "={{$json.fragment.cleaned_text}}",
+            "token_estimate": "={{$json.fragment.token_estimate}}",
+            "qa_status": "={{$json.fragment.qa_status}}",
+            "created_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "482680a6-5b4b-4eea-b222-ddb7ac4f1d29",
+      "name": "Upsert Text Fragments",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Update Crawl Ledger Final\n * - Marks run completed, writes counts\n * - Ensures ctx preserved after fragment upserts\n */\n\n// Source + ctx from earlier stable node\nconst base = $items('Normalize Apify Run Output')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\n\nconst fragmentsInserted = $input.all().length;\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_final: {\n      crawl_run_id: ctx.crawl_run_id,\n      status: 'completed',\n      completed_at: new Date().toISOString(),\n      raw_item_count: Number($items('Apify Get Dataset Items').length || 0),\n      page_count: Number(($items('Normalize Crawl Items')[0]?.json?.pages || []).length),\n      fragment_count: fragmentsInserted\n    }\n  }\n}];"
+      },
+      "id": "802537ac-7b07-40b0-9d1f-de4c5512745a",
+      "name": "Build Crawl Final Ledger Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2576,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "yWenhwOARipjjBIq",
+          "mode": "list",
+          "cachedResultName": "tvpx_crawl_run_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/yWenhwOARipjjBIq"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "crawl_run_id",
+              "keyValue": "={{$json.crawl_run_final.crawl_run_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{$json.crawl_run_final.status}}",
+            "completed_at": "={{$json.crawl_run_final.completed_at}}",
+            "raw_item_count": "={{$json.crawl_run_final.raw_item_count}}",
+            "page_count": "={{$json.crawl_run_final.page_count}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "crawl_run_id",
+              "displayName": "crawl_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "trigger_mode",
+              "displayName": "trigger_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "apify_run_id",
+              "displayName": "apify_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "dataset_id",
+              "displayName": "dataset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "page_count",
+              "displayName": "page_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "raw_item_count",
+              "displayName": "raw_item_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_text",
+              "displayName": "error_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "fc72bfed-e48c-4610-9f6e-50a07b6c6de5",
+      "name": "Update Crawl Ledger Final",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__20__Concept Forge And Brief Pool",
+          "mode": "list",
+          "cachedResultName": "TVPX__20__Concept Forge And Brief Pool",
+          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__20__Concept Forge And Brief Pool"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "af7cdc5d-78f0-445b-b536-3c3960afde11",
+      "name": "Call Concept Forge",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        176
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e24d190a-d45d-48c8-ad7c-2d07de732304",
+      "name": "Next Source",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3248,
+        416
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8cacdc81-1bcd-401b-b011-c04a6815ca93",
+      "name": "Context Hold For Apify Run",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        784,
+        272
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Get Active Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Sources": {
+      "main": [
+        [
+          {
+            "node": "Reattach Context After Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach Context After Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Sources": {
+      "main": [
+        [
+          {
+            "node": "Build Crawl Run Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Next Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Crawl Run Record": {
+      "main": [
+        [
+          {
+            "node": "Write Crawl Run Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Crawl Run Start": {
+      "main": [
+        [
+          {
+            "node": "Build Apify Request Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Apify Request Body": {
+      "main": [
+        [
+          {
+            "node": "Apify Run Crawler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Context Hold For Apify Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Run Crawler": {
+      "main": [
+        [
+          {
+            "node": "Merge Context And Apify Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Context And Apify Run": {
+      "main": [
+        [
+          {
+            "node": "Normalize Apify Run Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Apify Run Output": {
+      "main": [
+        [
+          {
+            "node": "Update Crawl Ledger With Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Crawl Ledger With Run": {
+      "main": [
+        [
+          {
+            "node": "Apify Get Dataset Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Get Dataset Items": {
+      "main": [
+        [
+          {
+            "node": "Normalize Crawl Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Crawl Items": {
+      "main": [
+        [
+          {
+            "node": "Chunk And Clean Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunk And Clean Text": {
+      "main": [
+        [
+          {
+            "node": "Upsert Text Fragments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Text Fragments": {
+      "main": [
+        [
+          {
+            "node": "Build Crawl Final Ledger Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Crawl Final Ledger Update": {
+      "main": [
+        [
+          {
+            "node": "Update Crawl Ledger Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Crawl Ledger Final": {
+      "main": [
+        [
+          {
+            "node": "Call Concept Forge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Concept Forge": {
+      "main": [
+        [
+          {
+            "node": "Next Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context Hold For Apify Run": {
+      "main": [
+        [
+          {
+            "node": "Merge Context And Apify Run",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Next Source": {
+      "main": [
+        [
+          {
+            "node": "Loop Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "490dfbef-4dba-46e2-aab8-3725b1cf30ce",
+  "activeVersionId": null,
+  "versionCounter": 75,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T13:57:34.571Z",
+      "createdAt": "2026-03-05T13:57:34.571Z",
+      "role": "workflow:owner",
+      "workflowId": "Q5NWVXP1AWnlw95F",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

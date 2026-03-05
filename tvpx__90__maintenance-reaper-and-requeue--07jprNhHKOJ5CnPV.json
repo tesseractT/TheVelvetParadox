@@ -1,0 +1,755 @@
+{
+  "updatedAt": "2026-03-05T20:17:07.094Z",
+  "createdAt": "2026-03-05T16:35:08.998Z",
+  "id": "07jprNhHKOJ5CnPV",
+  "name": "TVPX__90__Maintenance Reaper And Requeue",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d2537bd5-0e10-4dd2-a66b-2657d344dc46",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope (TVPX__90)\n * Minimal schema, high reliability.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 4000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: baseCtx.trigger_mode || 'maintenance',\n  route_mode: 'maintenance_reaper',\n  received_at: now,\n\n  // knobs (safe defaults)\n  stale_lock_grace_minutes: Number(baseCtx.stale_lock_grace_minutes || incoming.stale_lock_grace_minutes || 5),\n  stale_job_minutes: Number(baseCtx.stale_job_minutes || incoming.stale_job_minutes || 20),\n  batch_size: Number(baseCtx.batch_size || incoming.batch_size || 20)\n};\n\nreturn [{ json: { ctx } }];"
+      },
+      "id": "6da65c33-e69a-4721-a70a-5b86e4171b18",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "keyValue": "locked"
+            }
+          ]
+        }
+      },
+      "id": "9e29fbfb-33d7-42e7-b6cc-fc4338c24445",
+      "name": "Get Locked Concepts",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Filter Stale Concept Locks\n * Unlock if lock_expires_at is in the past (with optional grace).\n */\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\n\nconst rows = $input.all().map(i => i.json);\n\nconst graceMs = Number(ctx.stale_lock_grace_minutes || 0) * 60_000;\nconst now = Date.now();\n\nconst stale = rows.filter(r => {\n  const exp = String(r.lock_expires_at || '').trim();\n  if (!exp) return false;\n  const t = Date.parse(exp);\n  if (!Number.isFinite(t)) return false;\n  return (t + graceMs) < now;\n});\n\nreturn stale.map(r => ({ json: { ctx, concept: r } }));"
+      },
+      "id": "60b868c0-558b-4cae-93c1-48c685f11f8a",
+      "name": "Filter Stale Concept Locks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{$items('Initialize Envelope')[0].json.ctx.batch_size}}",
+        "options": {}
+      },
+      "id": "d2a1b9f1-c137-4c19-a7dd-6a35110c973a",
+      "name": "Batch Unlock Concepts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Unlock Update\n */\nconst j = $json;\nconst ctx = j.ctx;\nconst c = j.concept;\n\nreturn [{\n  json: {\n    ctx,\n    update: {\n      concept_id: String(c.concept_id || '').trim(),\n      from_state: String(c.state || '').trim(),\n      lock_owner: String(c.lock_owner || '').trim(),\n      lock_expires_at: String(c.lock_expires_at || '').trim(),\n      new_state: 'ready',\n      updated_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "11f9b0f3-c6c9-475b-b542-581f836f5dd5",
+      "name": "Build Unlock Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_ID__tvpx_concept_pool",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/REPLACE_PROJECT_ID/datatables/REPLACE_WITH_ID__tvpx_concept_pool"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "concept_id",
+              "keyValue": "={{$json.update.concept_id}}"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "locked"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "ready",
+            "lock_owner": "",
+            "lock_expires_at": "",
+            "updated_at": "={{$json.update.updated_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a5aa7dac-dd42-4bf6-8a04-55cab91446de",
+      "name": "Unlock Concept",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        864,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Failure Audit Row (Unlock)\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst ctx = $json.ctx;\nconst u = $json.update;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${fnv1a(ctx.trace_id + '::unlock::' + u.concept_id + '::' + now)}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'maintenance_unlock_stale_concept',\n      entity_type: 'concept',\n      entity_id: u.concept_id,\n      severity: 'warn',\n      payload_snapshot_json: JSON.stringify(u).slice(0, 18000),\n      error_text: `Unlocked stale lock (expired at ${u.lock_expires_at}, owner ${u.lock_owner}).`,\n      retry_count: 0,\n      status: 'closed',\n      created_at: now\n    }\n  }\n}];"
+      },
+      "id": "17027fad-bae0-4598-b56d-d3dc8f780322",
+      "name": "Build Audit Unlock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "N16VM5U0EMaPVs0E",
+          "mode": "list",
+          "cachedResultName": "tvpx_failure_audit",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/N16VM5U0EMaPVs0E"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "failure_id",
+              "keyValue": "={{$json.failure.failure_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "failure_id": "={{$json.failure.failure_id}}",
+            "trace_id": "={{$json.failure.trace_id}}",
+            "stage_name": "={{$json.failure.stage_name}}",
+            "entity_type": "={{$json.failure.entity_type}}",
+            "entity_id": "={{$json.failure.entity_id}}",
+            "severity": "={{$json.failure.severity}}",
+            "payload_snapshot_json": "={{$json.failure.payload_snapshot_json}}",
+            "error_text": "={{$json.failure.error_text}}",
+            "retry_count": "={{$json.failure.retry_count}}",
+            "status": "={{$json.failure.status}}",
+            "created_at": "={{$json.failure.created_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9b10fc1d-f468-4a97-8922-fbc69200eee0",
+      "name": "Upsert Audit Unlock",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        168
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "keyValue": "submitting"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "queued"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "running"
+            }
+          ]
+        }
+      },
+      "id": "29707145-4d53-4ea9-895a-bbc45572950c",
+      "name": "Get In Flight Jobs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Filter Stale Jobs\n * Marks jobs timed_out if started_at is older than stale_job_minutes.\n */\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\n\nconst rows = $input.all().map(i => i.json);\n\nconst maxAgeMs = Number(ctx.stale_job_minutes || 20) * 60_000;\nconst now = Date.now();\n\nconst stale = rows.filter(r => {\n  const started = String(r.started_at || r.created_at || '').trim();\n  const t = Date.parse(started);\n  if (!Number.isFinite(t)) return false;\n  return (now - t) > maxAgeMs;\n});\n\nreturn stale.map(r => ({ json: { ctx, job: r } }));"
+      },
+      "id": "6d9be2c3-90ab-4776-a892-b14ca780bfb0",
+      "name": "Filter Stale Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        528
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "batchSize": "={{$items('Initialize Envelope')[0].json.ctx.batch_size}}",
+        "options": {}
+      },
+      "id": "3aa8fa87-6da4-4863-9c1a-234ea558fa51",
+      "name": "Batch Jobs",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Job Timeout Update\n */\nconst j = $json;\nconst ctx = j.ctx;\nconst job = j.job;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    update: {\n      job_id: String(job.job_id || '').trim(),\n      from_state: String(job.state || '').trim(),\n      started_at: String(job.started_at || '').trim(),\n      new_state: 'timed_out',\n      error_text: `Maintenance timeout: exceeded ${ctx.stale_job_minutes} minutes in state ${job.state}.`,\n      completed_at: now\n    }\n  }\n}];"
+      },
+      "id": "a608b963-5159-48d1-8844-7464f00d977e",
+      "name": "Build Job Timeout Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.update.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "timed_out",
+            "error_text": "={{$json.update.error_text}}",
+            "completed_at": "={{$json.update.completed_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "81c4fa96-beb4-400c-a2fe-9a68bb36f076",
+      "name": "Update Job Timed Out",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        864,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Failure Audit Row (Job Timeout)\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst ctx = $json.ctx;\nconst u = $json.update;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${fnv1a(ctx.trace_id + '::job_timeout::' + u.job_id + '::' + now)}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'maintenance_timeout_generation_job',\n      entity_type: 'generation_job',\n      entity_id: u.job_id,\n      severity: 'warn',\n      payload_snapshot_json: JSON.stringify(u).slice(0, 18000),\n      error_text: u.error_text,\n      retry_count: 0,\n      status: 'closed',\n      created_at: now\n    }\n  }\n}];"
+      },
+      "id": "17667897-e0ed-4050-8231-ed8edc553705",
+      "name": "Build Audit Job Timeout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "N16VM5U0EMaPVs0E",
+          "mode": "list",
+          "cachedResultName": "tvpx_failure_audit",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/N16VM5U0EMaPVs0E"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "failure_id",
+              "keyValue": "={{$json.failure.failure_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "failure_id": "={{$json.failure.failure_id}}",
+            "trace_id": "={{$json.failure.trace_id}}",
+            "stage_name": "={{$json.failure.stage_name}}",
+            "entity_type": "={{$json.failure.entity_type}}",
+            "entity_id": "={{$json.failure.entity_id}}",
+            "severity": "={{$json.failure.severity}}",
+            "payload_snapshot_json": "={{$json.failure.payload_snapshot_json}}",
+            "error_text": "={{$json.failure.error_text}}",
+            "retry_count": "={{$json.failure.retry_count}}",
+            "status": "={{$json.failure.status}}",
+            "created_at": "={{$json.failure.created_at}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "failure_id",
+              "displayName": "failure_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage_name",
+              "displayName": "stage_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "entity_type",
+              "displayName": "entity_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "entity_id",
+              "displayName": "entity_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payload_snapshot_json",
+              "displayName": "payload_snapshot_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_text",
+              "displayName": "error_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "next_retry_at",
+              "displayName": "next_retry_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "706194ef-1c60-4f60-989c-e072aa8c5ead",
+      "name": "Upsert Audit Job Timeout",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        600
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "da3281a1-73a9-46bc-804c-7e09f8f5f2a3",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        192
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Get Locked Concepts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get In Flight Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Locked Concepts": {
+      "main": [
+        [
+          {
+            "node": "Filter Stale Concept Locks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Stale Concept Locks": {
+      "main": [
+        [
+          {
+            "node": "Batch Unlock Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Unlock Concepts": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Unlock Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Unlock Update": {
+      "main": [
+        [
+          {
+            "node": "Unlock Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unlock Concept": {
+      "main": [
+        [
+          {
+            "node": "Build Audit Unlock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Audit Unlock": {
+      "main": [
+        [
+          {
+            "node": "Upsert Audit Unlock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get In Flight Jobs": {
+      "main": [
+        [
+          {
+            "node": "Filter Stale Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Stale Jobs": {
+      "main": [
+        [
+          {
+            "node": "Batch Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Jobs": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Job Timeout Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Job Timeout Update": {
+      "main": [
+        [
+          {
+            "node": "Update Job Timed Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job Timed Out": {
+      "main": [
+        [
+          {
+            "node": "Build Audit Job Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Audit Job Timeout": {
+      "main": [
+        [
+          {
+            "node": "Upsert Audit Job Timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Audit Unlock": {
+      "main": [
+        [
+          {
+            "node": "Batch Unlock Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Audit Job Timeout": {
+      "main": [
+        [
+          {
+            "node": "Batch Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4d83b120-0798-4144-91db-570fee44c7e6",
+  "activeVersionId": null,
+  "versionCounter": 19,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T16:35:08.998Z",
+      "createdAt": "2026-03-05T16:35:08.998Z",
+      "role": "workflow:owner",
+      "workflowId": "07jprNhHKOJ5CnPV",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

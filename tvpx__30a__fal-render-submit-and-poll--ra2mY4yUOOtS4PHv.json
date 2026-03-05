@@ -1,0 +1,1025 @@
+{
+  "updatedAt": "2026-03-05T19:57:41.092Z",
+  "createdAt": "2026-03-05T15:57:06.003Z",
+  "id": "ra2mY4yUOOtS4PHv",
+  "name": "TVPX__30A__Fal Render Submit And Poll",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6ea0db96-ac15-4f52-b63e-b5d6532017dc",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3200,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope (TVPX__30A)\n * Bulletproof normalization for a single fal render job.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\n// Required inputs\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\nconst variant = String(incoming.render_variant || incoming.variant_key || '').trim();\nconst prompt = String(incoming.prompt || '').trim();\nconst neg = String(incoming.negative_prompt || '').trim();\n\nif (!conceptId) throw new Error('TVPX__30A: Missing concept_id.');\nif (!variant) throw new Error('TVPX__30A: Missing render_variant (color|bw).');\nif (prompt.length < 40) throw new Error('TVPX__30A: prompt too short / missing.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  poll_interval_seconds: Number(baseCtx.poll_interval_seconds || incoming.poll_interval_seconds || 8)\n};\n\nconst controls = (incoming.provider_controls && typeof incoming.provider_controls === 'object') ? incoming.provider_controls : {};\n\nconst imageSize = String(controls.image_size || incoming.image_size || baseCtx.image_size || '1024x1280');\nconst background = String(controls.background || incoming.background || baseCtx.background || 'opaque');\nconst quality = String(controls.quality || incoming.quality || baseCtx.quality || 'high');\nconst outputFormat = String(controls.output_format || incoming.output_format || baseCtx.output_format || 'png');\n\n// Provider endpoint key: keep configurable per project later; default to proven legacy still endpoint\nconst endpointUrl = String(incoming.fal_endpoint_url || baseCtx.fal_endpoint_url || 'https://queue.fal.run/fal-ai/gpt-image-1.5');\n\n// Make one robust prompt body: keep negative guidance inside prompt to avoid provider schema mismatch\nconst finalPrompt = neg\n  ? `${prompt}\\n\\nAVOID (negative guidance): ${neg}`\n  : prompt;\n\nconst jobId = `tvpx_job_${fnv1a(`${traceId}::${conceptId}::${variant}::${now}`)}`;\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      job_id: jobId,\n      concept_id: conceptId,\n      render_variant: variant,\n      provider_name: 'fal',\n      endpoint_url: endpointUrl,\n      request: {\n        prompt: finalPrompt,\n        image_size: imageSize,\n        background,\n        quality,\n        num_images: 1,\n        output_format: outputFormat,\n        sync_mode: false\n      },\n      // Keep original prompt + negative separately for audit\n      prompt_raw: prompt,\n      negative_prompt_raw: neg\n    }\n  }\n}];"
+      },
+      "id": "cc050267-f722-4d9e-a7b1-304179b93724",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2976,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.job.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{$json.job.job_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "concept_id": "={{$json.job.concept_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "variant_key": "={{$json.job.render_variant}}",
+            "provider_name": "={{$json.job.provider_name}}",
+            "endpoint_key": "={{$json.job.endpoint_url}}",
+            "request_payload_json": "={{JSON.stringify($json.job.request)}}",
+            "state": "submitting",
+            "poll_count": 0,
+            "started_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f4ddbf53-55d7-4f7c-b6de-6ada39fd35f4",
+      "name": "Write Job Start",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2752,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.job.endpoint_url}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.job.request}}",
+        "options": {
+          "response": {},
+          "timeout": 120000
+        }
+      },
+      "id": "8f01a30c-75b8-4061-be37-1c7d411dcf87",
+      "name": "Fal Submit Render",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -2528,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Normalize Submit Response\n * Expected (typical fal queue): { request_id / id?, status_url, response_url }\n * We store status_url + response_url and move into polling.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\n\nconst statusUrl = String(body.status_url || body.statusUrl || body.data?.status_url || '').trim();\nconst responseUrl = String(body.response_url || body.responseUrl || body.data?.response_url || '').trim();\nconst providerJobId = String(body.request_id || body.id || body.requestId || '').trim();\n\nif (!statusUrl && !responseUrl) {\n  // Some fal endpoints may return only status_url; accept either, but require at least one.\n  throw new Error('Fal submit did not return status_url or response_url. Check endpoint and auth.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      ...job,\n      provider_job_id: providerJobId,\n      status_url: statusUrl,\n      response_url: responseUrl,\n      state: 'queued'\n    }\n  }\n}];"
+      },
+      "id": "f111111e-4bf4-45fb-bd4e-1c1eccd09377",
+      "name": "Normalize Submit Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2304,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.job.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "provider_job_id": "={{$json.job.provider_job_id}}",
+            "status_url": "={{$json.job.status_url}}",
+            "response_url": "={{$json.job.response_url}}",
+            "state": "={{$json.job.state}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4d2eec55-f0e7-47a3-bec5-a2151e8b589a",
+      "name": "Update Job With URLs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Poll State\n */\nconst j = $json;\nconst ctx = j.ctx;\nconst job = j.job;\n\nreturn [{\n  json: {\n    ctx,\n    job,\n    poll: {\n      tries: 0,\n      max: Number(ctx.poll_max || 24),\n      interval_seconds: Number(ctx.poll_interval_seconds || 8)\n    }\n  }\n}];"
+      },
+      "id": "c657b3b5-7ef6-4831-8b13-4c8c12db3438",
+      "name": "Initialize Poll State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{$json.poll.interval_seconds}}",
+        "unit": "seconds"
+      },
+      "id": "f97276a2-ff41-4123-b506-e2abeaff2e2f",
+      "name": "Wait Poll Interval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        256
+      ],
+      "webhookId": "3fec0836-edc8-4b26-a9c7-4472c6473df1"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.job.status_url || $json.job.response_url}}",
+        "options": {
+          "response": {},
+          "timeout": 120000
+        }
+      },
+      "id": "0b982c81-b1d7-451e-bead-e1f8935e8942",
+      "name": "Fal Poll Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1408,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Normalize Poll Response\n * Common fal poll responses include: { status: 'IN_PROGRESS'|'COMPLETED'|'FAILED', ... , images:[{url}], image:{url} }\n */\n\nconst base = $items('Initialize Poll State')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\nconst poll = base.poll;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\n\nconst statusRaw = String(body.status || body.data?.status || '').trim();\nconst status = statusRaw ? statusRaw.toUpperCase() : '';\n\n// Try to extract image url\nlet imageUrl = '';\nif (Array.isArray(body.images) && body.images.length) {\n  imageUrl = String(body.images[0]?.url || body.images[0] || '').trim();\n}\nif (!imageUrl && body.image) {\n  imageUrl = String(body.image.url || body.image || '').trim();\n}\nif (!imageUrl && body.result && Array.isArray(body.result.images) && body.result.images.length) {\n  imageUrl = String(body.result.images[0]?.url || '').trim();\n}\n\nconst errorText = String(body.error || body.message || body.data?.error || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      ...job,\n      polled_status: status,\n      provider_image_url: imageUrl,\n      error_text: errorText\n    },\n    poll\n  }\n}];"
+      },
+      "id": "308701ae-171e-47de-b9d4-c13619df7ae0",
+      "name": "Normalize Poll Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "is_done",
+              "leftValue": "={{$json.job.polled_status}}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7567b19e-d611-4683-bb12-a7aae81b4b72",
+      "name": "Is Completed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "is_failed",
+              "leftValue": "={{$json.job.polled_status}}",
+              "rightValue": "FAILED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c1d4d2f6-f53a-458e-8085-cdada81f8df5",
+      "name": "Is Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Increment Poll\n * Loops until completed/failed/timeout.\n */\n\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst poll = $json.poll;\n\npoll.tries = Number(poll.tries || 0) + 1;\n\nconst max = Number(poll.max || 24);\nconst timedOut = poll.tries >= max;\n\nreturn [{\n  json: {\n    ctx,\n    job,\n    poll,\n    timed_out: timedOut\n  }\n}];"
+      },
+      "id": "85e613cc-b4ea-4956-8432-5b66856ce0ee",
+      "name": "Increment Poll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "is_timed_out",
+              "leftValue": "={{$json.timed_out}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0a3c01f3-4050-42d9-9343-cc8b3b25e66b",
+      "name": "Is Timed Out",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.job.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "poll_count": "={{$json.poll.tries}}",
+            "state": "running"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "29315736-a88b-4d8d-840c-0a4d365038ef",
+      "name": "Update Job Running",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Finalize Success\n * Return payload contract expected by Workflow 30.\n */\n\nconst ctx = $json.ctx;\nconst job = $json.job;\n\nconst imageUrl = String(job.provider_image_url || '').trim();\nif (!imageUrl) {\n  throw new Error('Fal reported COMPLETED but no image URL was found in response.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    image_url: imageUrl,\n    completed_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "46b9c234-cc49-4d68-a020-550350eaf867",
+      "name": "Finalize Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "completed",
+            "completed_at": "={{$json.completed_at}}",
+            "image_url": "={{$json.image_url}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "04240b9c-934c-427a-8492-003f3521c5a1",
+      "name": "Update Job Completed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/** Finalize Failure */\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst err = String(job.error_text || 'Fal job failed.').trim();\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    error_text: err,\n    failed_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "0609965a-bafe-4968-b1d3-25ff5977d1ef",
+      "name": "Finalize Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "failed",
+            "completed_at": "={{$json.failed_at}}",
+            "error_text": "={{$json.error_text}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "91d05b9c-8825-4042-b339-a0a12b6e0a68",
+      "name": "Update Job Failed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/** Finalize Timed Out */\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst poll = $json.poll;\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    error_text: `Timed out after ${poll.tries} polls.`,\n    failed_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "66c434f8-275d-4ae8-9711-9b42bfbdd470",
+      "name": "Finalize Timed Out",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1LbUzG38EzilvO0",
+          "mode": "list",
+          "cachedResultName": "tvpx_generation_job_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/V1LbUzG38EzilvO0"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "keyValue": "={{$json.job_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "timed_out",
+            "completed_at": "={{$json.failed_at}}",
+            "error_text": "={{$json.error_text}}",
+            "poll_count": "={{$json.ctx.poll_max}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "concept_id",
+              "displayName": "concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "parent_asset_id",
+              "displayName": "parent_asset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "asset_family_id",
+              "displayName": "asset_family_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "variant_key",
+              "displayName": "variant_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "provider_name",
+              "displayName": "provider_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "endpoint_key",
+              "displayName": "endpoint_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "request_payload_json",
+              "displayName": "request_payload_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "provider_job_id",
+              "displayName": "provider_job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "response_url",
+              "displayName": "response_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status_url",
+              "displayName": "status_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "poll_count",
+              "displayName": "poll_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_text",
+              "displayName": "error_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2346ca51-26df-4e4c-a4a6-7c54f519f6ff",
+      "name": "Update Job Timed Out",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Finalize Success')[0]?.json;\nif (!base) throw new Error('TVPX__30A: missing Finalize Success payload.');\n\nreturn [{\n  json: {\n    ...base,\n    status: 'completed'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -16
+      ],
+      "id": "ec9e47b6-654d-46d5-ae30-1cd66602a247",
+      "name": "Return Completed Payload"
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Finalize Timed Out')[0]?.json;\nif (!base) throw new Error('TVPX__30A: missing Finalize Timed Out payload.');\n\nreturn [{\n  json: {\n    ...base,\n    status: 'timed_out'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        368
+      ],
+      "id": "9b4c0da3-19e8-42e2-b6e3-337a603fc96f",
+      "name": "Return Timed Out Payload"
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Finalize Failed')[0]?.json;\nif (!base) throw new Error('TVPX__30A: missing Finalize Failed payload.');\n\nreturn [{\n  json: {\n    ...base,\n    status: 'failed'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        560
+      ],
+      "id": "2456bb01-130c-4221-9523-6cd71e5f79aa",
+      "name": "Return Failed Payload"
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Write Job Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Job Start": {
+      "main": [
+        [
+          {
+            "node": "Fal Submit Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fal Submit Render": {
+      "main": [
+        [
+          {
+            "node": "Normalize Submit Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Submit Response": {
+      "main": [
+        [
+          {
+            "node": "Update Job With URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job With URLs": {
+      "main": [
+        [
+          {
+            "node": "Initialize Poll State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Poll State": {
+      "main": [
+        [
+          {
+            "node": "Wait Poll Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Poll Interval": {
+      "main": [
+        [
+          {
+            "node": "Fal Poll Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fal Poll Status": {
+      "main": [
+        [
+          {
+            "node": "Normalize Poll Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Poll Response": {
+      "main": [
+        [
+          {
+            "node": "Is Completed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Failed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Increment Poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Completed": {
+      "main": [
+        [
+          {
+            "node": "Finalize Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Success": {
+      "main": [
+        [
+          {
+            "node": "Update Job Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Failed": {
+      "main": [
+        [
+          {
+            "node": "Finalize Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Failed": {
+      "main": [
+        [
+          {
+            "node": "Update Job Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment Poll": {
+      "main": [
+        [
+          {
+            "node": "Is Timed Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Timed Out": {
+      "main": [
+        [
+          {
+            "node": "Finalize Timed Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Job Running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job Running": {
+      "main": [
+        [
+          {
+            "node": "Wait Poll Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Timed Out": {
+      "main": [
+        [
+          {
+            "node": "Update Job Timed Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job Completed": {
+      "main": [
+        [
+          {
+            "node": "Return Completed Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job Timed Out": {
+      "main": [
+        [
+          {
+            "node": "Return Timed Out Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Job Failed": {
+      "main": [
+        [
+          {
+            "node": "Return Failed Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "1abe5c9d-e6e0-472d-9a32-6e26a2a1b2d1",
+  "activeVersionId": null,
+  "versionCounter": 29,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T15:57:06.003Z",
+      "createdAt": "2026-03-05T15:57:06.003Z",
+      "role": "workflow:owner",
+      "workflowId": "ra2mY4yUOOtS4PHv",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,0 +1,1078 @@
+{
+  "updatedAt": "2026-03-05T20:00:12.355Z",
+  "createdAt": "2026-03-05T14:22:37.384Z",
+  "id": "8KjucHiZTtdGzCrh",
+  "name": "TVPX__30__Image Generation Dual Mode",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8f561ace-da86-4c2c-9997-f27f95cccdad",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2128,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope (TVPX__30)\n * - Normalizes inbound payloads\n * - Ensures ctx exists\n * - Ensures concept_id is optional (we can pick one)\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\nconst familyId = baseCtx.asset_family_id || `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'image_generate_dual',\n  received_at: now,\n\n  // optional knobs\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1280'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15)\n};\n\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    concept_id: conceptId || null\n  }\n}];"
+      },
+      "id": "80c99f0a-153f-4f31-baa2-49cdc56075bf",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1904,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "has_concept_id",
+              "leftValue": "={{!!$json.concept_id}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2c69023a-f4b4-4510-9f98-03897d3ca05c",
+      "name": "Has Concept Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "concept_id",
+              "keyValue": "={{$json.concept_id}}"
+            }
+          ]
+        }
+      },
+      "id": "852db98f-5ad8-4733-b91a-82734b5ca88f",
+      "name": "Get Concept By Id",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "keyValue": "ready"
+            }
+          ]
+        }
+      },
+      "id": "8457536b-0c61-4719-9139-97f5c0d1c39b",
+      "name": "Get Ready Concepts",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Select Best Concept\n * - Anti-stock bias: prefer higher quality_score, lower used_count\n * - Safe if table returns different field shapes\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\n\nconst rows = $input.all().map(i => i.json);\nif (!rows.length) {\n  throw new Error('No ready concepts found in tvpx_concept_pool.');\n}\n\nfunction n(v, d=0){\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\n// Weighted score: quality dominates; penalize repetition\nconst scored = rows.map(r => {\n  const quality = n(r.quality_score, 0);\n  const used = n(r.used_count, 0);\n  const abstraction = n(r.abstraction_target, 6.2);\n  const noveltyPenalty = Math.min(used * 0.35, 2.0);\n  const abstractionPenalty = (abstraction < 5.4 || abstraction > 7.6) ? 0.6 : 0;\n  const score = quality - noveltyPenalty - abstractionPenalty;\n  return { r, score };\n}).sort((a,b) => b.score - a.score);\n\nconst picked = scored[0].r;\nconst conceptId = String(picked.concept_id || picked.id || picked.dt_row_id || '').trim();\nif (!conceptId) throw new Error('Concept row missing concept_id.');\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    concept_row: picked\n  }\n}];"
+      },
+      "id": "265777f3-e815-44d5-963c-75030f5f5d26",
+      "name": "Select Best Concept",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Reattach Context After Get Concept\n * Converts DataTable row to canonical envelope.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\n\nconst row = $input.all()[0]?.json || null;\nif (!row) throw new Error('Concept not found for provided concept_id.');\n\nconst conceptId = String(row.concept_id || row.id || row.dt_row_id || '').trim();\nif (!conceptId) throw new Error('Fetched concept row missing concept_id.');\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    concept_row: row\n  }\n}];"
+      },
+      "id": "63637042-3c76-49e3-bb11-328b575e8a91",
+      "name": "Reattach Context After Get Concept",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Lock Payload\n */\n\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date();\nconst expires = new Date(now.getTime() + (Number(ctx.lock_ttl_minutes || 15) * 60_000));\n\nreturn [{\n  json: {\n    ...j,\n    lock: {\n      lock_owner: ctx.trace_id,\n      lock_expires_at: expires.toISOString(),\n      locked_at: now.toISOString()\n    }\n  }\n}];"
+      },
+      "id": "e8837124-20a6-456d-a965-daab2b60ff84",
+      "name": "Build Lock Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "concept_id",
+              "keyValue": "={{$json.concept_id}}"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "ready"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "locked",
+            "lock_owner": "={{$json.lock.lock_owner}}",
+            "lock_expires_at": "={{$json.lock.lock_expires_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ab4b073e-474b-412c-aa99-cc825c08e621",
+      "name": "Lock Concept",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "concept_id",
+              "keyValue": "={{$json.concept_id}}"
+            }
+          ]
+        }
+      },
+      "id": "955ffaa7-ff78-47e9-867d-9b62f981a16b",
+      "name": "Fetch Locked Concept",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Verify Lock Ownership\n * Ensures we own the lock; otherwise bail safely.\n */\n\nconst base = $items('Build Lock Payload')[0].json;\nconst ctx = base.ctx;\nconst row = $input.all()[0]?.json;\nif (!row) throw new Error('Failed to refetch locked concept row.');\n\nconst owner = String(row.lock_owner || '').trim();\nconst state = String(row.state || '').trim();\n\nif (state !== 'locked' || owner !== ctx.trace_id) {\n  throw new Error(`Lock not acquired. state='${state}' lock_owner='${owner}' expected='${ctx.trace_id}'`);\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: base.concept_id,\n    concept_row: row\n  }\n}];"
+      },
+      "id": "d4dc1bf1-34b5-4a9e-9363-177044b3fffa",
+      "name": "Verify Lock Ownership",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "options": {}
+      },
+      "id": "3872ab30-a67d-4a4c-922a-dd946e582c1a",
+      "name": "OpenAI Director Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=SYSTEM\nYou are TVPX__LLM__Final_Render_Prompt_Smith for The Velvet Paradox.\n\nYour job is to convert a vetted concept row into a premium image-generation prompt.\n\nRules:\n- Keep the scene representational and photographically legible.\n- Preserve material honesty, tactile surfaces, and cinematic light behavior.\n- Avoid stock tropes, corporate gloss, generic portrait language, and adjective bloat.\n- Build one strong master prompt and one strong negative prompt.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"aspect_ratio\": \"4:5\",\n  \"image_size\": \"1024x1280\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\"\n  }\n}\n\nUSER\nConcept row:\n- Concept thesis: {{ $json.concept_row.concept_thesis }}\n- Symbolic tension: {{ $json.concept_row.symbolic_tension }}\n- Material anchor: {{ $json.concept_row.material_anchor }}\n- Spatial directive: {{ $json.concept_row.spatial_directive }}\n- Abstraction target: {{ $json.concept_row.abstraction_target }}\n\nSeries DNA:\n{{ $json.concept_row.series_dna_json }}\n\nGuardrails:\n{{ $json.concept_row.prompt_guardrails_json }}\n\nWrite a render prompt that feels expensive, specific, and cinematic."
+            }
+          ]
+        }
+      },
+      "id": "61b6b408-6177-4910-a734-d81b26a06790",
+      "name": "LLM Render Prompt Smith",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('Parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim()\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    try {\n      return JSON.parse(slice);\n    } catch (err) {\n      throw new Error(`Parser: invalid salvaged JSON. ${err.message}`);\n    }\n  }\n\n  throw new Error('Parser: could not find a valid JSON object.');\n}\n\nconst BASE_NODE = 'Verify Lock Ownership';\nconst OUT_KEY = 'render_spec';\n\nconst base = $items(BASE_NODE)[0]?.json;\nif (!base) {\n  throw new Error(`Parser: base node \"${BASE_NODE}\" returned no data.`);\n}\n\nconst parsed = parseStrictJson($json);\n\n// Per-output hardening\nif (OUT_KEY === 'critic') {\n  parsed.approve = Boolean(parsed.approve);\n  for (const key of ['score', 'brand_fit', 'novelty', 'visual_viability']) {\n    parsed[key] = Number(parsed[key] || 0);\n  }\n}\n\nif (OUT_KEY === 'abstraction') {\n  let a = Number(parsed.abstraction_target || 6.2);\n  const min = Number(base.ctx?.target_abstraction_min || 5.8);\n  const max = Number(base.ctx?.target_abstraction_max || 6.8);\n  if (!Number.isFinite(a)) a = 6.2;\n  a = Math.max(min, Math.min(max, a));\n  parsed.abstraction_target = Math.round(a * 10) / 10;\n}\n\nif (OUT_KEY === 'render_spec') {\n  parsed.image_size = String(parsed.image_size || base.ctx?.image_size || '1024x1280');\n  parsed.provider_controls = (parsed.provider_controls && typeof parsed.provider_controls === 'object')\n    ? parsed.provider_controls\n    : {};\n  parsed.provider_controls.quality = String(parsed.provider_controls.quality || base.ctx?.quality || 'high');\n  parsed.provider_controls.background = String(parsed.provider_controls.background || base.ctx?.background || 'opaque');\n  parsed.provider_controls.output_format = String(parsed.provider_controls.output_format || base.ctx?.output_format || 'png');\n}\n\nif (OUT_KEY === 'caption_pack') {\n  parsed.hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\n  parsed.keywords = Array.isArray(parsed.keywords) ? parsed.keywords : [];\n}\n\nif (OUT_KEY === 'series_plan') {\n  parsed.variations = Array.isArray(parsed.variations) ? parsed.variations : [];\n}\n\nreturn [{\n  json: {\n    ...base,\n    [OUT_KEY]: parsed\n  }\n}];"
+      },
+      "id": "2de08715-9ff4-4e59-8e04-00f691153bc4",
+      "name": "Parse Render Spec",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Dual Render Packets\n * Produces two items: color and bw, derived from same master.\n */\n\nconst j = $json;\nconst ctx = j.ctx;\nconst spec = j.render_spec;\n\nconst master = String(spec.master_prompt || '').trim();\nconst negative = String(spec.negative_prompt || '').trim();\nif (master.length < 40) throw new Error('Bad render spec: master_prompt too short.');\n\nconst imageSize = String(spec.image_size || '1024x1280');\nconst controls = spec.provider_controls || {};\n\nconst colorPrompt = [\n  master,\n  'Color grade: muted cinematic base (olive/sepia/ashen cream/damp gray) with at most one meaningful saturation puncture (amber/marigold/turquoise/orange).',\n  'Lighting: chiaroscuro or diffused haze; preserve tactile materials and surface tension.'\n].join(' ');\n\nconst bwPrompt = [\n  master,\n  'Black-and-white only. No color cast. Silver-gelatin tonal separation, velvet blacks, luminous midtones, tactile surface contrast, atmospheric haze.'\n].join(' ');\n\nconst common = {\n  image_size: imageSize,\n  background: String(controls.background || 'opaque'),\n  quality: String(controls.quality || 'high'),\n  output_format: String(controls.output_format || 'png')\n};\n\nreturn [\n  {\n    json: {\n      ctx,\n      concept_id: j.concept_id,\n      concept_row: j.concept_row,\n      render_variant: 'color',\n      prompt: colorPrompt,\n      negative_prompt: negative,\n      provider_controls: common\n    }\n  },\n  {\n    json: {\n      ctx,\n      concept_id: j.concept_id,\n      concept_row: j.concept_row,\n      render_variant: 'bw',\n      prompt: bwPrompt,\n      negative_prompt: negative,\n      provider_controls: common\n    }\n  }\n];"
+      },
+      "id": "9c895086-fbe6-4a00-b1e2-82c904888224",
+      "name": "Build Dual Render Packets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "is_color",
+              "leftValue": "={{$json.render_variant}}",
+              "rightValue": "color",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cd976680-9755-49ff-a180-6803c24255c6",
+      "name": "Is Color Variant",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        688,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll",
+          "mode": "list",
+          "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
+          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "9876fb3b-71a9-44b2-b844-372759ccc1bb",
+      "name": "Render Color Via Fal",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        912,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll",
+          "mode": "list",
+          "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
+          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__30A__Fal Render Submit And Poll"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "de399038-7558-464a-b398-449dde6ec3ae",
+      "name": "Render B W Via Fal",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        912,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "mergeByIndex",
+        "options": {}
+      },
+      "id": "fc179617-83dc-4a38-bc99-6267f0df287b",
+      "name": "Merge Color And B W",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Assemble Asset Family\n * Expects two subworkflow results; normalizes into a single payload for Workflow 40.\n */\n\nconst items = $input.all().map(i => i.json);\n\n// We expect each item includes render_variant and image_url\nconst by = {};\nfor (const it of items) {\n  const k = String(it.render_variant || '').trim();\n  if (k) by[k] = it;\n}\n\nconst color = by.color;\nconst bw = by.bw;\nif (!color || !bw) {\n  throw new Error(`Missing color or bw render results. Got keys: ${Object.keys(by).join(', ')}`);\n}\n\nconst ctx = color.ctx || bw.ctx;\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: String(color.concept_id || bw.concept_id || '').trim(),\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color,\n      bw\n    }\n  }\n}];"
+      },
+      "id": "56626bb7-c28a-463a-8619-3f573a4018df",
+      "name": "Assemble Asset Family",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_WORKFLOW_ID__TVPX__40__Asset Finalizer And Telegram Dispatch",
+          "mode": "list",
+          "cachedResultName": "TVPX__40__Asset Finalizer And Telegram Dispatch",
+          "cachedResultUrl": "/workflow/REPLACE_WITH_WORKFLOW_ID__TVPX__40__Asset Finalizer And Telegram Dispatch"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "026f6384-9683-47b6-8c14-774b5a1e701b",
+      "name": "Call Asset Finalizer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "concept_id",
+              "keyValue": "={{$json.concept_id}}"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "locked"
+            },
+            {
+              "keyName": "lock_owner",
+              "keyValue": "={{$json.ctx.trace_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "rendered",
+            "updated_at": "={{$now}}",
+            "last_used_at": "={{$now}}",
+            "used_count": "={{Number($json.concept_row.used_count || 0) + 1}}",
+            "abstraction_target": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "concept_id",
+              "displayName": "concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "origin_type",
+              "displayName": "origin_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parent_concept_id",
+              "displayName": "parent_concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "root_concept_id",
+              "displayName": "root_concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "seed_fragment_ids_json",
+              "displayName": "seed_fragment_ids_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "concept_thesis",
+              "displayName": "concept_thesis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "symbolic_tension",
+              "displayName": "symbolic_tension",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "material_anchor",
+              "displayName": "material_anchor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "spatial_directive",
+              "displayName": "spatial_directive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "palette_directive",
+              "displayName": "palette_directive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "texture_directive",
+              "displayName": "texture_directive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "abstraction_target",
+              "displayName": "abstraction_target",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "series_dna_json",
+              "displayName": "series_dna_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prompt_guardrails_json",
+              "displayName": "prompt_guardrails_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "quality_score",
+              "displayName": "quality_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lock_owner",
+              "displayName": "lock_owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lock_expires_at",
+              "displayName": "lock_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "used_count",
+              "displayName": "used_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_used_at",
+              "displayName": "last_used_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rejection_reason",
+              "displayName": "rejection_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ee13a635-3a36-41cf-a957-d4228deec983",
+      "name": "Mark Concept Rendered",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Failure Audit Builder\n * Use this on any branch you decide to wire into it.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${ctx.trace_id}_${now.replace(/[:.]/g,'')}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'TVPX__30__Image Generation Dual Mode',\n      entity_type: 'concept',\n      entity_id: String(base.concept_id || ''),\n      severity: 'error',\n      payload_snapshot_json: JSON.stringify(base).slice(0, 18000),\n      error_text: 'See execution logs (n8n).',\n      retry_count: 0,\n      status: 'open',\n      created_at: now\n    }\n  }\n}];"
+      },
+      "id": "4e172281-4211-4adb-998e-241f4d82ba9a",
+      "name": "Build Failure Audit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "N16VM5U0EMaPVs0E",
+          "mode": "list",
+          "cachedResultName": "tvpx_failure_audit",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/N16VM5U0EMaPVs0E"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "failure_id",
+              "keyValue": "={{$json.failure.failure_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "failure_id": "={{$json.failure.failure_id}}",
+            "trace_id": "={{$json.failure.trace_id}}",
+            "stage_name": "={{$json.failure.stage_name}}",
+            "entity_type": "={{$json.failure.entity_type}}",
+            "entity_id": "={{$json.failure.entity_id}}",
+            "severity": "={{$json.failure.severity}}",
+            "payload_snapshot_json": "={{$json.failure.payload_snapshot_json}}",
+            "error_text": "={{$json.failure.error_text}}",
+            "retry_count": "={{$json.failure.retry_count}}",
+            "status": "={{$json.failure.status}}",
+            "created_at": "={{$json.failure.created_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a4f55031-cca3-447c-a854-4a5d0bbd644c",
+      "name": "Upsert Failure Audit",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2128,
+        816
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Has Concept Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Concept Id": {
+      "main": [
+        [
+          {
+            "node": "Get Concept By Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Ready Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Concept By Id": {
+      "main": [
+        [
+          {
+            "node": "Reattach Context After Get Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ready Concepts": {
+      "main": [
+        [
+          {
+            "node": "Select Best Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Best Concept": {
+      "main": [
+        [
+          {
+            "node": "Build Lock Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach Context After Get Concept": {
+      "main": [
+        [
+          {
+            "node": "Build Lock Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Lock Payload": {
+      "main": [
+        [
+          {
+            "node": "Lock Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lock Concept": {
+      "main": [
+        [
+          {
+            "node": "Fetch Locked Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Locked Concept": {
+      "main": [
+        [
+          {
+            "node": "Verify Lock Ownership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Lock Ownership": {
+      "main": [
+        [
+          {
+            "node": "LLM Render Prompt Smith",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Render Prompt Smith": {
+      "main": [
+        [
+          {
+            "node": "Parse Render Spec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Render Spec": {
+      "main": [
+        [
+          {
+            "node": "Build Dual Render Packets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Dual Render Packets": {
+      "main": [
+        [
+          {
+            "node": "Is Color Variant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Color Variant": {
+      "main": [
+        [
+          {
+            "node": "Render Color Via Fal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Render B W Via Fal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Color Via Fal": {
+      "main": [
+        [
+          {
+            "node": "Merge Color And B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render B W Via Fal": {
+      "main": [
+        [
+          {
+            "node": "Merge Color And B W",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Color And B W": {
+      "main": [
+        [
+          {
+            "node": "Assemble Asset Family",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Asset Family": {
+      "main": [
+        [
+          {
+            "node": "Call Asset Finalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Asset Finalizer": {
+      "main": [
+        [
+          {
+            "node": "Mark Concept Rendered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Director Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Render Prompt Smith",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "27574bc1-e4aa-422d-8626-9ab88457759f",
+  "activeVersionId": null,
+  "versionCounter": 26,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T14:22:37.384Z",
+      "createdAt": "2026-03-05T14:22:37.384Z",
+      "role": "workflow:owner",
+      "workflowId": "8KjucHiZTtdGzCrh",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
