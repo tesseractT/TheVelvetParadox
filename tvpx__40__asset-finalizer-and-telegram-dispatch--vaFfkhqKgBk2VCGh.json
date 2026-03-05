@@ -34,24 +34,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "has_chat",
-              "leftValue": "={{!!$json.ctx.telegram_chat_id}}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+              "value1": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
+              "operation": "equals",
+              "value2": "true"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },

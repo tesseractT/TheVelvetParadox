@@ -34,24 +34,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "has_concept_id",
-              "leftValue": "={{!!$json.concept_id}}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+              "value1": "={{$json.concept_id ? 'true' : 'false'}}",
+              "operation": "equals",
+              "value2": "true"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },
@@ -320,24 +309,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "is_color",
-              "leftValue": "={{$json.render_variant}}",
-              "rightValue": "color",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "value1": "={{$json.render_variant}}",
+              "operation": "equals",
+              "value2": "color"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },

@@ -76,24 +76,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "number": [
             {
-              "id": "has_frags",
-              "leftValue": "={{Array.isArray($json.fragments) ? $json.fragments.length : 0}}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "larger"
-              }
+              "value1": "={{Array.isArray($json.fragments) ? $json.fragments.length : 0}}",
+              "operation": "larger",
+              "value2": 0
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },
@@ -468,42 +457,25 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "approve_bool",
-              "leftValue": "={{$json.critic.approve}}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            },
-            {
-              "id": "score_floor",
-              "leftValue": "={{$json.critic.score}}",
-              "rightValue": 7.2,
-              "operator": {
-                "type": "number",
-                "operation": "largerEqual"
-              }
-            },
-            {
-              "id": "brand_floor",
-              "leftValue": "={{$json.critic.brand_fit}}",
-              "rightValue": 7,
-              "operator": {
-                "type": "number",
-                "operation": "largerEqual"
-              }
+              "value1": "={{$json.critic.approve ? 'true' : 'false'}}",
+              "operation": "equals",
+              "value2": "true"
             }
           ],
-          "combinator": "and"
+          "number": [
+            {
+              "value1": "={{$json.critic.score}}",
+              "operation": "largerEqual",
+              "value2": 7.2
+            },
+            {
+              "value1": "={{$json.critic.brand_fit}}",
+              "operation": "largerEqual",
+              "value2": 7
+            }
+          ]
         },
         "options": {}
       },

@@ -239,24 +239,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "is_done",
-              "leftValue": "={{$json.job.polled_status}}",
-              "rightValue": "COMPLETED",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "value1": "={{$json.job.polled_status}}",
+              "operation": "equals",
+              "value2": "COMPLETED"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },
@@ -272,24 +261,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "is_failed",
-              "leftValue": "={{$json.job.polled_status}}",
-              "rightValue": "FAILED",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "value1": "={{$json.job.polled_status}}",
+              "operation": "equals",
+              "value2": "FAILED"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },
@@ -318,24 +296,13 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "is_timed_out",
-              "leftValue": "={{$json.timed_out}}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+              "value1": "={{$json.timed_out ? 'true' : 'false'}}",
+              "operation": "equals",
+              "value2": "true"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },

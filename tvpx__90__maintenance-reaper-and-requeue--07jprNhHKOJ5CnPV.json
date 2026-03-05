@@ -127,8 +127,8 @@
           "mappingMode": "defineBelow",
           "value": {
             "state": "ready",
-            "lock_owner": "",
-            "lock_expires_at": "",
+            "lock_owner": "={{null}}",
+            "lock_expires_at": "={{null}}",
             "updated_at": "={{$json.update.updated_at}}"
           },
           "attemptToConvertTypes": false,
