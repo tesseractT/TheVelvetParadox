@@ -184,9 +184,7 @@
           "mode": "list",
           "cachedResultName": "gpt-5.2"
         },
-        "options": {
-          "responseFormat": "json_object"
-        }
+        "options": {}
       },
       "id": "0237d211-cbee-4118-83ef-344c55c9b8c8",
       "name": "OpenAI Series Model",
@@ -212,12 +210,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "87bc97cb-7f53-41c4-86f0-69d9d9529ca9",
       "name": "LLM Series Variation Designer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         -224,
         352
@@ -555,48 +555,7 @@
           "value": "grok-4-1-fast-reasoning",
           "cachedResultName": "grok-4-1-fast-reasoning"
         },
-        "options": {
-          "responseFormat": "json_object"
-        }
-      }
-    },
-    {
-      "id": "3e7454ce-3b7f-42fb-b3cb-d5f45165222f",
-      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-      "type": "@n8n/n8n-nodes-langchain.modelSelector",
-      "typeVersion": 1,
-      "position": [
-        120,
-        680
-      ],
-      "parameters": {
-        "rules": {
-          "rule": [
-            {
-              "conditions": {
-                "options": {
-                  "version": 2,
-                  "caseSensitive": false,
-                  "typeValidation": "strict"
-                },
-                "combinator": "and",
-                "conditions": [
-                  {
-                    "id": "86400276-549e-424b-8ac9-8b1527d96337",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
-                    "rightValue": "xai"
-                  }
-                ]
-              },
-              "modelIndex": 1
-            }
-          ]
-        },
-        "numberInputs": 2
+        "options": {}
       }
     }
   ],
@@ -782,7 +741,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "node": "LLM Series Variation Designer",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -815,20 +774,9 @@
       "ai_languageModel": [
         [
           {
-            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-            "type": "ai_languageModel",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
-      "ai_languageModel": [
-        [
-          {
             "node": "LLM Series Variation Designer",
             "type": "ai_languageModel",
-            "index": 0
+            "index": 1
           }
         ]
       ]

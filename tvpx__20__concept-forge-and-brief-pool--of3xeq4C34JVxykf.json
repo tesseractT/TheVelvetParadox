@@ -255,9 +255,7 @@
           "mode": "list",
           "cachedResultName": "gpt-5.2"
         },
-        "options": {
-          "responseFormat": "json_object"
-        }
+        "options": {}
       },
       "id": "a07bb513-dc85-4880-8c86-c07d3ddc9bda",
       "name": "OpenAI Director Model",
@@ -283,12 +281,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "3d1ed93b-ab1d-449a-b598-a629f282eb23",
       "name": "LLM Theme Seizer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         -160,
         304
@@ -316,12 +316,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "8c12c68a-2141-4f70-aef1-fc89512c67ee",
       "name": "LLM Symbolic Tension",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         416,
         304
@@ -349,12 +351,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "243231f7-e01e-4da0-bd7b-479ff09f94e7",
       "name": "LLM Abstraction Balancer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         992,
         304
@@ -382,12 +386,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "9dc28733-c813-4eee-b97b-6f8e7311cace",
       "name": "LLM Composition Architect",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         1568,
         304
@@ -415,12 +421,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "6b08c6f4-9c90-43be-bafa-a9d6ecd43c25",
       "name": "LLM Chromatic Director",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         2144,
         304
@@ -448,12 +456,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "d7b725e4-cd11-493a-be0f-33d6de07bfbb",
       "name": "LLM Quality Critic",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         2720,
         304
@@ -1005,48 +1015,7 @@
           "value": "grok-4-1-fast-reasoning",
           "cachedResultName": "grok-4-1-fast-reasoning"
         },
-        "options": {
-          "responseFormat": "json_object"
-        }
-      }
-    },
-    {
-      "id": "9d97aaa7-09e1-48cb-b2b7-718c593fb458",
-      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-      "type": "@n8n/n8n-nodes-langchain.modelSelector",
-      "typeVersion": 1,
-      "position": [
-        176,
-        632
-      ],
-      "parameters": {
-        "rules": {
-          "rule": [
-            {
-              "conditions": {
-                "options": {
-                  "version": 2,
-                  "caseSensitive": false,
-                  "typeValidation": "strict"
-                },
-                "combinator": "and",
-                "conditions": [
-                  {
-                    "id": "867290df-46ce-4e82-8b68-80f2ae40269b",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
-                    "rightValue": "xai"
-                  }
-                ]
-              },
-              "modelIndex": 1
-            }
-          ]
-        },
-        "numberInputs": 2
+        "options": {}
       }
     }
   ],
@@ -1322,28 +1291,6 @@
       "ai_languageModel": [
         [
           {
-            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Director Model xAI Fallback Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-            "type": "ai_languageModel",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
-      "ai_languageModel": [
-        [
-          {
             "node": "LLM Theme Seizer",
             "type": "ai_languageModel",
             "index": 0
@@ -1372,6 +1319,42 @@
             "node": "LLM Quality Critic",
             "type": "ai_languageModel",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Director Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Theme Seizer",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Symbolic Tension",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Abstraction Balancer",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Composition Architect",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Chromatic Director",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Quality Critic",
+            "type": "ai_languageModel",
+            "index": 1
           }
         ]
       ]

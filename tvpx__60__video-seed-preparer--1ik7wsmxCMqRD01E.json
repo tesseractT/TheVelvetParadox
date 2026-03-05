@@ -131,9 +131,7 @@
     {
       "parameters": {
         "model": "gpt-5.1",
-        "options": {
-          "responseFormat": "json_object"
-        }
+        "options": {}
       },
       "id": "af6c7cca-9f2a-4477-ad10-a7ab3c6c2132",
       "name": "OpenAI Motion Model",
@@ -159,12 +157,14 @@
             }
           ]
         },
-        "promptType": "define"
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {}
       },
       "id": "6ce26d7c-c804-47ec-83f4-3875cc292e14",
       "name": "LLM Video Motion Translator",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
+      "typeVersion": 1.9,
       "position": [
         -304,
         96
@@ -265,48 +265,7 @@
           "value": "grok-4-1-fast-reasoning",
           "cachedResultName": "grok-4-1-fast-reasoning"
         },
-        "options": {
-          "responseFormat": "json_object"
-        }
-      }
-    },
-    {
-      "id": "8220b64d-2733-4936-b249-5b4101345360",
-      "name": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-      "type": "@n8n/n8n-nodes-langchain.modelSelector",
-      "typeVersion": 1,
-      "position": [
-        40,
-        424
-      ],
-      "parameters": {
-        "rules": {
-          "rule": [
-            {
-              "conditions": {
-                "options": {
-                  "version": 2,
-                  "caseSensitive": false,
-                  "typeValidation": "strict"
-                },
-                "combinator": "and",
-                "conditions": [
-                  {
-                    "id": "9bf6f2ba-e95c-44a0-b20e-10a7010d0059",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "leftValue": "={{ String($json.ctx?.llm_fallback_provider || $env.TVPX_LLM_FALLBACK_PROVIDER || \"\").toLowerCase() }}",
-                    "rightValue": "xai"
-                  }
-                ]
-              },
-              "modelIndex": 1
-            }
-          ]
-        },
-        "numberInputs": 2
+        "options": {}
       }
     }
   ],
@@ -443,7 +402,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
+            "node": "LLM Video Motion Translator",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -465,20 +424,9 @@
       "ai_languageModel": [
         [
           {
-            "node": "LLM Model Selector (OpenAI Primary, xAI Fallback)",
-            "type": "ai_languageModel",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "LLM Model Selector (OpenAI Primary, xAI Fallback)": {
-      "ai_languageModel": [
-        [
-          {
             "node": "LLM Video Motion Translator",
             "type": "ai_languageModel",
-            "index": 0
+            "index": 1
           }
         ]
       ]
