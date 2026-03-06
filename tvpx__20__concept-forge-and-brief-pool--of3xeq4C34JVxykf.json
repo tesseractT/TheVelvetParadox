@@ -33,6 +33,128 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond_crawl_run",
+              "leftValue": "={{($json.ctx.crawl_run_id || '').length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Has Crawl Run Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1168,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "yWenhwOARipjjBIq",
+          "mode": "list",
+          "cachedResultName": "tvpx_crawl_run_ledger",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/yWenhwOARipjjBIq"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "keyValue": "completed"
+            }
+          ]
+        },
+        "options": {
+          "limit": 20
+        }
+      },
+      "id": "c4d5e6f7-0004-4000-8000-000000000004",
+      "name": "Get Latest Crawl Run From Ledger",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Envelope From Ledger (manual run path)\n * Input: rows from Get Latest Crawl Run From Ledger. Pick latest by completed_at, build ctx/source.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst rows = $input.all().map(i => i.json).filter(Boolean);\nconst sorted = rows.slice().sort((a, b) => {\n  const ta = Date.parse(String(a.completed_at || a.started_at || ''));\n  const tb = Date.parse(String(b.completed_at || b.started_at || ''));\n  return (tb || 0) - (ta || 0);\n});\nconst row = sorted[0];\nconst now = new Date().toISOString();\n\nif (!row || !String(row.crawl_run_id || '').trim()) {\n  return [{\n    json: {\n      ctx: { crawl_run_id: '', source_id: '', trace_id: `tvpx_${fnv1a(now)}` },\n      source: {},\n      manual_run_instructions: true,\n      message: \"No completed crawl run found in tvpx_crawl_run_ledger. Run tvpx__10 first or provide crawl_run_id when triggering this workflow.\"\n    }\n  }];\n}\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: String(row.trace_id || '').trim() || `tvpx_${fnv1a(now + (row.crawl_run_id || ''))}`,\n  trigger_mode: String(row.trigger_mode || '').trim() || 'manual',\n  route_mode: 'concept_forge',\n  received_at: now,\n  crawl_run_id: String(row.crawl_run_id || '').trim(),\n  source_id: String(row.source_id || '').trim(),\n  max_fragments_for_llm: 10,\n  max_chars_per_fragment_for_llm: 1400,\n  target_abstraction_min: 5.8,\n  target_abstraction_max: 6.8\n};\nconst source = {};\n\nreturn [{ json: { ctx, source, input: row, carry: {}, provided_fragments: [] } }];"
+      },
+      "id": "d5e6f7a8-0005-4000-8000-000000000005",
+      "name": "Build Envelope From Ledger",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond_ledger_crawl_run",
+              "leftValue": "={{($json.ctx.crawl_run_id || '').length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e6f7a8b9-0006-4000-8000-000000000006",
+      "name": "Has Ledger Row",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -944,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Manual Run Instructions (TVPX__20)\n * Shown when workflow is run without required payload and no completed run in ledger.\n */\nconst ctx = $json.ctx || {};\nreturn [{\n  json: {\n    ctx,\n    manual_run_instructions: true,\n    message: \"When running this workflow manually, provide input with at least crawl_run_id (and optionally source_id). Get crawl_run_id from tvpx_crawl_run_ledger or tvpx_text_fragment_bank.\",\n    required_payload: {\n      crawl_run_id: \"required \u2014 from tvpx_crawl_run_ledger.crawl_run_id or tvpx_text_fragment_bank.crawl_run_id\",\n      source_id: \"optional \u2014 from source registry\",\n      ctx: \"optional \u2014 { trace_id?, trigger_mode?, max_fragments_for_llm?, target_abstraction_min?, target_abstraction_max? }\",\n      source: \"optional \u2014 { source_url?, crawl_profile?, ... } for LLM context\",\n    },\n    example: { crawl_run_id: \"tvpx_cr_<hash>\", source_id: \"nautilus\" },\n  },\n}];"
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Manual Run Instructions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        460
+      ]
+    },
+    {
+      "parameters": {
         "operation": "get",
         "dataTableId": {
           "__rl": true,
@@ -62,7 +184,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Reattach Context After Fragments\n */\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\n\nconst dtRows = $input.all().map(i => i.json);\nconst provided = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst fragments = dtRows.length ? dtRows : provided;\n\nreturn [{ json: { ctx, source, fragments } }];"
+        "jsCode": "/**\n * Reattach Context After Fragments\n * Use envelope from manual-run path (Build Envelope From Ledger) when present, else from trigger (Initialize Envelope).\n */\nconst base = $items('Build Envelope From Ledger')[0]?.json || $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst source = base.source || {};\n\nconst dtRows = $input.all().map(i => i.json);\nconst provided = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst fragments = dtRows.length ? dtRows : provided;\n\nreturn [{ json: { ctx, source, fragments } }];"
       },
       "id": "ee925050-b69c-497b-95e0-0d7a08784efd",
       "name": "Reattach Context After Fragments",
@@ -236,7 +358,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Assemble Fragment Bundle\n * Selects high-signal fragments aligned with The Velvet Paradox creative DNA.\n */\nfunction clean(s) {\n  return String(s || '').replace(/\\r/g, '').replace(/[\\t ]+/g, ' ').trim();\n}\nfunction clip(s, n) {\n  const t = clean(s);\n  return t.length > n ? t.slice(0, n) + '…' : t;\n}\nconst base = $json;\nconst ctx = base.ctx;\nconst source = base.source || {};\nconst frags = Array.isArray(base.fragments) ? base.fragments : [];\n\nconst SIGNAL = ['pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain','residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile','ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'];\nfunction scoreFrag(t) {\n  const s = t.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (s.includes(w)) score += 1;\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle|mirror|arch|stair)/i.test(t)) score += 3;\n  if (t.length > 500) score += 1;\n  return score;\n}\n\nconst normalized = frags.map(f => {\n  const cleaned = clean(f.cleaned_text || f.text || f.raw_text || '');\n  return {\n    fragment_id: String(f.fragment_id || f.id || f.dt_row_id || '').trim(),\n    page_url: String(f.page_url || f.url || '').trim(),\n    page_title: String(f.page_title || f.title || '').trim(),\n    cleaned_text: cleaned\n  };\n}).filter(x => x.cleaned_text);\n\nnormalized.sort((a,b) => scoreFrag(b.cleaned_text) - scoreFrag(a.cleaned_text));\n\nconst takeN = Math.max(3, Math.min(Number(ctx.max_fragments_for_llm || 10), 16));\nconst maxChars = Math.max(600, Math.min(Number(ctx.max_chars_per_fragment_for_llm || 1400), 2200));\n\nconst picked = normalized.slice(0, takeN).map(x => ({\n  fragment_id: x.fragment_id,\n  page_url: x.page_url,\n  page_title: x.page_title,\n  excerpt: clip(x.cleaned_text, maxChars)\n}));\n\nconst excerptBlock = picked.map((p, i) => {\n  const head = `[#${i+1}] ${p.page_title || 'Untitled'} | ${p.page_url || ''}`.trim();\n  return `${head}\\n${p.excerpt}`;\n}).join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    bundle: {\n      source_id: ctx.source_id,\n      crawl_run_id: ctx.crawl_run_id,\n      fragment_ids: picked.map(p => p.fragment_id).filter(Boolean),\n      excerpt_block: excerptBlock\n    }\n  }\n}];"
+        "jsCode": "/**\n * Assemble Fragment Bundle\n * Selects high-signal fragments aligned with The Velvet Paradox creative DNA.\n */\nfunction clean(s) {\n  return String(s || '').replace(/\\r/g, '').replace(/[\\t ]+/g, ' ').trim();\n}\nfunction clip(s, n) {\n  const t = clean(s);\n  return t.length > n ? t.slice(0, n) + '\u2026' : t;\n}\nconst base = $json;\nconst ctx = base.ctx;\nconst source = base.source || {};\nconst frags = Array.isArray(base.fragments) ? base.fragments : [];\n\nconst SIGNAL = ['pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain','residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile','ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'];\nfunction scoreFrag(t) {\n  const s = t.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (s.includes(w)) score += 1;\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle|mirror|arch|stair)/i.test(t)) score += 3;\n  if (t.length > 500) score += 1;\n  return score;\n}\n\nconst normalized = frags.map(f => {\n  const cleaned = clean(f.cleaned_text || f.text || f.raw_text || '');\n  return {\n    fragment_id: String(f.fragment_id || f.id || f.dt_row_id || '').trim(),\n    page_url: String(f.page_url || f.url || '').trim(),\n    page_title: String(f.page_title || f.title || '').trim(),\n    cleaned_text: cleaned\n  };\n}).filter(x => x.cleaned_text);\n\nnormalized.sort((a,b) => scoreFrag(b.cleaned_text) - scoreFrag(a.cleaned_text));\n\nconst takeN = Math.max(3, Math.min(Number(ctx.max_fragments_for_llm || 10), 16));\nconst maxChars = Math.max(600, Math.min(Number(ctx.max_chars_per_fragment_for_llm || 1400), 2200));\n\nconst picked = normalized.slice(0, takeN).map(x => ({\n  fragment_id: x.fragment_id,\n  page_url: x.page_url,\n  page_title: x.page_title,\n  excerpt: clip(x.cleaned_text, maxChars)\n}));\n\nconst excerptBlock = picked.map((p, i) => {\n  const head = `[#${i+1}] ${p.page_title || 'Untitled'} | ${p.page_url || ''}`.trim();\n  return `${head}\\n${p.excerpt}`;\n}).join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    bundle: {\n      source_id: ctx.source_id,\n      crawl_run_id: ctx.crawl_run_id,\n      fragment_ids: picked.map(p => p.fragment_id).filter(Boolean),\n      excerpt_block: excerptBlock\n    }\n  }\n}];"
       },
       "id": "211f88cc-c34e-4468-94db-34eabc8090cb",
       "name": "Assemble Fragment Bundle",
@@ -1019,7 +1141,7 @@
       "main": [
         [
           {
-            "node": "Get Fragments For Run",
+            "node": "Has Crawl Run Id",
             "type": "main",
             "index": 0
           }
@@ -1328,6 +1450,64 @@
             "node": "LLM Quality Critic",
             "type": "ai_languageModel",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "Has Crawl Run Id": {
+      "main": [
+        [
+          {
+            "node": "Get Fragments For Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Latest Crawl Run From Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Crawl Run From Ledger": {
+      "main": [
+        [
+          {
+            "node": "Build Envelope From Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Envelope From Ledger": {
+      "main": [
+        [
+          {
+            "node": "Has Ledger Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Ledger Row": {
+      "main": [
+        [
+          {
+            "node": "Get Fragments For Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Manual Run Instructions",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
