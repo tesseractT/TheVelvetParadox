@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__40)\n * Expected input from Workflow 30:\n * {\n *   ctx, concept_id, asset_family_id,\n *   family: { color: { image_url, ... }, bw: { image_url, ... } }\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'asset_finalize_dispatch',\n  received_at: now,\n\n  // telegram + drive routing (prefer upstream ctx overrides)\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || baseCtx.chat_id || '').trim() || null,\n  drive_id: String(baseCtx.drive_id || incoming.drive_id || '').trim() || null,\n  drive_folder_id: String(baseCtx.drive_folder_id || incoming.drive_folder_id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nif (!conceptId) throw new Error('TVPX__40: Missing concept_id.');\nif (!ctx.asset_family_id) ctx.asset_family_id = `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst fam = incoming.family || {};\nconst color = fam.color || {};\nconst bw = fam.bw || {};\n\nconst colorUrl = String(color.image_url || color.provider_image_url || '').trim();\nconst bwUrl = String(bw.image_url || bw.provider_image_url || '').trim();\nif (!colorUrl || !bwUrl) {\n  throw new Error('TVPX__40: Missing color or bw image_url from generation results.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color: { ...color, image_url: colorUrl },\n      bw: { ...bw, image_url: bwUrl }\n    }\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__40)\n * Primary generation now finalizes the color asset only.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'asset_finalize_dispatch',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || baseCtx.chat_id || '').trim() || null,\n  drive_id: String(baseCtx.drive_id || incoming.drive_id || '').trim() || null,\n  drive_folder_id: String(baseCtx.drive_folder_id || incoming.drive_folder_id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nif (!conceptId) throw new Error('TVPX__40: Missing concept_id.');\nif (!ctx.asset_family_id) ctx.asset_family_id = `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst fam = incoming.family || {};\nconst color = fam.color || {};\nconst colorUrl = String(color.image_url || color.provider_image_url || '').trim();\nif (!colorUrl) {\n  throw new Error('TVPX__40: Missing color image_url from generation results.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color: { ...color, image_url: colorUrl }\n    }\n  }\n}];"
       },
       "id": "0ea173b1-0d9d-43c3-a8db-e03cbbf78041",
       "name": "Initialize Envelope",
@@ -208,7 +208,7 @@
         "binaryData": true,
         "binaryPropertyName": "image",
         "additionalFields": {
-          "caption": "={{'The Velvet Paradox — Color (primary)\\nConcept: ' + $json.concept_id + '\\nReply to THIS image with /series 4 (or /series 3 more fog) to spawn variations.'}}"
+          "caption": "={{'The Velvet Paradox — Color (primary)\\nConcept: ' + $json.concept_id + '\\nReply to THIS image with /series 4 for variations, /bw for monochrome, or /video for motion prep.'}}"
         }
       },
       "id": "e1469df0-4599-4b4c-bb57-bf00e9d7596e",
@@ -230,7 +230,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Capture Telegram Message Id (Color)\n */\nconst base = $items('Normalize Drive Result Color')[0].json;\nconst ctx = base.ctx;\n\nif (ctx.telegram_disabled) {\n  return [{ json: { ...base, telegram: { color_message_id: null } } }];\n}\n\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\nif (!msgId) throw new Error('Telegram sendPhoto did not return message_id.');\n\nreturn [{\n  json: {\n    ...base,\n    telegram: {\n      color_message_id: Number(msgId)\n    }\n  }\n}];"
+        "jsCode": "/**\n * Capture Telegram Message Id (Color)\n */\nconst base = $items('Normalize Drive Result Color')[0].json;\nconst ctx = base.ctx;\n\nif (ctx.telegram_disabled) {\n  return [{ json: { ...base, telegram: { color_message_id: null } } }];\n}\n\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\n\nif (!msgId) {\n  return [{\n    json: {\n      ...base,\n      telegram: {\n        color_message_id: null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...base,\n    telegram: {\n      color_message_id: Number(msgId)\n    }\n  }\n}];"
       },
       "id": "8faa77de-dde7-4dc2-83e3-fcfad76e5146",
       "name": "Capture Telegram Message Id Color",
@@ -274,7 +274,7 @@
             "asset_family_id": "={{$json.asset_family_id}}",
             "concept_id": "={{$json.concept_id}}",
             "message_role": "primary_color",
-            "reply_mode": "series_spawn",
+            "reply_mode": "reply_actions",
             "is_active": true,
             "created_at": "={{$now}}"
           },
@@ -447,7 +447,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/** Capture Telegram Message Id (B W) */\nconst base = $items('Normalize Drive Result B W')[0].json;\nconst ctx = base.ctx;\n\nif (ctx.telegram_disabled) {\n  return [{ json: { ...base, telegram: { ...(base.telegram||{}), bw_message_id: null } } }];\n}\n\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\nif (!msgId) throw new Error('Telegram sendPhoto (B W) did not return message_id.');\n\nreturn [{\n  json: {\n    ...base,\n    telegram: {\n      ...(base.telegram || {}),\n      bw_message_id: Number(msgId)\n    }\n  }\n}];"
+        "jsCode": "/** Capture Telegram Message Id (B W) */\nconst base = $items('Normalize Drive Result B W')[0].json;\nconst ctx = base.ctx;\n\nif (ctx.telegram_disabled) {\n  return [{ json: { ...base, telegram: { ...(base.telegram||{}), bw_message_id: null } } }];\n}\n\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\n\nif (!msgId) {\n  return [{\n    json: {\n      ...base,\n      telegram: {\n        ...(base.telegram || {}),\n        bw_message_id: null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...base,\n    telegram: {\n      ...(base.telegram || {}),\n      bw_message_id: Number(msgId)\n    }\n  }\n}];"
       },
       "id": "ca5c2728-b8b1-439c-871b-c2d2154bc3ab",
       "name": "Capture Telegram Message Id B W",
@@ -540,14 +540,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Caption_Alchemist for The Velvet Paradox.\n\nYour job is to write a restrained, premium caption pack.\n\nRules:\n- Suggest meaning; do not over-explain.\n- Do not describe the image literally unless in alt text.\n- Avoid vague mysticism, pseudo-poetry, and cliché.\n- Keep hashtags curated.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"caption_hook\": \"...\",\n  \"caption_body\": \"...\",\n  \"hashtags\": [\"...\"],\n  \"alt_text\": \"...\",\n  \"keywords\": [\"...\"]\n}"
+              "message": "=You are TVPX__LLM__Caption_Alchemist for The Velvet Paradox.\n\nYour job is to write a restrained, premium caption pack.\n\nRules:\n- Suggest meaning; do not over-explain.\n- Do not describe the image literally unless in alt text.\n- Avoid vague mysticism, pseudo-poetry, and cliché.\n- Let the copy feel like memory after stylization: tactile, lucid, ceremonially strange, emotionally exact.\n- Keep hashtags curated and brand-consistent.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"caption_hook\": \"...\",\n  \"caption_body\": \"...\",\n  \"hashtags\": [\"...\"],\n  \"alt_text\": \"...\",\n  \"keywords\": [\"...\"]\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
         "batching": {},
-        "text": "=Creative context:\n- Concept ID: {{ $json.concept_id }}\n- Brand: {{ $json.ctx.brand_name }}\n- Color asset URL: {{ $json.assets.color.drive_view_url }}\n- B&W asset URL: {{ $json.assets.bw.drive_view_url }}\n\nConcept thesis:\n{{ $json.family.color.prompt_raw || $json.family.color.prompt || $json.concept_id }}\n\nWrite copy that feels lucid, tactile, and quietly uncanny."
+        "text": "=Creative context:\n- Concept ID: {{ $json.concept_id }}\n- Brand: {{ $json.ctx.brand_name }}\n- Color asset URL: {{ $json.assets.color.drive_view_url }}\n\nPrimary concept packet:\n{{ JSON.stringify($json.family.color.concept_snapshot || {}, null, 2) }}\n\nRender intent:\n{{ $json.family.color.prompt_final || $json.family.color.prompt_raw || $json.concept_id }}\n\nWrite copy that feels like memory after stylization: lucid, tactile, quietly uncanny, symbolically precise, and never overwritten."
       },
       "id": "589726b5-5553-40ef-a835-cc92c77b0536",
       "name": "LLM Caption Alchemist",
@@ -560,7 +560,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('Parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim()\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    try {\n      return JSON.parse(slice);\n    } catch (err) {\n      throw new Error(`Parser: invalid salvaged JSON. ${err.message}`);\n    }\n  }\n\n  throw new Error('Parser: could not find a valid JSON object.');\n}\n\nconst BASE_NODE = 'Capture Telegram Message Id B W';\nconst OUT_KEY = 'caption_pack';\n\nconst base = $items(BASE_NODE)[0]?.json;\nif (!base) {\n  throw new Error(`Parser: base node \"${BASE_NODE}\" returned no data.`);\n}\n\nconst parsed = parseStrictJson($json);\n\n// Per-output hardening\nif (OUT_KEY === 'critic') {\n  parsed.approve = Boolean(parsed.approve);\n  for (const key of ['score', 'brand_fit', 'novelty', 'visual_viability']) {\n    parsed[key] = Number(parsed[key] || 0);\n  }\n}\n\nif (OUT_KEY === 'abstraction') {\n  let a = Number(parsed.abstraction_target || 6.2);\n  const min = Number(base.ctx?.target_abstraction_min || 5.8);\n  const max = Number(base.ctx?.target_abstraction_max || 6.8);\n  if (!Number.isFinite(a)) a = 6.2;\n  a = Math.max(min, Math.min(max, a));\n  parsed.abstraction_target = Math.round(a * 10) / 10;\n}\n\nif (OUT_KEY === 'render_spec') {\n  parsed.image_size = String(parsed.image_size || base.ctx?.image_size || '1024x1280');\n  parsed.provider_controls = (parsed.provider_controls && typeof parsed.provider_controls === 'object')\n    ? parsed.provider_controls\n    : {};\n  parsed.provider_controls.quality = String(parsed.provider_controls.quality || base.ctx?.quality || 'high');\n  parsed.provider_controls.background = String(parsed.provider_controls.background || base.ctx?.background || 'opaque');\n  parsed.provider_controls.output_format = String(parsed.provider_controls.output_format || base.ctx?.output_format || 'png');\n}\n\nif (OUT_KEY === 'caption_pack') {\n  parsed.hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\n  parsed.keywords = Array.isArray(parsed.keywords) ? parsed.keywords : [];\n}\n\nif (OUT_KEY === 'series_plan') {\n  parsed.variations = Array.isArray(parsed.variations) ? parsed.variations : [];\n}\n\nreturn [{\n  json: {\n    ...base,\n    [OUT_KEY]: parsed\n  }\n}];"
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('Parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim()\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    try {\n      return JSON.parse(slice);\n    } catch (err) {\n      throw new Error(`Parser: invalid salvaged JSON. ${err.message}`);\n    }\n  }\n\n  throw new Error('Parser: could not find a valid JSON object.');\n}\n\nconst BASE_NODE = 'Capture Telegram Message Id Color';\nconst OUT_KEY = 'caption_pack';\n\nconst base = $items(BASE_NODE)[0]?.json;\nif (!base) {\n  throw new Error(`Parser: base node \"${BASE_NODE}\" returned no data.`);\n}\n\nconst parsed = parseStrictJson($json);\n\nif (OUT_KEY === 'critic') {\n  parsed.approve = Boolean(parsed.approve);\n  for (const key of ['score', 'brand_fit', 'novelty', 'visual_viability']) {\n    parsed[key] = Number(parsed[key] || 0);\n  }\n}\n\nif (OUT_KEY === 'abstraction') {\n  let a = Number(parsed.abstraction_target || 6.2);\n  const min = Number(base.ctx?.target_abstraction_min || 5.8);\n  const max = Number(base.ctx?.target_abstraction_max || 6.8);\n  if (!Number.isFinite(a)) a = 6.2;\n  a = Math.max(min, Math.min(max, a));\n  parsed.abstraction_target = Math.round(a * 10) / 10;\n}\n\nif (OUT_KEY === 'render_spec') {\n  parsed.image_size = String(parsed.image_size || base.ctx?.image_size || '1024x1280');\n  parsed.provider_controls = (parsed.provider_controls && typeof parsed.provider_controls === 'object')\n    ? parsed.provider_controls\n    : {};\n  parsed.provider_controls.quality = String(parsed.provider_controls.quality || base.ctx?.quality || 'high');\n  parsed.provider_controls.background = String(parsed.provider_controls.background || base.ctx?.background || 'opaque');\n  parsed.provider_controls.output_format = String(parsed.provider_controls.output_format || base.ctx?.output_format || 'png');\n}\n\nif (OUT_KEY === 'caption_pack') {\n  parsed.hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\n  parsed.keywords = Array.isArray(parsed.keywords) ? parsed.keywords : [];\n}\n\nif (OUT_KEY === 'series_plan') {\n  parsed.variations = Array.isArray(parsed.variations) ? parsed.variations : [];\n}\n\nreturn [{\n  json: {\n    ...base,\n    [OUT_KEY]: parsed\n  }\n}];"
       },
       "id": "3db11107-4f42-42ea-a184-a31c20a7c9cb",
       "name": "Parse Caption JSON",
@@ -703,6 +703,226 @@
       "continueOnFail": true
     },
     {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "8kWxhXpAUD2Xthqh",
+          "mode": "list",
+          "cachedResultName": "tvpx_series_lineage",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/8kWxhXpAUD2Xthqh"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "child_concept_id",
+              "keyValue": "={{$json.concept_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "child_asset_id": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_color'}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "8f1d4d75-5444-46d7-8f46-9c2bfac1459a",
+      "name": "Update Series Lineage Child Asset",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b9caa1ee-0ec3-461f-b1f4-75fd0ffb09a8",
+      "name": "Should Send Color To Telegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.telegram.color_message_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7537fb2f-8ea9-4eab-a3f4-c4ae98fd4fcb",
+      "name": "Has Color Message Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1d0b5302-c6aa-41ca-92fd-8df1e67d6928",
+      "name": "Should Send B W To Telegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.telegram.bw_message_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ef283e8c-c903-4d18-b7cf-447c07ff2496",
+      "name": "Has B W Message Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1ik7wsmxCMqRD01E",
+          "mode": "list",
+          "cachedResultName": "TVPX__60__Video Seed Preparer",
+          "cachedResultUrl": "/workflow/1ik7wsmxCMqRD01E"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "99dbd047-9f77-4b85-bb25-ad2fa886193b",
+      "name": "Call Video Seed Preparer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0932c315-47f8-4338-8fe8-858c6f0f97d4",
+      "name": "Should Send Caption Draft",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        -224
+      ]
+    },
+    {
       "id": "7bbd54e2-6b56-416f-b698-20c0cd1cffcd",
       "name": "Caption Model xAI Fallback Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
@@ -833,7 +1053,36 @@
       "main": [
         [
           {
+            "node": "Update Series Lineage Child Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Series Lineage Child Asset": {
+      "main": [
+        [
+          {
+            "node": "Should Send Color To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send Color To Telegram": {
+      "main": [
+        [
+          {
             "node": "Send Color To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Capture Telegram Message Id Color",
             "type": "main",
             "index": 0
           }
@@ -855,7 +1104,25 @@
       "main": [
         [
           {
+            "node": "Has Color Message Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Color Message Id": {
+      "main": [
+        [
+          {
             "node": "Register Reply Index Color",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LLM Caption Alchemist",
             "type": "main",
             "index": 0
           }
@@ -866,7 +1133,7 @@
       "main": [
         [
           {
-            "node": "Download B W Image",
+            "node": "LLM Caption Alchemist",
             "type": "main",
             "index": 0
           }
@@ -932,7 +1199,25 @@
       "main": [
         [
           {
+            "node": "Should Send B W To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send B W To Telegram": {
+      "main": [
+        [
+          {
             "node": "Send B W To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Capture Telegram Message Id B W",
             "type": "main",
             "index": 0
           }
@@ -954,7 +1239,25 @@
       "main": [
         [
           {
+            "node": "Has B W Message Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has B W Message Id": {
+      "main": [
+        [
+          {
             "node": "Register Reply Index B W",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LLM Caption Alchemist",
             "type": "main",
             "index": 0
           }
@@ -998,25 +1301,14 @@
       "main": [
         [
           {
-            "node": "Build Video Seed Row",
+            "node": "Should Send Caption Draft",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Build Video Seed Row": {
-      "main": [
-        [
-          {
-            "node": "Upsert Video Seed Queue",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upsert Video Seed Queue": {
+    "Should Send Caption Draft": {
       "main": [
         [
           {
@@ -1024,7 +1316,8 @@
             "type": "main",
             "index": 0
           }
-        ]
+        ],
+        []
       ]
     },
     "OpenAI Caption Model": {

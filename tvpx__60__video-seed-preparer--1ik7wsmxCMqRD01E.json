@@ -110,6 +110,7 @@
       "name": "Get Source Asset",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
+      "alwaysOutputData": true,
       "position": [
         -752,
         96
@@ -117,12 +118,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const current = $items('Reattach Context After Seeds', 0, 0)[$itemIndex]?.json || $json || {};\nconst ctx = current.ctx || {};\nconst seed = current.seed || {};\n\nconst assetRow = $json || {};\nif (!assetRow || typeof assetRow !== 'object') {\n  throw new Error('TVPX__60: source asset row missing.');\n}\n\nconst stillUrl = String(seed.still_image_drive_url || assetRow.drive_view_url || '').trim();\nif (!stillUrl) {\n  throw new Error('TVPX__60: missing still image URL.');\n}\n\nconst guardrails = {\n  pace: 'slow',\n  camera: ['glide', 'hover', 'micro-dolly'],\n  preserve: [\n    'composition identity',\n    'symbolic logic',\n    'lighting mood',\n    'tactile textures',\n    'abstraction band 5.8-6.8'\n  ],\n  avoid: [\n    'scene changes',\n    'fast cuts',\n    'hyperactive motion',\n    'rubbery morphing',\n    'new objects'\n  ]\n};\n\nreturn [{\n  json: {\n    ctx,\n    seed,\n    asset: assetRow,\n    motion_brief: {\n      still_reference_url: stillUrl,\n      concept_id: String(seed.concept_id || assetRow.concept_id || '').trim(),\n      prompt_final: String(assetRow.prompt_final || '').trim(),\n      guardrails\n    }\n  }\n}];"
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "concept_id",
+              "keyValue": "={{$json.concept_id}}"
+            }
+          ]
+        }
       },
-      "id": "9d058922-ac78-42fe-be7b-aba4e00e62e6",
-      "name": "Assemble Motion Brief",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "0dd4f7ad-6db3-4f58-8f7d-16e47a7baf5d",
+      "name": "Get Source Concept",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
       "position": [
         -528,
         96
@@ -130,7 +148,25 @@
     },
     {
       "parameters": {
-        "model": "gpt-5.1",
+        "jsCode": "const current = $items('Reattach Context After Seeds', 0, 0)[$itemIndex]?.json || {};\nconst ctx = current.ctx || {};\nconst seed = current.seed || {};\nconst assetRow = $items('Get Source Asset', 0, 0)[$itemIndex]?.json || {};\nconst conceptRow = $json || {};\n\nif (!assetRow || typeof assetRow !== 'object' || !Object.keys(assetRow).length) {\n  throw new Error('TVPX__60: source asset row missing.');\n}\nif (!conceptRow || typeof conceptRow !== 'object' || !Object.keys(conceptRow).length) {\n  throw new Error('TVPX__60: source concept row missing.');\n}\n\nconst stillUrl = String(seed.still_image_drive_url || assetRow.drive_view_url || '').trim();\nif (!stillUrl) {\n  throw new Error('TVPX__60: missing still image URL.');\n}\n\nconst guardrails = {\n  pace: 'slow',\n  camera: ['glide', 'hover', 'micro-dolly'],\n  preserve: [\n    'composition identity',\n    'symbolic logic',\n    'lighting mood',\n    'tactile textures',\n    'abstraction band 5.8-6.8',\n    'staged inevitability',\n    'negative space as pressure',\n    'real-world optics',\n    'believable anatomy',\n    'natural skin texture',\n    'cloth and hair physics'\n  ],\n  avoid: [\n    'scene changes',\n    'fast cuts',\n    'hyperactive motion',\n    'rubbery morphing',\n    'new objects',\n    'breaking the singular focal point',\n    'temporal face drift',\n    'plastic skin',\n    'cg sheen'\n  ]\n};\n\nreturn [{\n  json: {\n    ctx,\n    seed,\n    asset: assetRow,\n    concept: conceptRow,\n    motion_brief: {\n      still_reference_url: stillUrl,\n      concept_id: String(seed.concept_id || conceptRow.concept_id || assetRow.concept_id || '').trim(),\n      operator_motion_hint: String(seed.motion_prompt || '').trim(),\n      concept_thesis: String(conceptRow.concept_thesis || '').trim(),\n      symbolic_tension: String(conceptRow.symbolic_tension || '').trim(),\n      material_anchor: String(conceptRow.material_anchor || '').trim(),\n      spatial_directive: String(conceptRow.spatial_directive || '').trim(),\n      abstraction_target: Number(conceptRow.abstraction_target || 6.2),\n      palette_directive: String(conceptRow.palette_directive || '{}'),\n      texture_directive: String(conceptRow.texture_directive || '{}'),\n      series_dna_json: String(conceptRow.series_dna_json || '{}'),\n      guardrails\n    }\n  }\n}];"
+      },
+      "id": "9d058922-ac78-42fe-be7b-aba4e00e62e6",
+      "name": "Assemble Motion Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
         "options": {}
       },
       "id": "af6c7cca-9f2a-4477-ad10-a7ab3c6c2132",
@@ -153,14 +189,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Video_Motion_Translator for The Velvet Paradox.\n\nYour job is to translate a still image concept into a future video motion brief.\n\nRules:\n- Preserve composition identity, symbolic logic, tactile texture, and abstraction band.\n- Motion should feel slow, ceremonial, inevitable.\n- No cuts, no new objects, no scene changes, no morphing.\n- Prefer subtle parallax, drift, micro-dolly, breathing light, and minimal atmospheric motion.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"motion_prompt\": \"...\",\n  \"camera_motion_profile\": \"...\",\n  \"parallax_priority\": \"...\",\n  \"scene_breathing_notes\": \"...\",\n  \"avoid_motion_artifacts\": [\"...\"],\n  \"duration_hint\": \"5-7s\"\n}"
+              "message": "=You are TVPX__LLM__Video_Motion_Translator for The Velvet Paradox.\n\nYour job is to translate a still image concept into a future video motion brief.\n\nRules:\n- Preserve composition identity, symbolic logic, tactile texture, and abstraction band.\n- Preserve staged inevitability, a singular readable focal point, and negative space as pressure.\n- Motion should feel slow, ceremonial, inevitable.\n- Keep the result grounded in real-world camera optics, inertia, cloth behavior, hair behavior, atmospheric drift, and believable human anatomy.\n- If people are present, protect natural skin texture, facial structure, blinking, breath, and micro-movement; never let faces drift into synthetic or rubbery motion.\n- No cuts, no new objects, no scene changes, no morphing.\n- Prefer subtle parallax, drift, micro-dolly, breathing light, fog, fabric, flame, or atmospheric motion when justified.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"motion_prompt\": \"...\",\n  \"camera_motion_profile\": \"...\",\n  \"parallax_priority\": \"...\",\n  \"scene_breathing_notes\": \"...\",\n  \"avoid_motion_artifacts\": [\"...\"],\n  \"duration_hint\": \"5-7s\"\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
         "batching": {},
-        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nSource asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nTranslate the still into motion without breaking its dignity."
+        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nSource concept:\n{{ JSON.stringify($json.concept, null, 2) }}\n\nSource asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nTranslate the still into motion without breaking its dignity or collapsing the visual grammar into generic movement. The future video should still feel like a real photographed moment rather than synthetic AI animation."
       },
       "id": "6ce26d7c-c804-47ec-83f4-3875cc292e14",
       "name": "LLM Video Motion Translator",
@@ -319,14 +355,14 @@
       "main": [
         [
           {
-            "node": "Next Seed",
+            "node": "Get Source Asset",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Get Source Asset",
+            "node": "Next Seed",
             "type": "main",
             "index": 0
           }
@@ -334,6 +370,17 @@
       ]
     },
     "Get Source Asset": {
+      "main": [
+        [
+          {
+            "node": "Get Source Concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Source Concept": {
       "main": [
         [
           {

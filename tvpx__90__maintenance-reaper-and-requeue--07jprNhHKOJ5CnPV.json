@@ -8,6 +8,26 @@
   "isArchived": false,
   "nodes": [
     {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "0d662571-6b3e-40d7-a789-64e2fcdd9d56",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        184
+      ]
+    },
+    {
       "parameters": {},
       "id": "d2537bd5-0e10-4dd2-a66b-2657d344dc46",
       "name": "When Executed By Another Workflow",
@@ -521,6 +541,17 @@
     }
   ],
   "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "When Executed By Another Workflow": {
       "main": [
         [
@@ -574,14 +605,14 @@
       "main": [
         [
           {
-            "node": "Done",
+            "node": "Build Unlock Update",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Build Unlock Update",
+            "node": "Done",
             "type": "main",
             "index": 0
           }
@@ -647,14 +678,14 @@
       "main": [
         [
           {
-            "node": "Done",
+            "node": "Build Job Timeout Update",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Build Job Timeout Update",
+            "node": "Done",
             "type": "main",
             "index": 0
           }

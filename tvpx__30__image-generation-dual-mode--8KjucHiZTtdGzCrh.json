@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__30)\n * - Normalizes inbound payloads\n * - Ensures ctx exists\n * - Ensures concept_id is optional (we can pick one)\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\nconst familyId = baseCtx.asset_family_id || `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'image_generate_dual',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || incoming.chat_id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n\n  // optional knobs\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1280'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15)\n};\n\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    concept_id: conceptId || null\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__30)\n * - Normalizes inbound payloads\n * - Ensures ctx exists\n * - Ensures concept_id is optional (we can pick one)\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\nconst familyId = baseCtx.asset_family_id || `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'image_generate_primary',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || incoming.chat_id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n\n  // optional knobs\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1280'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15)\n};\n\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    concept_id: conceptId || null\n  }\n}];"
       },
       "id": "80c99f0a-153f-4f31-baa2-49cdc56075bf",
       "name": "Initialize Envelope",
@@ -123,7 +123,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Select Best Concept\n * - Anti-stock bias: prefer higher quality_score, lower used_count\n * - Safe if table returns different field shapes\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\n\nconst rows = $input.all().map(i => i.json);\nif (!rows.length) {\n  throw new Error('No ready concepts found in tvpx_concept_pool.');\n}\n\nfunction n(v, d=0){\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\n// Weighted score: quality dominates; penalize repetition\nconst scored = rows.map(r => {\n  const quality = n(r.quality_score, 0);\n  const used = n(r.used_count, 0);\n  const abstraction = n(r.abstraction_target, 6.2);\n  const noveltyPenalty = Math.min(used * 0.35, 2.0);\n  const abstractionPenalty = (abstraction < 5.4 || abstraction > 7.6) ? 0.6 : 0;\n  const score = quality - noveltyPenalty - abstractionPenalty;\n  return { r, score };\n}).sort((a,b) => b.score - a.score);\n\nconst picked = scored[0].r;\nconst conceptId = String(picked.concept_id || picked.id || picked.dt_row_id || '').trim();\nif (!conceptId) throw new Error('Concept row missing concept_id.');\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    concept_row: picked\n  }\n}];"
+        "jsCode": "/**\n * Select Best Concept\n * Prefer strong, under-used ready concepts for direct generation.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\n\nconst rows = $input.all().map(i => i.json);\nif (!rows.length) {\n  throw new Error('No ready concepts found in tvpx_concept_pool.');\n}\n\nfunction n(v, d=0){\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nconst scored = rows.map(r => {\n  const quality = n(r.quality_score, 0);\n  const used = n(r.used_count, 0);\n  const abstraction = n(r.abstraction_target, 6.2);\n  const noveltyPenalty = Math.min(used * 0.35, 2.0);\n  const abstractionPenalty = (abstraction < 5.4 || abstraction > 7.6) ? 0.6 : 0;\n  const score = quality - noveltyPenalty - abstractionPenalty;\n  return { r, score };\n}).sort((a,b) => b.score - a.score);\n\nconst picked = scored[0].r;\nconst conceptId = String(picked.concept_id || picked.id || picked.dt_row_id || '').trim();\nif (!conceptId) throw new Error('Concept row missing concept_id.');\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    concept_row: picked\n  }\n}];"
       },
       "id": "265777f3-e815-44d5-963c-75030f5f5d26",
       "name": "Select Best Concept",
@@ -276,14 +276,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Final_Render_Prompt_Smith for The Velvet Paradox.\n\nYour job is to convert a vetted concept row into a premium image-generation prompt.\n\nRules:\n- Keep the scene representational and photographically legible.\n- Preserve material honesty, tactile surfaces, and cinematic light behavior.\n- Avoid stock tropes, corporate gloss, generic portrait language, and adjective bloat.\n- Build one strong master prompt and one strong negative prompt.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"aspect_ratio\": \"4:5\",\n  \"image_size\": \"1024x1280\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\"\n  }\n}"
+              "message": "=You are TVPX__LLM__Final_Render_Prompt_Smith for The Velvet Paradox.\n\nYour job is to convert a vetted concept row into a premium image-generation prompt.\n\nRules:\n- Keep the scene representational and photographically legible.\n- Preserve material honesty, tactile surfaces, cinematic light behavior, and real-world optical plausibility.\n- If people are present, keep believable anatomy, natural skin texture, asymmetry, pores, hair, hands, teeth, and age detail.\n- Avoid stock tropes, corporate gloss, generic portrait language, beauty-retouch language, CGI sheen, and adjective bloat.\n- Build one strong master prompt and one strong negative prompt.\n- Return valid JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"aspect_ratio\": \"4:5\",\n  \"image_size\": \"1024x1280\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\"\n  }\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
         "batching": {},
-        "text": "=Concept row:\n- Concept thesis: {{ $json.concept_row.concept_thesis }}\n- Symbolic tension: {{ $json.concept_row.symbolic_tension }}\n- Material anchor: {{ $json.concept_row.material_anchor }}\n- Spatial directive: {{ $json.concept_row.spatial_directive }}\n- Abstraction target: {{ $json.concept_row.abstraction_target }}\n\nSeries DNA:\n{{ $json.concept_row.series_dna_json }}\n\nGuardrails:\n{{ $json.concept_row.prompt_guardrails_json }}\n\nWrite a render prompt that feels expensive, specific, and cinematic."
+        "text": "=Concept row:\n- Concept thesis: {{ $json.concept_row.concept_thesis }}\n- Symbolic tension: {{ $json.concept_row.symbolic_tension }}\n- Material anchor: {{ $json.concept_row.material_anchor }}\n- Spatial directive: {{ $json.concept_row.spatial_directive }}\n- Palette directive: {{ $json.concept_row.palette_directive }}\n- Texture directive: {{ $json.concept_row.texture_directive }}\n- Abstraction target: {{ $json.concept_row.abstraction_target }}\n\nSeries DNA:\n{{ $json.concept_row.series_dna_json }}\n\nGuardrails:\n{{ $json.concept_row.prompt_guardrails_json }}\n\nCreative mandate:\n- Preserve staged inevitability and a singular readable focal point.\n- Let negative space feel pressurized, not empty.\n- Maintain the tension between rigid architecture and organic or decaying textures.\n- Keep the image representational and lucid, but semantically destabilized.\n- Use muted cinematic desaturation with at most one meaningful saturation event.\n- Surfaces should feel tactile, materially specific, and lit with chiaroscuro or diffused haze.\n- The result must read as a real-life photograph, not an illustration or synthetic AI render.\n- If a person appears, keep realistic skin texture, eyes, hands, posture, wardrobe, and age detail; never beautify into smooth plastic skin.\n\nWrite a render prompt that feels expensive, precise, ceremonial, and emotionally exact without collapsing into generic surrealism."
       },
       "id": "61b6b408-6177-4910-a734-d81b26a06790",
       "name": "LLM Render Prompt Smith",
@@ -309,7 +309,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build Dual Render Packets\n * Produces two items: color and bw, derived from same master.\n */\n\nconst j = $json;\nconst ctx = j.ctx;\nconst spec = j.render_spec;\n\nconst master = String(spec.master_prompt || '').trim();\nconst negative = String(spec.negative_prompt || '').trim();\nif (master.length < 40) throw new Error('Bad render spec: master_prompt too short.');\n\nconst imageSize = String(spec.image_size || '1024x1280');\nconst controls = spec.provider_controls || {};\n\nconst colorPrompt = [\n  master,\n  'Color grade: muted cinematic base (olive/sepia/ashen cream/damp gray) with at most one meaningful saturation puncture (amber/marigold/turquoise/orange).',\n  'Lighting: chiaroscuro or diffused haze; preserve tactile materials and surface tension.'\n].join(' ');\n\nconst bwPrompt = [\n  master,\n  'Black-and-white only. No color cast. Silver-gelatin tonal separation, velvet blacks, luminous midtones, tactile surface contrast, atmospheric haze.'\n].join(' ');\n\nconst common = {\n  image_size: imageSize,\n  background: String(controls.background || 'opaque'),\n  quality: String(controls.quality || 'high'),\n  output_format: String(controls.output_format || 'png')\n};\n\nreturn [\n  {\n    json: {\n      ctx,\n      concept_id: j.concept_id,\n      concept_row: j.concept_row,\n      render_variant: 'color',\n      prompt: colorPrompt,\n      negative_prompt: negative,\n      provider_controls: common\n    }\n  },\n  {\n    json: {\n      ctx,\n      concept_id: j.concept_id,\n      concept_row: j.concept_row,\n      render_variant: 'bw',\n      prompt: bwPrompt,\n      negative_prompt: negative,\n      provider_controls: common\n    }\n  }\n];"
+        "jsCode": "/**\n * Build Primary Render Packet\n * Default generation produces a single color render only.\n */\n\nconst j = $json;\nconst ctx = j.ctx;\nconst spec = j.render_spec;\n\nconst master = String(spec.master_prompt || '').trim();\nconst negative = [\n  String(spec.negative_prompt || '').trim(),\n  'cgi, 3d render, illustration, painterly brushstrokes, cartoon stylization, plastic skin, waxy skin, smooth skin, airbrushed skin, beauty retouching, uncanny eyes, bad hands, extra fingers, duplicate limbs, deformed anatomy, fake pores, synthetic fabric, overprocessed HDR, glossy commercial polish, text, watermark, logo'\n].filter(Boolean).join(', ');\nif (master.length < 40) throw new Error('Bad render spec: master_prompt too short.');\n\nconst imageSize = String(spec.image_size || '1024x1280');\nconst controls = spec.provider_controls || {};\n\nconst colorPrompt = [\n  master,\n  'Color grade: muted cinematic desaturation with at most one symbolic saturation detonation.',\n  'Preserve negative space as pressure, tactile materials, and staged inevitability.',\n  'Lighting should feel like chiaroscuro or diffused haze rather than flat commercial brightness.',\n  'The image must read as a real-life photograph with honest lens behavior, believable anatomy, natural skin texture, and materially specific detail.',\n  'Avoid the look of CGI, over-retouched beauty photography, or smooth synthetic AI surfaces.'\n].join(' ');\n\nconst common = {\n  image_size: imageSize,\n  background: String(controls.background || 'opaque'),\n  quality: String(controls.quality || 'high'),\n  output_format: String(controls.output_format || 'png')\n};\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: j.concept_id,\n    concept_row: j.concept_row,\n    render_variant: 'color',\n    prompt: colorPrompt,\n    negative_prompt: negative,\n    provider_controls: common\n  }\n}];"
       },
       "id": "9c895086-fbe6-4a00-b1e2-82c904888224",
       "name": "Build Dual Render Packets",
@@ -419,7 +419,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Assemble Asset Family\n * Expects two subworkflow results; normalizes into a single payload for Workflow 40.\n */\n\nconst items = $input.all().map(i => i.json);\n\n// We expect each item includes render_variant and image_url\nconst by = {};\nfor (const it of items) {\n  const k = String(it.render_variant || '').trim();\n  if (k) by[k] = it;\n}\n\nconst color = by.color;\nconst bw = by.bw;\nif (!color || !bw) {\n  throw new Error(`Missing color or bw render results. Got keys: ${Object.keys(by).join(', ')}`);\n}\n\nconst ctx = color.ctx || bw.ctx;\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: String(color.concept_id || bw.concept_id || '').trim(),\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color,\n      bw\n    }\n  }\n}];"
+        "jsCode": "/**\n * Assemble Asset Family\n * Normalizes the primary color render payload for Workflow 40.\n */\n\nconst item = $input.all()[0]?.json || null;\nif (!item) {\n  throw new Error('Missing primary render result.');\n}\n\nconst color = item;\nconst ctx = color.ctx || {};\n\nif (String(color.render_variant || '').trim() !== 'color') {\n  throw new Error(`Expected primary color render, got '${String(color.render_variant || '').trim() || 'unknown'}'.`);\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: String(color.concept_id || '').trim(),\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color\n    }\n  }\n}];"
       },
       "id": "56626bb7-c28a-463a-8619-3f573a4018df",
       "name": "Assemble Asset Family",
@@ -983,25 +983,7 @@
       "main": [
         [
           {
-            "node": "Is Color Variant",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Is Color Variant": {
-      "main": [
-        [
-          {
             "node": "Render Color Via Fal",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Render B W Via Fal",
             "type": "main",
             "index": 0
           }
@@ -1009,28 +991,6 @@
       ]
     },
     "Render Color Via Fal": {
-      "main": [
-        [
-          {
-            "node": "Merge Color And B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Render B W Via Fal": {
-      "main": [
-        [
-          {
-            "node": "Merge Color And B W",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Color And B W": {
       "main": [
         [
           {

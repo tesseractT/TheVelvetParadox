@@ -40,7 +40,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope\n * - Normalizes inbound payloads from Schedule or ExecuteWorkflowTrigger\n * - Ensures ctx exists and survives external node outputs via explicit ctx holds + merges\n * - No env vars; all state flows through json + DataTables\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\n// Preserve any ctx already provided\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: baseCtx.trigger_mode || (incoming.message ? 'telegram' : 'schedule'),\n  route_mode: baseCtx.route_mode || 'crawl',\n  run_started_at: now,\n  // Optional knobs (safe defaults)\n  crawl_profile: baseCtx.crawl_profile || incoming.crawl_profile || 'default',\n  max_pages_per_source: Number(baseCtx.max_pages_per_source || incoming.max_pages_per_source || 50),\n  max_fragments_per_page: Number(baseCtx.max_fragments_per_page || incoming.max_fragments_per_page || 8),\n  max_fragment_chars: Number(baseCtx.max_fragment_chars || incoming.max_fragment_chars || 2200)\n};\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    // Telegram payload may exist upstream; keep it but do not rely on it here\n    tg: incoming.tg || incoming.message || {}\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope\n * - Normalizes inbound payloads from Schedule or ExecuteWorkflowTrigger\n * - Ensures ctx exists and survives external node outputs via explicit ctx holds + merges\n * - No env vars; all state flows through json + DataTables\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: baseCtx.trigger_mode || (incoming.message ? 'telegram' : 'schedule'),\n  route_mode: baseCtx.route_mode || 'crawl',\n  run_started_at: now,\n  crawl_profile: baseCtx.crawl_profile || incoming.crawl_profile || 'default',\n  default_apify_actor_id: String(baseCtx.default_apify_actor_id || incoming.default_apify_actor_id || '').trim(),\n  max_pages_per_source: Number(baseCtx.max_pages_per_source || incoming.max_pages_per_source || 50),\n  max_fragments_per_page: Number(baseCtx.max_fragments_per_page || incoming.max_fragments_per_page || 8),\n  max_fragment_chars: Number(baseCtx.max_fragment_chars || incoming.max_fragment_chars || 2200)\n};\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    tg: incoming.tg || incoming.message || {}\n  }\n}];"
       },
       "id": "b7f80be5-f6b9-49ec-8900-a35a120bf7a9",
       "name": "Initialize Envelope",
@@ -67,6 +67,10 @@
             {
               "keyName": "crawl_enabled",
               "condition": "isTrue"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "active"
             }
           ]
         }
@@ -287,7 +291,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseJsonSafe(value, fallback) {\n  if (value === null || value === undefined || value === '') return fallback;\n  if (typeof value === 'object') return value;\n  try {\n    return JSON.parse(String(value));\n  } catch {\n    return fallback;\n  }\n}\n\nconst j = $json || {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? j.ctx : {};\nconst source = (j.source && typeof j.source === 'object') ? j.source : {};\n\nconst sourceUrl = String(source.source_url || source.url || '').trim();\nif (!sourceUrl) {\n  throw new Error('TVPX__10 / Build Apify Request Body: source_url is required.');\n}\n\nconst actorId = String(source.apify_actor_id || '').trim();\nif (!actorId) {\n  throw new Error('TVPX__10 / Build Apify Request Body: source.apify_actor_id is required.');\n}\n\nconst crawlProfile = String(source.crawl_profile || ctx.crawl_profile || 'default').trim();\nconst maxPages = Math.max(1, Math.min(Number(source.max_pages || ctx.max_pages_per_source || 50), 500));\n\nconst apifyInput = {\n  startUrls: [{ url: sourceUrl }],\n  maxPagesPerCrawl: maxPages,\n  includeUrlGlobs: parseJsonSafe(source.include_url_globs, undefined),\n  excludeUrlGlobs: parseJsonSafe(source.exclude_url_globs, undefined),\n  proxyConfiguration: parseJsonSafe(source.proxy_json, undefined),\n  userData: {\n    tvpx: {\n      trace_id: ctx.trace_id,\n      crawl_run_id: ctx.crawl_run_id,\n      source_id: ctx.source_id,\n      crawl_profile: crawlProfile,\n      brand_name: ctx.brand_name\n    }\n  }\n};\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    apify: {\n      actor_id: actorId,\n      input: apifyInput\n    }\n  }\n}];"
+        "jsCode": "function parseJsonSafe(value, fallback) {\n  if (value === null || value === undefined || value === '') return fallback;\n  if (typeof value === 'object') return value;\n  try {\n    return JSON.parse(String(value));\n  } catch {\n    return fallback;\n  }\n}\n\nconst j = $json || {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? j.ctx : {};\nconst source = (j.source && typeof j.source === 'object') ? j.source : {};\nconst sourceUrl = String(source.source_url || source.url || '').trim();\nif (!sourceUrl) {\n  throw new Error('TVPX__10 / Build Apify Request Body: source_url is required.');\n}\n\nconst profile = parseJsonSafe(source.crawl_profile, {}) || {};\nconst ingest = (profile.ingest && typeof profile.ingest === 'object') ? profile.ingest : {};\nconst fallback = (ingest.fallback && typeof ingest.fallback === 'object') ? ingest.fallback : {};\nconst extract = (profile.extract && typeof profile.extract === 'object') ? profile.extract : {};\nconst quality = (profile.quality && typeof profile.quality === 'object') ? profile.quality : {};\n\nconst actorId = String(\n  source.apify_actor_id ||\n  source.actor_id ||\n  profile.apify_actor_id ||\n  profile.actor_id ||\n  ingest.actor_id ||\n  fallback.actor_id ||\n  ctx.default_apify_actor_id ||\n  ''\n).trim();\nif (!actorId) {\n  throw new Error('TVPX__10 / Build Apify Request Body: no Apify actor id found. Checked source.apify_actor_id, source.actor_id, crawl_profile.apify_actor_id, crawl_profile.actor_id, crawl_profile.ingest.actor_id, crawl_profile.ingest.fallback.actor_id, and ctx.default_apify_actor_id.');\n}\n\nconst preferred = String(ingest.preferred || '').trim().toLowerCase();\nconst rssUrl = String(ingest.rss_url || '').trim();\nconst fallbackStartUrls = Array.isArray(fallback.start_urls)\n  ? fallback.start_urls.map(url => ({ url: String(url || '').trim() })).filter(x => x.url)\n  : [];\n\nconst seedStartUrls = [];\nif (preferred === 'rss' && rssUrl) seedStartUrls.push({ url: rssUrl });\nfor (const entry of fallbackStartUrls) {\n  if (!seedStartUrls.some(x => x.url === entry.url)) seedStartUrls.push(entry);\n}\nif (!seedStartUrls.length) seedStartUrls.push({ url: sourceUrl });\n\nconst maxPages = Math.max(\n  1,\n  Math.min(Number(source.max_pages || ingest.max_pages || ctx.max_pages_per_source || 50), 500)\n);\n\nconst apifyInput = {\n  startUrls: seedStartUrls,\n  maxPagesPerCrawl: maxPages,\n  includeUrlGlobs: parseJsonSafe(source.include_url_globs || fallback.include_url_globs || profile.include_url_globs, undefined),\n  excludeUrlGlobs: parseJsonSafe(source.exclude_url_globs || fallback.exclude_url_globs || profile.exclude_url_globs, undefined),\n  proxyConfiguration: parseJsonSafe(source.proxy_json || profile.proxy_json, undefined),\n  userData: {\n    tvpx: {\n      trace_id: ctx.trace_id,\n      crawl_run_id: ctx.crawl_run_id,\n      source_id: ctx.source_id,\n      crawl_profile: String(source.crawl_profile || ctx.crawl_profile || 'default'),\n      brand_name: ctx.brand_name,\n      preferred_ingest: preferred || 'section_crawl',\n      rss_url: rssUrl || null,\n      min_word_count: Number(extract.min_word_count || 0),\n      require_h1: Boolean(quality.require_h1),\n      require_paragraphs: Boolean(quality.require_paragraphs),\n      strip_selectors: Array.isArray(extract.strip_selectors) ? extract.strip_selectors : []\n    }\n  }\n};\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_profile: profile,\n    apify: {\n      actor_id: actorId,\n      input: apifyInput\n    }\n  }\n}];"
       },
       "id": "ccd1777f-fd24-41df-8cf5-10ec876505ec",
       "name": "Build Apify Request Body",
@@ -331,7 +335,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const run = $json || {};\nconst seed = $items('Build Apify Request Body')[0]?.json || {};\n\nconst ctx = (seed.ctx && typeof seed.ctx === 'object') ? seed.ctx : {};\nconst source = (seed.source && typeof seed.source === 'object') ? seed.source : {};\n\nconst apifyRunId = String(run.id || run.runId || run.data?.id || '').trim();\nconst datasetId = String(run.defaultDatasetId || run.data?.defaultDatasetId || run.datasetId || '').trim();\n\nif (!datasetId) {\n  throw new Error('TVPX__10 / Normalize Apify Run Output: missing dataset ID from Apify run result.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_update: {\n      crawl_run_id: String(ctx.crawl_run_id || '').trim(),\n      apify_run_id: apifyRunId,\n      dataset_id: datasetId,\n      status: 'running'\n    }\n  }\n}];"
+        "jsCode": "const run = $json || {};\nconst seed = $items('Build Apify Request Body')[0]?.json || {};\n\nconst ctx = (seed.ctx && typeof seed.ctx === 'object') ? seed.ctx : {};\nconst source = (seed.source && typeof seed.source === 'object') ? seed.source : {};\nconst crawlProfile = (seed.crawl_profile && typeof seed.crawl_profile === 'object') ? seed.crawl_profile : {};\n\nconst apifyRunId = String(run.id || run.runId || run.data?.id || '').trim();\nconst datasetId = String(run.defaultDatasetId || run.data?.defaultDatasetId || run.datasetId || '').trim();\n\nif (!datasetId) {\n  throw new Error('TVPX__10 / Normalize Apify Run Output: missing dataset ID from Apify run result.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_profile: crawlProfile,\n    crawl_run_update: {\n      crawl_run_id: String(ctx.crawl_run_id || '').trim(),\n      apify_run_id: apifyRunId,\n      dataset_id: datasetId,\n      status: 'running'\n    }\n  }\n}];"
       },
       "id": "4886b1f2-a2f2-4e47-80f7-65e810bf2e5d",
       "name": "Normalize Apify Run Output",
@@ -398,7 +402,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Normalize Crawl Items\n * Converts dataset items into canonical pages with {url,title,text}\n * Assumes each item includes url/title/text-like fields; adapt mapping here to your actor output.\n */\n\nconst base = $items('Normalize Apify Run Output')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\n\nconst items = $input.all().map(i => i.json);\n\n// Actor outputs vary; try common patterns.\nconst pages = items.map((it, idx) => {\n  const url = String(it.url || it.pageUrl || it.request?.url || it.requestUrl || '').trim();\n  const title = String(it.title || it.pageTitle || it.metadata?.title || '').trim();\n  const text = String(it.text || it.content || it.pageText || it.markdown || it.bodyText || '').trim();\n  return { url, title, text, index: idx };\n}).filter(p => p.url && p.text);\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_id: ctx.crawl_run_id,\n    pages\n  }\n}];"
+        "jsCode": "/**\n * Normalize Crawl Items\n * Converts dataset items into canonical pages with {url,title,text}\n * Applies crawl_profile quality filters and dedupes by URL.\n */\n\nfunction cleanText(value) {\n  return String(value || '')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\r/g, '')\n    .replace(/[\\t ]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nconst base = $items('Normalize Apify Run Output')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\nconst crawlProfile = (base.crawl_profile && typeof base.crawl_profile === 'object') ? base.crawl_profile : {};\nconst extract = (crawlProfile.extract && typeof crawlProfile.extract === 'object') ? crawlProfile.extract : {};\nconst quality = (crawlProfile.quality && typeof crawlProfile.quality === 'object') ? crawlProfile.quality : {};\n\nconst minWordCount = Math.max(0, Number(extract.min_word_count || 0));\nconst requireH1 = Boolean(quality.require_h1);\nconst requireParagraphs = Boolean(quality.require_paragraphs);\n\nconst items = $input.all().map(i => i.json);\nconst seen = new Set();\n\nconst pages = items.map((it, idx) => {\n  const url = String(it.url || it.pageUrl || it.request?.url || it.requestUrl || '').trim();\n  const title = String(it.title || it.pageTitle || it.metadata?.title || '').trim();\n  const text = cleanText(it.text || it.content || it.pageText || it.markdown || it.bodyText || it.html || '');\n  const wordCount = text ? text.split(/\\s+/).filter(Boolean).length : 0;\n  const hasParagraphShape = /\\n\\n/.test(text) || /[.!?]\\s+[A-Z]/.test(text);\n  return { url, title, text, index: idx, wordCount, hasParagraphShape };\n}).filter(p => {\n  if (!p.url || !p.text) return false;\n  if (seen.has(p.url)) return false;\n  if (minWordCount && p.wordCount < minWordCount) return false;\n  if (requireH1 && !p.title) return false;\n  if (requireParagraphs && !p.hasParagraphShape) return false;\n  seen.add(p.url);\n  return true;\n});\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_profile: crawlProfile,\n    crawl_run_id: ctx.crawl_run_id,\n    pages\n  }\n}];"
       },
       "id": "2b3fee92-698e-4b3a-b7fa-82e9ab61cdd4",
       "name": "Normalize Crawl Items",
@@ -411,7 +415,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Chunk And Clean Text\n * - Retains legacy chunking/payload concept\n * - Produces fragment items shaped for tvpx_text_fragment_bank\n * - Keeps creative goal: extracts \"charged\" paragraphs, tension words, material cues\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nfunction clean(s) {\n  return String(s || '')\n    .replace(/\\r/g, '')\n    .replace(/[\\t ]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nfunction splitParagraphs(text) {\n  return clean(text)\n    .split(/\\n\\n+/)\n    .map(p => clean(p))\n    .filter(Boolean);\n}\n\n// Simple signal scoring: prioritizes paragraphs likely to produce Velvet Paradox concepts.\nconst SIGNAL = [\n  'pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain',\n  'residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile',\n  'ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'\n];\n\nfunction scorePara(p) {\n  const t = p.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (t.includes(w)) score += 1;\n  // reward tactile material language\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle)/i.test(p)) score += 2;\n  return score;\n}\n\nconst j = $json;\nconst ctx = j.ctx;\nconst source = j.source;\nconst pages = Array.isArray(j.pages) ? j.pages : [];\n\nconst maxFragChars = Number(ctx.max_fragment_chars || 2200);\nconst maxFragsPerPage = Number(ctx.max_fragments_per_page || 8);\n\nconst out = [];\n\nfor (const page of pages) {\n  const paras = splitParagraphs(page.text);\n  // pick best paragraphs first, then pack into fragments\n  const ranked = paras\n    .map((p, idx) => ({ p, idx, s: scorePara(p) }))\n    .sort((a,b) => b.s - a.s);\n\n  const chosen = ranked.slice(0, Math.min(ranked.length, maxFragsPerPage * 3)).map(x => x.p);\n\n  // pack into fragments up to maxFragChars\n  let buf = '';\n  let chunkIndex = 0;\n\n  for (const p of chosen) {\n    const add = buf ? (buf + '\\n\\n' + p) : p;\n    if (add.length > maxFragChars && buf) {\n      const cleaned = clean(buf);\n      const hash = fnv1a(`${ctx.trace_id}::${ctx.crawl_run_id}::${page.url}::${chunkIndex}::${cleaned}`);\n      out.push({\n        ctx,\n        source,\n        fragment: {\n          fragment_id: `tvpx_fg_${hash}`,\n          crawl_run_id: ctx.crawl_run_id,\n          source_id: ctx.source_id,\n          page_url: page.url,\n          page_title: page.title || '',\n          chunk_index: chunkIndex,\n          fragment_hash: hash,\n          raw_text: buf,\n          cleaned_text: cleaned,\n          token_estimate: Math.ceil(cleaned.length / 4),\n          qa_status: 'clean'\n        }\n      });\n      buf = p;\n      chunkIndex += 1;\n      if (chunkIndex >= maxFragsPerPage) break;\n    } else {\n      buf = add;\n    }\n  }\n\n  if (buf && chunkIndex < maxFragsPerPage) {\n    const cleaned = clean(buf);\n    const hash = fnv1a(`${ctx.trace_id}::${ctx.crawl_run_id}::${page.url}::${chunkIndex}::${cleaned}`);\n    out.push({\n      ctx,\n      source,\n      fragment: {\n        fragment_id: `tvpx_fg_${hash}`,\n        crawl_run_id: ctx.crawl_run_id,\n        source_id: ctx.source_id,\n        page_url: page.url,\n        page_title: page.title || '',\n        chunk_index: chunkIndex,\n        fragment_hash: hash,\n        raw_text: buf,\n        cleaned_text: cleaned,\n        token_estimate: Math.ceil(cleaned.length / 4),\n        qa_status: 'clean'\n      }\n    });\n  }\n}\n\nif (!out.length) {\n  // Still proceed, but ledger will mark empty.\n  return [{ json: { ctx, source, fragments: [], empty: true } }];\n}\n\nreturn out.map(o => ({ json: o }));"
+        "jsCode": "/**\n * Chunk And Clean Text\n * - Retains legacy chunking/payload concept\n * - Produces fragment items shaped for tvpx_text_fragment_bank\n * - Keeps creative goal: extracts \"charged\" paragraphs, tension words, material cues\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nfunction clean(s) {\n  return String(s || '')\n    .replace(/\\r/g, '')\n    .replace(/[\\t ]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nfunction splitParagraphs(text) {\n  return clean(text)\n    .split(/\\n\\n+/)\n    .map(p => clean(p))\n    .filter(Boolean);\n}\n\nfunction splitLongParagraph(paragraph, maxChars) {\n  const text = clean(paragraph);\n  if (!text) return [];\n  if (text.length <= maxChars) return [text];\n\n  const sentences = text.split(/(?<=[.!?])\\s+/).map(clean).filter(Boolean);\n  if (sentences.length <= 1) {\n    const hardChunks = [];\n    for (let i = 0; i < text.length; i += maxChars) {\n      const chunk = clean(text.slice(i, i + maxChars));\n      if (chunk) hardChunks.push(chunk);\n    }\n    return hardChunks;\n  }\n\n  const out = [];\n  let buf = '';\n  for (const sentence of sentences) {\n    if (sentence.length > maxChars) {\n      if (buf) {\n        out.push(buf);\n        buf = '';\n      }\n      for (let i = 0; i < sentence.length; i += maxChars) {\n        const hardChunk = clean(sentence.slice(i, i + maxChars));\n        if (hardChunk) out.push(hardChunk);\n      }\n      continue;\n    }\n\n    const candidate = buf ? `${buf} ${sentence}` : sentence;\n    if (candidate.length > maxChars && buf) {\n      out.push(buf);\n      buf = sentence;\n    } else {\n      buf = candidate;\n    }\n  }\n\n  if (buf) out.push(buf);\n  return out;\n}\n\n// Simple signal scoring: prioritizes paragraphs likely to produce Velvet Paradox concepts.\nconst SIGNAL = [\n  'pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain',\n  'residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile',\n  'ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'\n];\n\nfunction scorePara(p) {\n  const t = p.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (t.includes(w)) score += 1;\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle)/i.test(p)) score += 2;\n  return score;\n}\n\nconst j = $json;\nconst ctx = j.ctx;\nconst source = j.source;\nconst crawlProfile = (j.crawl_profile && typeof j.crawl_profile === 'object') ? j.crawl_profile : {};\nconst extract = (crawlProfile.extract && typeof crawlProfile.extract === 'object') ? crawlProfile.extract : {};\nconst pages = Array.isArray(j.pages) ? j.pages : [];\n\nconst maxFragChars = Math.max(400, Math.min(Number(extract.max_fragment_chars || ctx.max_fragment_chars || 2200), 8000));\nconst maxFragsPerPage = Math.max(1, Math.min(Number(extract.max_fragments_per_page || ctx.max_fragments_per_page || 8), 24));\n\nconst out = [];\n\nfor (const page of pages) {\n  const paras = splitParagraphs(page.text);\n  const ranked = paras\n    .map((p, idx) => ({ p, idx, s: scorePara(p) }))\n    .sort((a, b) => (b.s - a.s) || (a.idx - b.idx));\n\n  const chosen = ranked\n    .slice(0, Math.min(ranked.length, maxFragsPerPage * 3))\n    .sort((a, b) => a.idx - b.idx)\n    .flatMap(({ p }) => splitLongParagraph(p, maxFragChars));\n\n  let buf = '';\n  let chunkIndex = 0;\n\n  for (const p of chosen) {\n    const add = buf ? (buf + '\\n\\n' + p) : p;\n    if (add.length > maxFragChars && buf) {\n      const cleaned = clean(buf);\n      const hash = fnv1a(`${ctx.trace_id}::${ctx.crawl_run_id}::${page.url}::${chunkIndex}::${cleaned}`);\n      out.push({\n        ctx,\n        source,\n        fragment: {\n          fragment_id: `tvpx_fg_${hash}`,\n          crawl_run_id: ctx.crawl_run_id,\n          source_id: ctx.source_id,\n          page_url: page.url,\n          page_title: page.title || '',\n          chunk_index: chunkIndex,\n          fragment_hash: hash,\n          raw_text: buf,\n          cleaned_text: cleaned,\n          token_estimate: Math.ceil(cleaned.length / 4),\n          qa_status: 'clean'\n        }\n      });\n      buf = p;\n      chunkIndex += 1;\n      if (chunkIndex >= maxFragsPerPage) break;\n    } else {\n      buf = add;\n    }\n  }\n\n  if (buf && chunkIndex < maxFragsPerPage) {\n    const cleaned = clean(buf);\n    const hash = fnv1a(`${ctx.trace_id}::${ctx.crawl_run_id}::${page.url}::${chunkIndex}::${cleaned}`);\n    out.push({\n      ctx,\n      source,\n      fragment: {\n        fragment_id: `tvpx_fg_${hash}`,\n        crawl_run_id: ctx.crawl_run_id,\n        source_id: ctx.source_id,\n        page_url: page.url,\n        page_title: page.title || '',\n        chunk_index: chunkIndex,\n        fragment_hash: hash,\n        raw_text: buf,\n        cleaned_text: cleaned,\n        token_estimate: Math.ceil(cleaned.length / 4),\n        qa_status: 'clean'\n      }\n    });\n  }\n}\n\nif (!out.length) {\n  return [{ json: { ctx, source, crawl_profile: crawlProfile, fragments: [], empty: true } }];\n}\n\nreturn out.map(o => ({ json: { ...o, crawl_profile: crawlProfile } }));"
       },
       "id": "22f08a87-ef1d-4729-9f7f-104dbe78eb33",
       "name": "Chunk And Clean Text",
@@ -420,6 +424,38 @@
       "position": [
         2128,
         176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.fragment?.fragment_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2d2ed4ff-5536-4b8f-8e36-a1275f8ba419",
+      "name": "Has Fragment Rows",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        48
       ]
     },
     {
@@ -473,7 +509,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Update Crawl Ledger Final\n * - Marks run completed, writes counts\n * - Ensures ctx preserved after fragment upserts\n */\n\n// Source + ctx from earlier stable node\nconst base = $items('Normalize Apify Run Output')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\n\nconst fragmentsInserted = $input.all().length;\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_final: {\n      crawl_run_id: ctx.crawl_run_id,\n      status: 'completed',\n      completed_at: new Date().toISOString(),\n      raw_item_count: Number($items('Apify Get Dataset Items').length || 0),\n      page_count: Number(($items('Normalize Crawl Items')[0]?.json?.pages || []).length),\n      fragment_count: fragmentsInserted\n    }\n  }\n}];"
+        "jsCode": "/**\n * Update Crawl Ledger Final\n * - Marks run completed, writes counts\n * - Ensures ctx preserved after fragment upserts\n */\n\nconst base = $items('Normalize Apify Run Output')[0].json;\nconst ctx = base.ctx;\nconst source = base.source;\nconst fragmentRows = $items('Chunk And Clean Text').filter(item => item.json?.fragment?.fragment_id);\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    crawl_run_final: {\n      crawl_run_id: ctx.crawl_run_id,\n      status: 'completed',\n      completed_at: new Date().toISOString(),\n      raw_item_count: Number($items('Apify Get Dataset Items').length || 0),\n      page_count: Number(($items('Normalize Crawl Items')[0]?.json?.pages || []).length),\n      fragment_count: fragmentRows.length\n    }\n  }\n}];"
       },
       "id": "802537ac-7b07-40b0-9d1f-de4c5512745a",
       "name": "Build Crawl Final Ledger Update",
@@ -509,7 +545,8 @@
             "status": "={{$json.crawl_run_final.status}}",
             "completed_at": "={{$json.crawl_run_final.completed_at}}",
             "raw_item_count": "={{$json.crawl_run_final.raw_item_count}}",
-            "page_count": "={{$json.crawl_run_final.page_count}}"
+            "page_count": "={{$json.crawl_run_final.page_count}}",
+            "fragment_count": "={{$json.crawl_run_final.fragment_count}}"
           },
           "matchingColumns": [],
           "schema": [
@@ -604,6 +641,16 @@
               "removed": false
             },
             {
+              "id": "fragment_count",
+              "displayName": "fragment_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
               "id": "raw_item_count",
               "displayName": "raw_item_count",
               "required": false,
@@ -645,6 +692,38 @@
       "typeVersion": 1,
       "position": [
         2800,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "number_1",
+              "leftValue": "={{$json.crawl_run_final.fragment_count}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1e5f6f2d-4e48-4928-a6b8-268e2bcfead3",
+      "name": "Should Call Concept Forge",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3024,
         176
       ]
     },
@@ -758,13 +837,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Next Source",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Build Crawl Run Record": {
@@ -875,7 +948,25 @@
       "main": [
         [
           {
+            "node": "Has Fragment Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Fragment Rows": {
+      "main": [
+        [
+          {
             "node": "Upsert Text Fragments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Crawl Final Ledger Update",
             "type": "main",
             "index": 0
           }
@@ -908,7 +999,25 @@
       "main": [
         [
           {
+            "node": "Should Call Concept Forge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Call Concept Forge": {
+      "main": [
+        [
+          {
             "node": "Call Concept Forge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Next Source",
             "type": "main",
             "index": 0
           }

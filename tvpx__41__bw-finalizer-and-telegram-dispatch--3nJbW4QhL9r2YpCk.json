@@ -1,0 +1,478 @@
+{
+  "updatedAt": "2026-03-05T22:55:00.000Z",
+  "createdAt": "2026-03-05T22:55:00.000Z",
+  "id": "3nJbW4QhL9r2YpCk",
+  "name": "TVPX__41__B_W_Finalizer_And_Telegram_Dispatch",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "35f2f6db-6fd8-43e5-a6af-5dcf57c58fe3",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2432,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope (TVPX__41)\n * Finalizes a reply-driven B&W asset.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim() || null,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'telegram',\n  route_mode: 'bw_finalize_dispatch',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nconst assetId = String(incoming.asset_id || incoming?.family?.bw?.asset_id || '').trim();\nif (!conceptId) throw new Error('TVPX__41: Missing concept_id.');\nif (!assetId) throw new Error('TVPX__41: Missing asset_id.');\n\nconst fam = incoming.family || {};\nconst bw = fam.bw || {};\nconst bwUrl = String(bw.image_url || bw.provider_image_url || '').trim();\nif (!bwUrl) throw new Error('TVPX__41: Missing bw image_url.');\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_id: assetId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      bw: {\n        ...bw,\n        asset_id: assetId,\n        image_url: bwUrl\n      }\n    }\n  }\n}];"
+      },
+      "id": "4b7839ca-9085-449f-b542-b68b91bf93ea",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.family.bw.image_url}}",
+        "options": {
+          "response": {},
+          "timeout": 180000
+        }
+      },
+      "id": "4b1f6cf8-0be1-482a-a1d4-a9f2e3547ceb",
+      "name": "Download B W Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1984,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Initialize Envelope')[0].json;\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('TVPX__41: No binary found from Download B W Image.');\nconst firstKey = binKeys[0];\nreturn [{ json: { ...base, variant: 'bw' }, binary: { image: $binary[firstKey] } }];"
+      },
+      "id": "71fc245f-3131-4382-be1e-6b4e46cc2ca6",
+      "name": "Ensure Binary For B W",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function safe(s){\n  return String(s||'').toLowerCase()\n    .replace(/[^a-z0-9\\-_.]+/g,'-')\n    .replace(/-+/g,'-')\n    .replace(/^-|-$/g,'')\n    .slice(0,80);\n}\nconst j = $json;\nconst ext = (j.family?.bw?.output_format || j.ctx.output_format || 'png').toLowerCase();\nconst filename = `${safe(j.asset_id)}.${ext === 'jpg' ? 'jpg' : ext === 'jpeg' ? 'jpg' : ext}`;\nreturn [{ json: { ...j, filename }, binary: $binary }];"
+      },
+      "id": "d6ed1010-1ece-44a7-b825-0aa3f2e4ca3f",
+      "name": "Make Safe Filename B W",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "name": "={{$json.filename}}",
+        "options": {}
+      },
+      "id": "6bc9fc08-78e2-4d6d-86a0-90d4c6bde3a7",
+      "name": "Upload B W To Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qf75UASR5hw79O6L",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Make Safe Filename B W')[0].json;\nconst r = $json || {};\nconst fileId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!fileId) throw new Error('TVPX__41: Google Drive upload returned no file id.');\nconst viewUrl = String(r.webViewLink || r.webViewUrl || r.alternateLink || '').trim();\nconst dlUrl = String(r.webContentLink || r.downloadUrl || '').trim();\nreturn [{\n  json: {\n    ...base,\n    assets: {\n      bw: {\n        filename: base.filename,\n        drive_file_id: fileId,\n        drive_view_url: viewUrl,\n        drive_download_url: dlUrl,\n        provider_image_url: String(base.family.bw.image_url || '').trim()\n      }\n    }\n  }\n}];"
+      },
+      "id": "3b84169f-c46e-4f2a-8865-687c84b8f8c3",
+      "name": "Normalize Drive Result B W",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "EMrgSDBhBwr8SiT9",
+          "mode": "list",
+          "cachedResultName": "tvpx_asset_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/EMrgSDBhBwr8SiT9"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "asset_id",
+              "keyValue": "={{$json.asset_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "asset_id": "={{$json.asset_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "concept_id": "={{$json.concept_id}}",
+            "asset_family_id": "={{$json.asset_family_id}}",
+            "variant_key": "bw",
+            "render_mode": "reply_bw",
+            "provider_image_url": "={{$json.assets.bw.provider_image_url}}",
+            "drive_file_id": "={{$json.assets.bw.drive_file_id}}",
+            "drive_view_url": "={{$json.assets.bw.drive_view_url}}",
+            "drive_download_url": "={{$json.assets.bw.drive_download_url}}",
+            "created_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f86bb8a8-b4fa-49ce-8a6d-0e69e44a8842",
+      "name": "Upsert Asset Registry B W",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "44539333-1b0c-4a93-b1d2-65f7bde3dd4d",
+      "name": "Should Send B W To Telegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{$json.ctx.telegram_chat_id}}",
+        "binaryData": true,
+        "binaryPropertyName": "image",
+        "additionalFields": {
+          "caption": "={{'The Velvet Paradox — B&W\\nConcept: ' + $json.concept_id + '\\nReply to THIS image with /series 4 for variations or /video for motion prep.'}}"
+        }
+      },
+      "id": "da0f3156-d9dc-4c0a-97a5-e79daa839467",
+      "name": "Send B W To Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        -96
+      ],
+      "webhookId": "ef022ac5-925b-41f8-a1a9-45831894bf4f",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Normalize Drive Result B W')[0].json;\nconst ctx = base.ctx;\nif (!ctx.telegram_chat_id) {\n  return [{ json: { ...base, telegram: { bw_message_id: null } } }];\n}\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\nreturn [{\n  json: {\n    ...base,\n    telegram: {\n      bw_message_id: msgId ? Number(msgId) : null\n    }\n  }\n}];"
+      },
+      "id": "121d1190-a653-45a2-af33-db8478a04831",
+      "name": "Capture Telegram Message Id B W",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.telegram.bw_message_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ae6c7fe-c2f5-49c3-8f1b-7c0d8d5d1d23",
+      "name": "Has B W Message Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        32,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "19rCaZx3furKQz5y",
+          "mode": "list",
+          "cachedResultName": "tvpx_telegram_reply_index",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/19rCaZx3furKQz5y"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{$json.ctx.telegram_chat_id}}"
+            },
+            {
+              "keyName": "message_id",
+              "keyValue": "={{$json.telegram.bw_message_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reply_index_id": "={{'tvpx_ridx_' + $json.asset_id}}",
+            "chat_id": "={{$json.ctx.telegram_chat_id}}",
+            "message_id": "={{$json.telegram.bw_message_id}}",
+            "asset_id": "={{$json.asset_id}}",
+            "asset_family_id": "={{$json.asset_family_id}}",
+            "concept_id": "={{$json.concept_id}}",
+            "message_role": "reply_bw",
+            "reply_mode": "reply_actions",
+            "is_active": true,
+            "created_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "94b419ff-c4cc-46f9-a3a6-95e9e2f83ae3",
+      "name": "Register Reply Index B W",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -96
+      ],
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Download B W Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download B W Image": {
+      "main": [
+        [
+          {
+            "node": "Ensure Binary For B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure Binary For B W": {
+      "main": [
+        [
+          {
+            "node": "Make Safe Filename B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Safe Filename B W": {
+      "main": [
+        [
+          {
+            "node": "Upload B W To Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload B W To Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Normalize Drive Result B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Drive Result B W": {
+      "main": [
+        [
+          {
+            "node": "Upsert Asset Registry B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Asset Registry B W": {
+      "main": [
+        [
+          {
+            "node": "Should Send B W To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send B W To Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send B W To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Capture Telegram Message Id B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send B W To Telegram": {
+      "main": [
+        [
+          {
+            "node": "Capture Telegram Message Id B W",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Telegram Message Id B W": {
+      "main": [
+        [
+          {
+            "node": "Has B W Message Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has B W Message Id": {
+      "main": [
+        [
+          {
+            "node": "Register Reply Index B W",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "65af3077-4873-4af5-8b4d-b20dce52c4c7",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

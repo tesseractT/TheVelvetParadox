@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__50)\n * Expected inbound shape from Router:\n * {\n *   ctx, tg: { chat_id, message_id, reply_to_message_id, text }, input\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst tg = incoming.tg || incoming.message || {};\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: 'telegram',\n  route_mode: 'reply_series',\n  received_at: now,\n  telegram_chat_id: String(tg.chat_id || tg.chat?.id || '').trim() || null,\n\n  // defaults for series\n  series_default_count: Number(baseCtx.series_default_count || incoming.series_default_count || 4),\n  series_max_count: Number(baseCtx.series_max_count || incoming.series_max_count || 8)\n};\n\nconst chatId = String(tg.chat_id || tg.chat?.id || '').trim();\nconst replyToId = String(tg.reply_to_message_id || tg.reply_to_message?.message_id || '').trim();\nconst text = String(tg.text || tg.caption || '').trim();\n\nif (!chatId) throw new Error('TVPX__50: Missing tg.chat_id');\nif (!replyToId) throw new Error('TVPX__50: Missing tg.reply_to_message_id (must be a reply to an image message)');\n\nreturn [{\n  json: {\n    ctx,\n    tg: {\n      chat_id: chatId,\n      reply_to_message_id: Number(replyToId),\n      text\n    },\n    input: incoming.input || incoming\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__50)\n * Expected inbound shape from Router:\n * {\n *   ctx, tg: { chat_id, message_id, reply_to_message_id, text }, input\n * }\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst tg = incoming.tg || incoming.message || {};\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  trigger_mode: 'telegram',\n  route_mode: 'reply_action',\n  received_at: now,\n  telegram_chat_id: String(tg.chat_id || tg.chat?.id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n\n  // defaults for series\n  series_default_count: Number(baseCtx.series_default_count || incoming.series_default_count || 4),\n  series_max_count: Number(baseCtx.series_max_count || incoming.series_max_count || 8)\n};\n\nconst chatId = String(tg.chat_id || tg.chat?.id || '').trim();\nconst replyToId = String(tg.reply_to_message_id || tg.reply_to_message?.message_id || '').trim();\nconst text = String(tg.text || tg.caption || '').trim();\n\nif (!chatId) throw new Error('TVPX__50: Missing tg.chat_id');\nif (!replyToId) throw new Error('TVPX__50: Missing tg.reply_to_message_id (must be a reply to an image message)');\n\nreturn [{\n  json: {\n    ctx,\n    tg: {\n      chat_id: chatId,\n      reply_to_message_id: Number(replyToId),\n      text\n    },\n    input: incoming.input || incoming\n  }\n}];"
       },
       "id": "205efb23-60c9-498f-9a1f-15d998ea8b77",
       "name": "Initialize Envelope",
@@ -33,7 +33,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const j = $json || {};\nconst text = String(j.tg?.text || '').trim();\n\nlet count = Number(j.ctx?.series_default_count || 4);\nlet instruction = '';\nlet mode = 'implicit';\n\nconst seriesMatch = text.match(/^\\s*\\/series\\b\\s*(.*)$/i);\n\nif (seriesMatch) {\n  mode = 'explicit';\n  const rest = String(seriesMatch[1] || '').trim();\n  const leading = rest.match(/^(\\d+)\\s*(.*)$/);\n\n  if (leading) {\n    count = Number(leading[1]);\n    instruction = String(leading[2] || '').trim();\n  } else {\n    instruction = rest;\n  }\n} else {\n  // Freeform reply: only use it if it looks intentional.\n  // Short throwaway replies should not spawn costly work.\n  if (text.length >= 8) {\n    instruction = text;\n    mode = 'freeform';\n  } else {\n    throw new Error('TVPX__50: reply is too short to treat as a series instruction. Use /series or a meaningful modifier.');\n  }\n}\n\nif (!Number.isFinite(count) || count < 1) count = Number(j.ctx?.series_default_count || 4);\ncount = Math.min(Math.max(count, 1), Number(j.ctx?.series_max_count || 8));\n\nif (!instruction) {\n  instruction = 'Preserve identity and symbolic logic; vary atmosphere, distance, and light pressure subtly.';\n}\n\nreturn [{\n  json: {\n    ...j,\n    series_request: {\n      count,\n      instruction,\n      mode\n    }\n  }\n}];"
+        "jsCode": "const j = $json || {};\nconst text = String(j.tg?.text || '').trim();\nconst isSlashCommand = /^\\s*\\/\\w+/.test(text);\n\nlet actionType = 'series';\nlet seriesRequest = null;\nlet bwRequest = null;\nlet videoRequest = null;\n\nconst bwMatch = text.match(/^\\s*\\/bw\\b\\s*(.*)$/i);\nconst videoMatch = text.match(/^\\s*\\/video\\b\\s*(.*)$/i);\nconst seriesMatch = text.match(/^\\s*\\/series\\b\\s*(.*)$/i);\n\nif (bwMatch) {\n  actionType = 'bw';\n  bwRequest = {\n    mode: 'explicit',\n    instruction: String(bwMatch[1] || '').trim() || 'Translate this still into a tactile monochrome photograph with tonal realism, natural texture, and real-world optical truth.'\n  };\n} else if (videoMatch) {\n  actionType = 'video';\n  videoRequest = {\n    mode: 'explicit',\n    instruction: String(videoMatch[1] || '').trim() || 'Prepare slow ceremonial motion that preserves the still as a real photographed moment with believable physics.'\n  };\n} else {\n  let count = Number(j.ctx?.series_default_count || 4);\n  let instruction = '';\n  let mode = 'implicit';\n\n  if (seriesMatch) {\n    mode = 'explicit';\n    const rest = String(seriesMatch[1] || '').trim();\n    const leading = rest.match(/^(\\d+)\\s*(.*)$/);\n\n    if (leading) {\n      count = Number(leading[1]);\n      instruction = String(leading[2] || '').trim();\n    } else {\n      instruction = rest;\n    }\n  } else if (!isSlashCommand && text.length >= 8) {\n    instruction = text;\n    mode = 'freeform';\n  } else if (isSlashCommand) {\n    throw new Error('TVPX__50: unsupported reply command. Use /series, /bw, /video, or a meaningful freeform series instruction.');\n  } else {\n    throw new Error('TVPX__50: reply is too short to treat as a series instruction. Use /series or a meaningful modifier.');\n  }\n\n  if (!Number.isFinite(count) || count < 1) count = Number(j.ctx?.series_default_count || 4);\n  count = Math.min(Math.max(count, 1), Number(j.ctx?.series_max_count || 8));\n\n  if (!instruction) {\n    instruction = 'Preserve identity and symbolic logic; vary atmosphere, distance, and light pressure subtly.';\n  }\n\n  seriesRequest = {\n    count,\n    instruction,\n    mode\n  };\n}\n\nreturn [{\n  json: {\n    ...j,\n    reply_action: {\n      type: actionType\n    },\n    series_request: seriesRequest,\n    bw_request: bwRequest,\n    video_request: videoRequest\n  }\n}];"
       },
       "id": "c96ca8e0-42f4-4b96-aee9-dffb338d5e79",
       "name": "Parse Series Command",
@@ -72,6 +72,7 @@
       "name": "Lookup Reply Index",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
+      "alwaysOutputData": true,
       "position": [
         -1344,
         352
@@ -79,7 +80,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Reattach Context After Reply Lookup\n */\n\nconst base = $items('Parse Series Command')[0].json;\nconst row = $input.all()[0]?.json || null;\n\nif (!row) {\n  throw new Error('TVPX__50: Could not find reply index record for this replied message. Ensure TVPX__40 registered it.');\n}\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    tg: base.tg,\n    series_request: base.series_request,\n    reply_index: row\n  }\n}];"
+        "jsCode": "/**\n * Reattach Context After Reply Lookup\n */\n\nconst base = $items('Parse Series Command')[0].json;\nconst row = $input.all()[0]?.json || null;\n\nif (!row || !String(row.asset_id || '').trim()) {\n  throw new Error('TVPX__50: Could not find reply index record for this replied message. Ensure TVPX__40 or TVPX__41 registered it.');\n}\nif (row.is_active === false) {\n  throw new Error('TVPX__50: reply index is inactive for this message.');\n}\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    tg: base.tg,\n    reply_action: base.reply_action,\n    series_request: base.series_request,\n    bw_request: base.bw_request,\n    video_request: base.video_request,\n    reply_index: row\n  }\n}];"
       },
       "id": "a6e9a0c9-0093-4277-ab90-26f047335e0c",
       "name": "Reattach After Reply Lookup",
@@ -114,6 +115,7 @@
       "name": "Get Parent Asset",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
+      "alwaysOutputData": true,
       "position": [
         -896,
         232
@@ -143,6 +145,7 @@
       "name": "Get Parent Concept",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
+      "alwaysOutputData": true,
       "position": [
         -896,
         424
@@ -165,7 +168,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Assemble Parent Packet\n * Ensures we have parent asset + parent concept; builds a compact packet.\n */\n\nconst base = $items('Reattach After Reply Lookup')[0].json;\nconst ctx = base.ctx;\n\nconst merged = $json;\n// Merge node passes one combined object; but we fetch from upstream nodes reliably too\nconst parentAsset = $items('Get Parent Asset')[0]?.json;\nconst parentConcept = $items('Get Parent Concept')[0]?.json;\n\nif (!parentAsset) throw new Error('TVPX__50: Parent asset not found.');\nif (!parentConcept) throw new Error('TVPX__50: Parent concept not found.');\n\nconst dna = (() => {\n  try { return JSON.parse(parentConcept.series_dna_json || '{}'); } catch { return {}; }\n})();\n\nreturn [{\n  json: {\n    ctx,\n    tg: base.tg,\n    series_request: base.series_request,\n    reply_index: base.reply_index,\n    parent: {\n      asset: parentAsset,\n      concept: parentConcept,\n      series_dna: dna\n    }\n  }\n}];"
+        "jsCode": "/**\n * Assemble Parent Packet\n * Ensures we have parent asset + parent concept; builds a compact packet.\n */\n\nconst base = $items('Reattach After Reply Lookup')[0].json;\nconst ctx = base.ctx;\n\nconst parentAsset = $items('Get Parent Asset')[0]?.json;\nconst parentConcept = $items('Get Parent Concept')[0]?.json;\n\nif (!parentAsset || !String(parentAsset.asset_id || '').trim()) throw new Error('TVPX__50: Parent asset not found.');\nif (!parentConcept || !String(parentConcept.concept_id || '').trim()) throw new Error('TVPX__50: Parent concept not found.');\n\nconst dna = (() => {\n  try { return JSON.parse(parentConcept.series_dna_json || '{}'); } catch { return {}; }\n})();\n\nreturn [{\n  json: {\n    ctx,\n    tg: base.tg,\n    reply_action: base.reply_action,\n    series_request: base.series_request,\n    bw_request: base.bw_request,\n    video_request: base.video_request,\n    reply_index: base.reply_index,\n    parent: {\n      asset: parentAsset,\n      concept: parentConcept,\n      series_dna: dna\n    }\n  }\n}];"
       },
       "id": "121b1c1e-5cd0-490d-be39-c289d8889a4f",
       "name": "Assemble Parent Packet",
@@ -206,14 +209,14 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Series_Variation_Designer for The Velvet Paradox.\n\nYour job is to produce a coherent variation plan inside the same visual universe.\n\nRules:\n- Preserve identity, concept thesis, symbolic logic, emotional temperature, and abstraction band.\n- Vary only controlled axes: atmosphere, distance, framing, light behavior, material emphasis, accent placement, ritual density.\n- Do not introduce random new objects.\n- Return valid JSON only.\n- Output exactly the requested number of variations.\n\nReturn exactly:\n{\n  \"series_group_id\": \"...\",\n  \"continuity_rules\": {\n    \"must_preserve\": [\"...\"],\n    \"must_avoid\": [\"...\"],\n    \"composition_dna\": \"...\",\n    \"abstraction_band\": [5.8, 6.8]\n  },\n  \"variations\": [\n    {\n      \"variation_index\": 1,\n      \"variation_instruction\": \"...\",\n      \"prompt_delta\": \"...\",\n      \"palette_shift\": \"...\",\n      \"atmosphere_shift\": \"...\",\n      \"intensity_change\": \"...\"\n    }\n  ]\n}"
+              "message": "=You are TVPX__LLM__Series_Variation_Designer for The Velvet Paradox.\n\nYour job is to produce a coherent variation plan inside the same visual universe.\n\nRules:\n- Preserve identity, concept thesis, symbolic logic, emotional temperature, photographic realism, and abstraction band.\n- Vary only controlled axes: atmosphere, distance, framing, light behavior, material emphasis, accent placement, ritual density.\n- Keep every variation stageable as a real photographed scene with believable anatomy, skin, optics, and material behavior.\n- Do not introduce random new objects.\n- Return valid JSON only.\n- Output exactly the requested number of variations.\n\nReturn exactly:\n{\n  \"series_group_id\": \"...\",\n  \"continuity_rules\": {\n    \"must_preserve\": [\"...\"],\n    \"must_avoid\": [\"...\"],\n    \"composition_dna\": \"...\",\n    \"abstraction_band\": [5.8, 6.8]\n  },\n  \"variations\": [\n    {\n      \"variation_index\": 1,\n      \"variation_instruction\": \"...\",\n      \"prompt_delta\": \"...\",\n      \"palette_shift\": \"...\",\n      \"atmosphere_shift\": \"...\",\n      \"intensity_change\": \"...\"\n    }\n  ]\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
         "batching": {},
-        "text": "=Requested count: {{ $json.series_request.count }}\nUser instruction: {{ $json.series_request.instruction }}\n\nParent asset:\n{{ JSON.stringify($json.parent.asset, null, 2) }}\n\nParent concept:\n{{ JSON.stringify($json.parent.concept, null, 2) }}\n\nParent series DNA:\n{{ JSON.stringify($json.parent.series_dna, null, 2) }}\n\nPreserve family resemblance."
+        "text": "=Requested count: {{ $json.series_request.count }}\nUser instruction: {{ $json.series_request.instruction }}\n\nParent asset:\n{{ JSON.stringify($json.parent.asset, null, 2) }}\n\nParent concept:\n{{ JSON.stringify($json.parent.concept, null, 2) }}\n\nParent series DNA:\n{{ JSON.stringify($json.parent.series_dna, null, 2) }}\n\nPreserve family resemblance and keep the future images feeling like real-life photographs rather than synthetic AI variations."
       },
       "id": "87bc97cb-7f53-41c4-86f0-69d9d9529ca9",
       "name": "LLM Series Variation Designer",
@@ -558,6 +561,692 @@
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.reply_action.type}}",
+              "rightValue": "series",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7c0a6e37-b9f1-43b2-9a7b-1e17ebf3bb21",
+      "name": "If Series Action",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.reply_action.type}}",
+              "rightValue": "bw",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5ebde0c3-6653-4d02-95ef-dbf73b02b495",
+      "name": "If B W Action",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "EMrgSDBhBwr8SiT9",
+          "mode": "list",
+          "cachedResultName": "tvpx_asset_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/EMrgSDBhBwr8SiT9"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "asset_family_id",
+              "keyValue": "={{$json.parent.asset.asset_family_id}}"
+            },
+            {
+              "keyName": "variant_key",
+              "keyValue": "bw"
+            }
+          ]
+        }
+      },
+      "id": "45e87c6c-f2ad-47d8-acde-d0ca6e8a4f5b",
+      "name": "Get Existing B W Asset",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        0,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Assemble Parent Packet')[0]?.json || {};\nconst rows = $input.all().map(i => i.json).filter(r => r && Object.keys(r).length);\nconst existing = rows.find(r => String(r.asset_id || '').trim()) || null;\nreturn [{ json: { ...base, existing_bw_asset: existing } }];"
+      },
+      "id": "9de7dfe0-7ad3-4c26-a4eb-3f4b90bbf356",
+      "name": "Reattach B W Lookup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.existing_bw_asset?.asset_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1814f50f-63ff-4db1-8d37-5ebfdbd8b35d",
+      "name": "Has Existing B W Asset",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        448,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.existing_bw_asset.drive_download_url || $json.existing_bw_asset.provider_image_url}}",
+        "options": {
+          "response": {},
+          "timeout": 180000
+        }
+      },
+      "id": "2b67d689-b91a-44d1-8642-620c2c4dfc7f",
+      "name": "Download Existing B W Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Reattach B W Lookup')[0]?.json || {};\nconst existing = base.existing_bw_asset || {};\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('TVPX__50: no binary downloaded for existing B&W asset.');\nconst firstKey = binKeys[0];\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(existing.concept_id || base.parent?.concept?.concept_id || '').trim(),\n    asset_id: String(existing.asset_id || '').trim(),\n    asset_family_id: String(existing.asset_family_id || base.parent?.asset?.asset_family_id || '').trim() || null\n  },\n  binary: {\n    image: $binary[firstKey]\n  }\n}];"
+      },
+      "id": "6dd6d967-c909-45c7-8489-7d25caec9d3a",
+      "name": "Prepare Existing B W Telegram Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{$json.ctx.telegram_chat_id}}",
+        "binaryData": true,
+        "binaryPropertyName": "image",
+        "additionalFields": {
+          "caption": "={{'The Velvet Paradox — B&W\\nConcept: ' + $json.concept_id + '\\nReply to THIS image with /series 4 for variations or /video for motion prep.'}}"
+        }
+      },
+      "id": "cffd024f-f7cc-4057-acde-cd80d8c4db81",
+      "name": "Send Existing B W To Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        416
+      ],
+      "webhookId": "6d3304ab-7cb6-4a5d-8431-9788ed7e080e",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Prepare Existing B W Telegram Packet')[0]?.json || {};\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\nreturn [{ json: { ...base, telegram: { bw_message_id: msgId ? Number(msgId) : null } } }];"
+      },
+      "id": "786adf3a-a3b7-4230-a1fe-b95b039afdf8",
+      "name": "Capture Existing B W Message Id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.telegram.bw_message_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d7917d8f-d6c3-4d1c-8a2d-c8fdd1742b48",
+      "name": "Has Existing B W Message Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "19rCaZx3furKQz5y",
+          "mode": "list",
+          "cachedResultName": "tvpx_telegram_reply_index",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/19rCaZx3furKQz5y"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{$json.ctx.telegram_chat_id}}"
+            },
+            {
+              "keyName": "message_id",
+              "keyValue": "={{$json.telegram.bw_message_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reply_index_id": "={{'tvpx_ridx_' + $json.asset_id}}",
+            "chat_id": "={{$json.ctx.telegram_chat_id}}",
+            "message_id": "={{$json.telegram.bw_message_id}}",
+            "asset_id": "={{$json.asset_id}}",
+            "asset_family_id": "={{$json.asset_family_id}}",
+            "concept_id": "={{$json.concept_id}}",
+            "message_role": "reply_bw",
+            "reply_mode": "reply_actions",
+            "is_active": true,
+            "created_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "37ddd23d-11c4-4279-98fc-f746d4ed7108",
+      "name": "Register Existing B W Reply Index",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        384
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst parentAsset = j.parent?.asset || {};\nconst parentConcept = j.parent?.concept || {};\nconst bwInstruction = String(j.bw_request?.instruction || '').trim();\nconst fallbackAssetId = `tvpx_as_${fnv1a(String(parentAsset.asset_id || parentConcept.concept_id || j.ctx?.trace_id || '') + '::bw')}`;\nconst assetId = String(parentAsset.asset_id || '').trim().replace(/_(color|bw)$/i, '_bw') || fallbackAssetId;\n\nconst prompt = [\n  'Photoreal black and white fine-art photograph, real-life camera image, not CGI or illustration.',\n  `Scene thesis: ${String(parentConcept.concept_thesis || '').trim()}.`,\n  `Symbolic tension: ${String(parentConcept.symbolic_tension || '').trim()}.`,\n  `Material anchor: ${String(parentConcept.material_anchor || '').trim()}.`,\n  `Spatial directive: ${String(parentConcept.spatial_directive || '').trim()}.`,\n  'Preserve staged inevitability, negative space as pressure, tactile material truth, and believable lens behavior.',\n  'If a person is present, keep natural skin texture, realistic eyes, hands, posture, wardrobe, age detail, and unretouched human asymmetry.',\n  'Use rich tonal separation, filmic shadow rolloff, real grain logic, and physically plausible monochrome light.',\n  bwInstruction\n].filter(Boolean).join(' ');\n\nconst negative = 'cgi, 3d render, illustration, painterly brushstrokes, cartoon stylization, plastic skin, waxy skin, smooth skin, airbrushed skin, beauty retouching, uncanny eyes, bad hands, extra fingers, duplicate limbs, deformed anatomy, fake grain, glossy synthetic surfaces, text, watermark, logo';\n\nreturn [{\n  json: {\n    ctx: j.ctx,\n    concept_id: String(parentConcept.concept_id || '').trim(),\n    asset_id: assetId,\n    asset_family_id: String(parentAsset.asset_family_id || j.reply_index?.asset_family_id || '').trim() || null,\n    concept_row: parentConcept,\n    render_variant: 'bw',\n    prompt,\n    negative_prompt: negative,\n    provider_controls: {\n      image_size: '1024x1280',\n      background: 'opaque',\n      quality: 'high',\n      output_format: 'png'\n    }\n  }\n}];"
+      },
+      "id": "74fb8a75-48c3-4d0b-8fb5-eb3d829f0b16",
+      "name": "Build B W Render Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.fal_api_key ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "45901c61-8a6f-4ef3-98e2-7f4731f6a6bb",
+      "name": "Has B W Render Auth",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        896,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.ctx.telegram_chat_id}}",
+        "text": "=The Velvet Paradox — /bw is reply-only and correctly routed, but this execution has no FAL image-render auth attached. Pass `fal_api_key` in the workflow input/context for monochrome rendering.",
+        "additionalFields": {}
+      },
+      "id": "fb33a74d-acde-4c48-8d16-8e553602f0e9",
+      "name": "Send B W Config Missing Ack",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        736
+      ],
+      "webhookId": "6ff18fdf-6ead-4ee8-99aa-e1da4a25a6f4",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ra2mY4yUOOtS4PHv",
+          "mode": "list",
+          "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
+          "cachedResultUrl": "/workflow/ra2mY4yUOOtS4PHv"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "ac68c9bd-79b0-4d1c-a3bb-7a321e1824ab",
+      "name": "Call B W Render",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        608
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.image_url ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a8d7f1b7-e63a-49c7-9ed8-01c1362f6c06",
+      "name": "Has Fresh B W Image Url",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$items('Initialize Envelope')[0].json.tg.chat_id}}",
+        "text": "=The Velvet Paradox — the /bw request could not be completed for this reply. Check the render provider config or the upstream render error and retry.",
+        "additionalFields": {}
+      },
+      "id": "79e2977f-f38a-4d4b-ae17-15c4ea52b2d4",
+      "name": "Send B W Render Failed Ack",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        704
+      ],
+      "webhookId": "5d7ec6b6-c305-4c1f-9c1b-3f6b7015a7d5",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const render = $json || {};\nconst base = $items('Build B W Render Request')[0]?.json || {};\nconst imageUrl = String(render.image_url || '').trim();\nif (!imageUrl) {\n  throw new Error('TVPX__50: B&W render returned no image_url.');\n}\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(render.concept_id || base.concept_id || '').trim(),\n    asset_id: String(base.asset_id || '').trim(),\n    asset_family_id: String(base.asset_family_id || '').trim() || null,\n    family: {\n      bw: {\n        image_url: imageUrl,\n        provider_image_url: imageUrl,\n        output_format: String(render.output_format || base.provider_controls?.output_format || 'png')\n      }\n    }\n  }\n}];"
+      },
+      "id": "86d94bf0-3e12-4252-b35e-4f6e7b5d8cab",
+      "name": "Build B W Finalizer Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "3nJbW4QhL9r2YpCk",
+          "mode": "list",
+          "cachedResultName": "TVPX__41__B W Finalizer And Telegram Dispatch",
+          "cachedResultUrl": "/workflow/3nJbW4QhL9r2YpCk"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "744aaec9-052c-49d0-a995-8a69d10e43db",
+      "name": "Call B W Finalizer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IQPfZFZ9krMbQRcA",
+          "mode": "list",
+          "cachedResultName": "tvpx_video_seed_queue",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/IQPfZFZ9krMbQRcA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "asset_id",
+              "keyValue": "={{$json.parent.asset.asset_id}}"
+            }
+          ]
+        }
+      },
+      "id": "cbc47684-8483-4204-9bba-01d8f45ccada",
+      "name": "Get Existing Video Seed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        0,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $items('Assemble Parent Packet')[0]?.json || {};\nconst parentAsset = base.parent?.asset || {};\nconst parentConcept = base.parent?.concept || {};\nconst rows = $input.all().map(i => i.json).filter(r => r && Object.keys(r).length && String(r.asset_id || '').trim());\nconst priority = { prepared: 5, queued: 4, processing: 3, failed: 2, timed_out: 1, cancelled: 0 };\nrows.sort((a, b) => (priority[String(b.state || '').trim().toLowerCase()] || -1) - (priority[String(a.state || '').trim().toLowerCase()] || -1));\nconst existing = rows[0] || null;\nconst state = String(existing?.state || '').trim().toLowerCase();\nconst shouldUpsert = !existing || ['failed', 'timed_out', 'cancelled'].includes(state);\nconst shouldPrepare = !existing || state === 'queued' || ['failed', 'timed_out', 'cancelled'].includes(state);\nconst stillUrl = String(parentAsset.drive_view_url || parentAsset.drive_download_url || parentAsset.provider_image_url || '').trim();\nif (!stillUrl) {\n  throw new Error('TVPX__50: parent asset has no still image URL for motion prep.');\n}\nconst videoSeedId = String(existing?.video_seed_id || `tvpx_vid_${fnv1a(String(parentAsset.asset_id || parentConcept.concept_id || base.ctx?.trace_id || ''))}`);\nlet ackText = 'The Velvet Paradox — motion prep queued for this image.';\nif (state === 'prepared') ackText = 'The Velvet Paradox — motion prep already exists for this image.';\nelse if (state === 'processing') ackText = 'The Velvet Paradox — motion prep is already in progress for this image.';\nelse if (state === 'queued') ackText = 'The Velvet Paradox — motion prep was already queued; refreshing the prep run now.';\nelse if (['failed', 'timed_out', 'cancelled'].includes(state)) ackText = 'The Velvet Paradox — motion prep was stale, so it has been re-queued.';\nreturn [{\n  json: {\n    ...base,\n    existing_video_seed: existing,\n    video_plan: {\n      state,\n      should_upsert: shouldUpsert,\n      should_prepare: shouldPrepare,\n      ack_text: ackText,\n      video_seed: {\n        video_seed_id: videoSeedId,\n        asset_id: String(parentAsset.asset_id || '').trim(),\n        concept_id: String(parentConcept.concept_id || '').trim(),\n        provider_target: 'fal_video',\n        still_image_drive_url: stillUrl,\n        motion_prompt: String(base.video_request?.instruction || '').trim(),\n        camera_motion_profile: '',\n        duration_hint: '5-7s',\n        aspect_ratio: '4:5',\n        state: 'queued',\n        created_at: new Date().toISOString()\n      }\n    }\n  }\n}];"
+      },
+      "id": "1b7974cc-e520-486d-9b1c-9d7f0f0e5c86",
+      "name": "Plan Video Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.video_plan.should_upsert ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "efe16c6f-62c3-470c-9356-8ecb49c26561",
+      "name": "Should Upsert Video Seed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        448,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IQPfZFZ9krMbQRcA",
+          "mode": "list",
+          "cachedResultName": "tvpx_video_seed_queue",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/IQPfZFZ9krMbQRcA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "video_seed_id",
+              "keyValue": "={{$json.video_plan.video_seed.video_seed_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "video_seed_id": "={{$json.video_plan.video_seed.video_seed_id}}",
+            "asset_id": "={{$json.video_plan.video_seed.asset_id}}",
+            "concept_id": "={{$json.video_plan.video_seed.concept_id}}",
+            "provider_target": "={{$json.video_plan.video_seed.provider_target}}",
+            "still_image_drive_url": "={{$json.video_plan.video_seed.still_image_drive_url}}",
+            "motion_prompt": "={{$json.video_plan.video_seed.motion_prompt}}",
+            "camera_motion_profile": "={{$json.video_plan.video_seed.camera_motion_profile}}",
+            "duration_hint": "={{$json.video_plan.video_seed.duration_hint}}",
+            "aspect_ratio": "={{$json.video_plan.video_seed.aspect_ratio}}",
+            "state": "={{$json.video_plan.video_seed.state}}",
+            "created_at": "={{$json.video_plan.video_seed.created_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "55315a7d-d3f6-4adb-8f72-f9fb4cf2b0ea",
+      "name": "Upsert Video Seed Queue",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        672,
+        768
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "71fdf8d4-1939-4dc8-b4dd-9963246aa3f7",
+      "name": "Video Plan Ready",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        896,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.video_plan.should_prepare ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c464bbde-d6a6-4a61-a828-f3020b8cd9ea",
+      "name": "Should Call Video Seed Preparer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1ik7wsmxCMqRD01E",
+          "mode": "list",
+          "cachedResultName": "TVPX__60__Video Seed Preparer",
+          "cachedResultUrl": "/workflow/1ik7wsmxCMqRD01E"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "83d6347d-6d3f-4218-b1a8-c4288fa7dbe7",
+      "name": "Call Video Seed Preparer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        768
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.tg.chat_id}}",
+        "text": "={{$json.video_plan.ack_text}}",
+        "additionalFields": {}
+      },
+      "id": "6f894c65-d746-46d3-8afe-bbb31d731c12",
+      "name": "Send Video Ack",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        832
+      ],
+      "webhookId": "38d35789-1bb2-4d69-9ca1-3ed7238683de",
+      "credentials": {
+        "telegramApi": {
+          "id": "nXE4YlrFVa15bP8Q",
+          "name": "videoGenForSocialBot"
+        }
+      }
     }
   ],
   "connections": {
@@ -658,7 +1347,43 @@
       "main": [
         [
           {
+            "node": "If Series Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Series Action": {
+      "main": [
+        [
+          {
             "node": "LLM Series Variation Designer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If B W Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If B W Action": {
+      "main": [
+        [
+          {
+            "node": "Get Existing B W Asset",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Existing Video Seed",
             "type": "main",
             "index": 0
           }
@@ -778,6 +1503,262 @@
             "node": "LLM Series Variation Designer",
             "type": "ai_languageModel",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Existing B W Asset": {
+      "main": [
+        [
+          {
+            "node": "Reattach B W Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach B W Lookup": {
+      "main": [
+        [
+          {
+            "node": "Has Existing B W Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Existing B W Asset": {
+      "main": [
+        [
+          {
+            "node": "Download Existing B W Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build B W Render Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Existing B W Image": {
+      "main": [
+        [
+          {
+            "node": "Prepare Existing B W Telegram Packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Existing B W Telegram Packet": {
+      "main": [
+        [
+          {
+            "node": "Send Existing B W To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Existing B W To Telegram": {
+      "main": [
+        [
+          {
+            "node": "Capture Existing B W Message Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Existing B W Message Id": {
+      "main": [
+        [
+          {
+            "node": "Has Existing B W Message Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Existing B W Message Id": {
+      "main": [
+        [
+          {
+            "node": "Register Existing B W Reply Index",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Build B W Render Request": {
+      "main": [
+        [
+          {
+            "node": "Has B W Render Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has B W Render Auth": {
+      "main": [
+        [
+          {
+            "node": "Call B W Render",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send B W Config Missing Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call B W Render": {
+      "main": [
+        [
+          {
+            "node": "Has Fresh B W Image Url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Fresh B W Image Url": {
+      "main": [
+        [
+          {
+            "node": "Build B W Finalizer Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send B W Render Failed Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build B W Finalizer Payload": {
+      "main": [
+        [
+          {
+            "node": "Call B W Finalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Video Seed": {
+      "main": [
+        [
+          {
+            "node": "Plan Video Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Video Request": {
+      "main": [
+        [
+          {
+            "node": "Should Upsert Video Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Upsert Video Seed": {
+      "main": [
+        [
+          {
+            "node": "Upsert Video Seed Queue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Video Plan Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Video Seed Queue": {
+      "main": [
+        [
+          {
+            "node": "Video Plan Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Plan Ready": {
+      "main": [
+        [
+          {
+            "node": "Should Call Video Seed Preparer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Call Video Seed Preparer": {
+      "main": [
+        [
+          {
+            "node": "Call Video Seed Preparer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Video Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Video Seed Preparer": {
+      "main": [
+        [
+          {
+            "node": "Send Video Ack",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
