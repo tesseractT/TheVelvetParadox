@@ -68,90 +68,31 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "yWenhwOARipjjBIq",
+          "value": "DOpMQGynGFn8U3vb",
           "mode": "list",
-          "cachedResultName": "tvpx_crawl_run_ledger",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/yWenhwOARipjjBIq"
+          "cachedResultName": "tvpx_text_fragment_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DOpMQGynGFn8U3vb"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "status",
-              "keyValue": "completed"
+              "keyName": "qa_status",
+              "keyValue": "clean"
             }
           ]
         },
-        "options": {
-          "limit": 20
-        }
+        "limit": 500
       },
-      "id": "c4d5e6f7-0004-4000-8000-000000000004",
-      "name": "Get Latest Crawl Run From Ledger",
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Get Clean Fragments",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
         -1168,
         340
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/**\n * Build Envelope From Ledger (manual run path)\n * Input: rows from Get Latest Crawl Run From Ledger. Pick latest by completed_at, build ctx/source.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst rows = $input.all().map(i => i.json).filter(Boolean);\nconst sorted = rows.slice().sort((a, b) => {\n  const ta = Date.parse(String(a.completed_at || a.started_at || ''));\n  const tb = Date.parse(String(b.completed_at || b.started_at || ''));\n  return (tb || 0) - (ta || 0);\n});\nconst row = sorted[0];\nconst now = new Date().toISOString();\n\nif (!row || !String(row.crawl_run_id || '').trim()) {\n  return [{\n    json: {\n      ctx: { crawl_run_id: '', source_id: '', trace_id: `tvpx_${fnv1a(now)}` },\n      source: {},\n      manual_run_instructions: true,\n      message: \"No completed crawl run found in tvpx_crawl_run_ledger. Run tvpx__10 first or provide crawl_run_id when triggering this workflow.\"\n    }\n  }];\n}\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: String(row.trace_id || '').trim() || `tvpx_${fnv1a(now + (row.crawl_run_id || ''))}`,\n  trigger_mode: String(row.trigger_mode || '').trim() || 'manual',\n  route_mode: 'concept_forge',\n  received_at: now,\n  crawl_run_id: String(row.crawl_run_id || '').trim(),\n  source_id: String(row.source_id || '').trim(),\n  max_fragments_for_llm: 10,\n  max_chars_per_fragment_for_llm: 1400,\n  target_abstraction_min: 5.8,\n  target_abstraction_max: 6.8\n};\nconst source = {};\n\nreturn [{ json: { ctx, source, input: row, carry: {}, provided_fragments: [] } }];"
-      },
-      "id": "d5e6f7a8-0005-4000-8000-000000000005",
-      "name": "Build Envelope From Ledger",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -1056,
-        340
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "cond_ledger_crawl_run",
-              "leftValue": "={{($json.ctx.crawl_run_id || '').length}}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "larger"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "e6f7a8b9-0006-4000-8000-000000000006",
-      "name": "Has Ledger Row",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -944,
-        340
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/**\n * Manual Run Instructions (TVPX__20)\n * Shown when workflow is run without required payload and no completed run in ledger.\n */\nconst ctx = $json.ctx || {};\nreturn [{\n  json: {\n    ctx,\n    manual_run_instructions: true,\n    message: \"When running this workflow manually, provide input with at least crawl_run_id (and optionally source_id). Get crawl_run_id from tvpx_crawl_run_ledger or tvpx_text_fragment_bank.\",\n    required_payload: {\n      crawl_run_id: \"required \u2014 from tvpx_crawl_run_ledger.crawl_run_id or tvpx_text_fragment_bank.crawl_run_id\",\n      source_id: \"optional \u2014 from source registry\",\n      ctx: \"optional \u2014 { trace_id?, trigger_mode?, max_fragments_for_llm?, target_abstraction_min?, target_abstraction_max? }\",\n      source: \"optional \u2014 { source_url?, crawl_profile?, ... } for LLM context\",\n    },\n    example: { crawl_run_id: \"tvpx_cr_<hash>\", source_id: \"nautilus\" },\n  },\n}];"
-      },
-      "id": "a1b2c3d4-0002-4000-8000-000000000002",
-      "name": "Manual Run Instructions",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -832,
-        460
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -184,7 +125,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Reattach Context After Fragments\n * Use envelope from manual-run path (Build Envelope From Ledger) when present, else from trigger (Initialize Envelope).\n */\nconst base = $items('Build Envelope From Ledger')[0]?.json || $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst source = base.source || {};\n\nconst dtRows = $input.all().map(i => i.json);\nconst provided = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst fragments = dtRows.length ? dtRows : provided;\n\nreturn [{ json: { ctx, source, fragments } }];"
+        "jsCode": "/**\n * Reattach Context After Fragments\n * Supports both direct crawl_run_id lookups and autonomous run selection.\n */\nconst base = $items('Initialize Envelope')[0]?.json || {};\nlet autonomous = {};\ntry {\n  autonomous = $items('Pick Candidate Run')[0]?.json || {};\n} catch {\n  autonomous = {};\n}\n\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst autoCtx = (autonomous.ctx && typeof autonomous.ctx === 'object') ? autonomous.ctx : {};\nconst ctx = String(autoCtx.crawl_run_id || '').trim() ? autoCtx : baseCtx;\n\nconst inputRows = $input.all().map(i => i.json || {});\nconst dtFragmentRows = inputRows.filter(row => row && String(row.fragment_id || '').trim());\nconst autonomousFragments = Array.isArray(autonomous.fragments) ? autonomous.fragments : [];\nconst providedFragments = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst fragments = dtFragmentRows.length ? dtFragmentRows : (autonomousFragments.length ? autonomousFragments : providedFragments);\n\nconst sourceLookupRow = inputRows.find(row => {\n  if (!row || String(row.fragment_id || '').trim()) return false;\n  return Boolean(row.source_id || row.source_url || row.url || row.source_label || row.source_type || row.crawl_profile);\n});\n\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst autonomousSource = (autonomous.source && typeof autonomous.source === 'object') ? autonomous.source : {};\nconst source = (sourceLookupRow && Object.keys(sourceLookupRow).length)\n  ? sourceLookupRow\n  : (Object.keys(autonomousSource).length ? autonomousSource : baseSource);\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    fragments,\n    candidate_run: autonomous.candidate_run || null,\n    candidate_debug: autonomous.candidate_debug || null,\n  }\n}];"
       },
       "id": "ee925050-b69c-497b-95e0-0d7a08784efd",
       "name": "Reattach Context After Fragments",
@@ -229,7 +170,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/** Build No Fragments Reject */\nconst base = $items('Reattach Context After Fragments')[0].json;\nconst ctx = base.ctx;\nconst now = new Date().toISOString();\nreturn [{\n  json: {\n    ctx,\n    reject: {\n      reject_id: `tvpx_rej_${ctx.trace_id}_no_fragments`,\n      trace_id: ctx.trace_id,\n      stage_name: 'concept_forge_ingress',\n      rejection_reason: 'No fragments found for crawl_run_id. Upstream crawl may have yielded empty dataset or mapping mismatch.',\n      raw_output_json: JSON.stringify({ crawl_run_id: ctx.crawl_run_id, source_id: ctx.source_id }),\n      created_at: now\n    }\n  }\n}];"
+        "jsCode": "/** Build No Fragments Reject */\nconst base = $items('Reattach Context After Fragments')[0].json;\nconst ctx = base.ctx;\nconst now = new Date().toISOString();\nreturn [{\n  json: {\n    ctx,\n    reject: {\n      reject_id: `tvpx_rej_${ctx.trace_id}_no_fragments`,\n      trace_id: ctx.trace_id,\n      stage_name: 'concept_forge_ingress',\n      rejection_reason: 'No eligible fragments were found for concept forging. The selected crawl run may be empty, already consumed, or missing clean fragments.',\n      raw_output_json: JSON.stringify({ crawl_run_id: ctx.crawl_run_id, source_id: ctx.source_id }),\n      created_at: now\n    }\n  }\n}];"
       },
       "id": "83fd6a90-9672-4e9f-aa77-5e4d9196910b",
       "name": "Build No Fragments Reject",
@@ -662,7 +603,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/** Build Concept Row for tvpx_concept_pool */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date().toISOString();\n\nconst seed = `${ctx.trace_id}::${ctx.crawl_run_id}::${(j.bundle.fragment_ids||[]).join(',')}::${j.symbolic_tension.concept_thesis}`;\nconst conceptId = `tvpx_cp_${fnv1a(seed)}`;\n\nconst seriesDNA = {\n  brand: 'The Velvet Paradox',\n  abstraction_target: j.abstraction.abstraction_target,\n  mechanisms: j.abstraction.abstraction_mechanisms || [],\n  composition_bias: j.composition.framing_bias || '',\n  focal_strategy: j.composition.focal_strategy || '',\n  palette: {\n    base: j.chromatic.base_palette || [],\n    accent: j.chromatic.accent_palette || [],\n    luminance: j.chromatic.luminance_behavior || ''\n  },\n  texture_stack: j.composition.texture_stack || [],\n  atmosphere: j.chromatic.atmosphere_notes || ''\n};\n\nconst guardrails = {\n  anti_stock: true,\n  avoid_cliches: ['teamwork','lightbulb','gears','handshake','generic office'],\n  keep_representational: true,\n  maintain_singular_focal_point: true,\n  preserve_negative_space_as_pressure: true,\n  preserve_staged_inevitability: true,\n  preserve_photographic_realism: true,\n  avoid_ai_synthetic_finish: true,\n  prefer_natural_skin_texture: true,\n  prefer_real_world_optics: true,\n  abstraction_band: [Number(ctx.target_abstraction_min||5.8), Number(ctx.target_abstraction_max||6.8)]\n};\n\nreturn [{\n  json: {\n    ctx: { ...ctx, concept_id: conceptId, root_concept_id: conceptId },\n    concept: {\n      concept_id: conceptId,\n      trace_id: ctx.trace_id,\n      origin_type: 'crawler',\n      source_id: ctx.source_id,\n      parent_concept_id: null,\n      root_concept_id: conceptId,\n      seed_fragment_ids_json: JSON.stringify(j.bundle.fragment_ids || []),\n      concept_thesis: String(j.symbolic_tension.concept_thesis || '').trim(),\n      symbolic_tension: String(j.symbolic_tension.symbolic_tension || '').trim(),\n      material_anchor: String(j.symbolic_tension.material_anchor || '').trim(),\n      spatial_directive: String(j.composition.foreground_midground_background || j.symbolic_tension.spatial_hint || '').trim(),\n      palette_directive: JSON.stringify(j.chromatic || {}),\n      texture_directive: JSON.stringify({ texture_stack: j.composition.texture_stack || [] }),\n      abstraction_target: Number(j.abstraction.abstraction_target || 6.2),\n      series_dna_json: JSON.stringify(seriesDNA),\n      prompt_guardrails_json: JSON.stringify(guardrails),\n      quality_score: Number(j.critic.score || 0),\n      state: 'ready',\n      lock_owner: '',\n      lock_expires_at: '',\n      used_count: 0,\n      last_used_at: '',\n      created_at: now,\n      updated_at: now\n    }\n  }\n}];"
+        "jsCode": "/** Build Concept Row for tvpx_concept_pool */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date().toISOString();\n\nconst seed = `${ctx.trace_id}::${ctx.crawl_run_id}::${(j.bundle.fragment_ids||[]).join(',')}::${j.symbolic_tension.concept_thesis}`;\nconst conceptId = `tvpx_cp_${fnv1a(seed)}`;\n\nconst seriesDNA = {\n  brand: 'The Velvet Paradox',\n  abstraction_target: j.abstraction.abstraction_target,\n  mechanisms: j.abstraction.abstraction_mechanisms || [],\n  composition_bias: j.composition.framing_bias || '',\n  focal_strategy: j.composition.focal_strategy || '',\n  palette: {\n    base: j.chromatic.base_palette || [],\n    accent: j.chromatic.accent_palette || [],\n    luminance: j.chromatic.luminance_behavior || ''\n  },\n  texture_stack: j.composition.texture_stack || [],\n  atmosphere: j.chromatic.atmosphere_notes || ''\n};\n\nconst guardrails = {\n  anti_stock: true,\n  avoid_cliches: ['teamwork','lightbulb','gears','handshake','generic office'],\n  keep_representational: true,\n  maintain_singular_focal_point: true,\n  preserve_negative_space_as_pressure: true,\n  preserve_staged_inevitability: true,\n  preserve_photographic_realism: true,\n  avoid_ai_synthetic_finish: true,\n  prefer_natural_skin_texture: true,\n  prefer_real_world_optics: true,\n  abstraction_band: [Number(ctx.target_abstraction_min||5.8), Number(ctx.target_abstraction_max||6.8)]\n};\n\nreturn [{\n  json: {\n    ctx: { ...ctx, concept_id: conceptId, root_concept_id: conceptId },\n    concept: {\n      concept_id: conceptId,\n      trace_id: ctx.trace_id,\n      crawl_run_id: ctx.crawl_run_id,\n      origin_type: 'crawler',\n      source_id: ctx.source_id,\n      parent_concept_id: null,\n      root_concept_id: conceptId,\n      seed_fragment_ids_json: JSON.stringify(j.bundle.fragment_ids || []),\n      concept_thesis: String(j.symbolic_tension.concept_thesis || '').trim(),\n      symbolic_tension: String(j.symbolic_tension.symbolic_tension || '').trim(),\n      material_anchor: String(j.symbolic_tension.material_anchor || '').trim(),\n      spatial_directive: String(j.composition.foreground_midground_background || j.symbolic_tension.spatial_hint || '').trim(),\n      palette_directive: JSON.stringify(j.chromatic || {}),\n      texture_directive: JSON.stringify({ texture_stack: j.composition.texture_stack || [] }),\n      abstraction_target: Number(j.abstraction.abstraction_target || 6.2),\n      series_dna_json: JSON.stringify(seriesDNA),\n      prompt_guardrails_json: JSON.stringify(guardrails),\n      quality_score: Number(j.critic.score || 0),\n      state: 'ready',\n      lock_owner: '',\n      lock_expires_at: '',\n      used_count: 0,\n      last_used_at: '',\n      created_at: now,\n      updated_at: now\n    }\n  }\n}];"
       },
       "id": "2608dc5a-5c8c-41d7-9d17-1883a083d2fb",
       "name": "Build Concept Row",
@@ -696,6 +637,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "concept_id": "={{$json.concept.concept_id}}",
+            "crawl_run_id": "={{$json.concept.crawl_run_id}}",
             "origin_type": "={{$json.concept.origin_type}}",
             "source_id": "={{$json.concept.source_id}}",
             "parent_concept_id": "={{$json.concept.parent_concept_id}}",
@@ -724,6 +666,16 @@
             {
               "id": "concept_id",
               "displayName": "concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "crawl_run_id",
+              "displayName": "crawl_run_id",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -1123,6 +1075,73 @@
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "limit": 500
+      },
+      "id": "5b571c75-6c4f-41c4-b1d7-2f2cf1a3b201",
+      "name": "Get Existing Concepts",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        340
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Pick Candidate Run\n * Selects an eligible crawl_run_id from clean fragments when no run was supplied.\n */\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst requestedSourceId = String(baseCtx.source_id || '').trim();\n\nconst fragmentRows = $items('Get Clean Fragments')\n  .map(i => i.json || {})\n  .filter(r => r && Object.keys(r).length);\n\nconst conceptRows = $items('Get Existing Concepts')\n  .map(i => i.json || {})\n  .filter(r => r && Object.keys(r).length);\n\nconst consumedRunIds = new Set(\n  conceptRows\n    .map(r => String(r.crawl_run_id || '').trim())\n    .filter(Boolean)\n);\n\nconst groups = new Map();\nfor (const row of fragmentRows) {\n  const fragmentId = String(row.fragment_id || row.id || row.dt_row_id || '').trim();\n  const crawlRunId = String(row.crawl_run_id || '').trim();\n  const sourceId = String(row.source_id || '').trim();\n  const cleanedText = String(row.cleaned_text || row.text || row.raw_text || '').trim();\n  const qaStatus = String(row.qa_status || '').trim().toLowerCase();\n  const createdAt = String(row.created_at || '').trim();\n\n  if (!fragmentId || !crawlRunId || !sourceId || !cleanedText) continue;\n  if (qaStatus && qaStatus !== 'clean') continue;\n  if (requestedSourceId && sourceId !== requestedSourceId) continue;\n\n  if (!groups.has(crawlRunId)) {\n    groups.set(crawlRunId, {\n      crawl_run_id: crawlRunId,\n      source_id: sourceId,\n      fragments: [],\n      newest_created_at: '',\n    });\n  }\n\n  const group = groups.get(crawlRunId);\n  if (group.fragments.some(f => String(f.fragment_id || '').trim() === fragmentId)) continue;\n  group.fragments.push(row);\n  if (createdAt && (!group.newest_created_at || createdAt > group.newest_created_at)) {\n    group.newest_created_at = createdAt;\n  }\n}\n\nconst candidates = Array.from(groups.values())\n  .map(group => ({\n    ...group,\n    fragment_count: group.fragments.length,\n  }))\n  .filter(group => group.fragment_count >= 3)\n  .filter(group => !consumedRunIds.has(group.crawl_run_id))\n  .sort((a, b) => {\n    if (b.fragment_count !== a.fragment_count) return b.fragment_count - a.fragment_count;\n    return String(b.newest_created_at || '').localeCompare(String(a.newest_created_at || ''));\n  });\n\nconst picked = candidates[0] || null;\nconst nextCtx = {\n  ...baseCtx,\n  crawl_run_id: String(picked?.crawl_run_id || baseCtx.crawl_run_id || '').trim(),\n  source_id: String(picked?.source_id || baseCtx.source_id || '').trim(),\n};\n\nreturn [{\n  json: {\n    ctx: nextCtx,\n    source: baseSource,\n    fragments: Array.isArray(picked?.fragments) ? picked.fragments : [],\n    candidate_run: picked ? {\n      crawl_run_id: picked.crawl_run_id,\n      source_id: picked.source_id,\n      fragment_count: picked.fragment_count,\n      newest_created_at: picked.newest_created_at,\n    } : null,\n    candidate_debug: {\n      requested_source_id: requestedSourceId,\n      total_clean_fragments_scanned: fragmentRows.length,\n      grouped_runs: groups.size,\n      consumed_runs_count: consumedRunIds.size,\n      eligible_runs_count: candidates.length,\n    },\n  }\n}];"
+      },
+      "id": "b8f3f949-6ff2-4582-9f02-1bc3ecb0ac4b",
+      "name": "Pick Candidate Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "T3ws14nAvLePi5js",
+          "mode": "list",
+          "cachedResultName": "tvpx_source_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/T3ws14nAvLePi5js"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_id",
+              "keyValue": "={{$json.ctx.source_id}}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "8e7d6dcf-2459-47fb-9d5e-71e9b47128e7",
+      "name": "Get Source For Run",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        340
+      ],
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -1465,47 +1484,51 @@
         ],
         [
           {
-            "node": "Get Latest Crawl Run From Ledger",
+            "node": "Get Clean Fragments",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get Latest Crawl Run From Ledger": {
+    "Get Clean Fragments": {
       "main": [
         [
           {
-            "node": "Build Envelope From Ledger",
+            "node": "Get Existing Concepts",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Build Envelope From Ledger": {
+    "Get Existing Concepts": {
       "main": [
         [
           {
-            "node": "Has Ledger Row",
+            "node": "Pick Candidate Run",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Has Ledger Row": {
+    "Pick Candidate Run": {
       "main": [
         [
           {
-            "node": "Get Fragments For Run",
+            "node": "Get Source For Run",
             "type": "main",
             "index": 0
           }
-        ],
+        ]
+      ]
+    },
+    "Get Source For Run": {
+      "main": [
         [
           {
-            "node": "Manual Run Instructions",
+            "node": "Reattach Context After Fragments",
             "type": "main",
             "index": 0
           }
