@@ -338,12 +338,20 @@
         },
         "options": {
           "waitForSubWorkflow": false
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "3be60d3d-93dc-471f-8b7f-67983c340782",
       "name": "Call Image Generation",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
         1024,
         160
@@ -936,12 +944,20 @@
         },
         "options": {
           "waitForSubWorkflow": true
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "ac68c9bd-79b0-4d1c-a3bb-7a321e1824ab",
       "name": "Call B W Render",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
         1120,
         608
@@ -1026,12 +1042,20 @@
         },
         "options": {
           "waitForSubWorkflow": true
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "744aaec9-052c-49d0-a995-8a69d10e43db",
       "name": "Call B W Finalizer",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
         1792,
         576
@@ -1214,12 +1238,20 @@
         },
         "options": {
           "waitForSubWorkflow": false
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         }
       },
       "id": "83d6347d-6d3f-4218-b1a8-c4288fa7dbe7",
       "name": "Call Video Seed Preparer",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
+      "typeVersion": 1.3,
       "position": [
         1344,
         768
@@ -1474,14 +1506,14 @@
       "main": [
         [
           {
-            "node": "Build Image Generation Payload",
+            "node": "Send Series Queued Ack",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Send Series Queued Ack",
+            "node": "Build Image Generation Payload",
             "type": "main",
             "index": 0
           }

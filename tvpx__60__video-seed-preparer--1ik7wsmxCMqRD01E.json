@@ -353,16 +353,10 @@
     },
     "Loop Seeds": {
       "main": [
+        [],
         [
           {
             "node": "Get Source Asset",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Next Seed",
             "type": "main",
             "index": 0
           }
