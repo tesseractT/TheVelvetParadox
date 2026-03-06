@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "updatedAt": "2026-03-06T20:28:57.731Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "XtyvRQfTLySqT16o",
   "name": "TVPX__30__Scene Blueprint Batch Render",
@@ -15,7 +15,7 @@
       "typeVersion": 1,
       "position": [
         -2160,
-        260
+        200
       ]
     },
     {
@@ -33,8 +33,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        -240,
-        520
+        312,
+        424
       ],
       "credentials": {
         "openAiApi": {
@@ -44,14 +44,6 @@
       }
     },
     {
-      "id": "09dc3ece-12de-4c4a-b0c1-c4faca36bb7b",
-      "name": "Director Model xAI Fallback Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
-      "typeVersion": 1,
-      "position": [
-        -240,
-        720
-      ],
       "parameters": {
         "model": {
           "__rl": true,
@@ -60,7 +52,15 @@
           "cachedResultName": "grok-4-1-fast-reasoning"
         },
         "options": {}
-      }
+      },
+      "id": "09dc3ece-12de-4c4a-b0c1-c4faca36bb7b",
+      "name": "Director Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        440,
+        424
+      ]
     },
     {
       "parameters": {
@@ -71,8 +71,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1940,
-        260
+        -1936,
+        200
       ]
     },
     {
@@ -103,8 +103,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1720,
-        260
+        -1712,
+        200
       ]
     },
     {
@@ -132,8 +132,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -1500,
-        160
+        -1488,
+        128
       ]
     },
     {
@@ -161,8 +161,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -1500,
-        360
+        -1488,
+        320
       ]
     },
     {
@@ -174,8 +174,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1280,
-        360
+        -1264,
+        320
       ]
     },
     {
@@ -187,8 +187,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1280,
-        160
+        -1264,
+        128
       ]
     },
     {
@@ -200,8 +200,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1060,
-        260
+        -1040,
+        200
       ]
     },
     {
@@ -244,8 +244,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -840,
-        260
+        -816,
+        200
       ]
     },
     {
@@ -273,8 +273,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -620,
-        260
+        -592,
+        200
       ]
     },
     {
@@ -286,8 +286,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -400,
-        260
+        -368,
+        200
       ]
     },
     {
@@ -316,8 +316,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -180,
-        260
+        -144,
+        200
       ],
       "alwaysOutputData": true
     },
@@ -330,12 +330,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        40,
-        260
+        80,
+        200
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nReference rule:\nThe result must feel like one of the uploaded reference families: cinematic, authored, sparse, tactile, image-native.\n\nBuild three blueprints only.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -343,18 +346,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nReference rule:\nThe result must feel like one of the uploaded reference families: cinematic, authored, sparse, tactile, image-native.\n\nBuild three blueprints only."
+        "batching": {}
       },
       "id": "0312f809-6197-4f34-affc-5e5f8de94081",
       "name": "LLM Scene Blueprint Director",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        260,
-        260
+        304,
+        200
       ]
     },
     {
@@ -366,8 +366,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        480,
-        260
+        656,
+        200
       ]
     },
     {
@@ -379,8 +379,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        700,
-        260
+        880,
+        200
       ]
     },
     {
@@ -437,12 +437,15 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        920,
-        120
+        1168,
+        128
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nBlueprint:\n{{ JSON.stringify($json.blueprint, null, 2) }}\n\nWrite a production-grade GPT Image 1.5 prompt that belongs to this archetype and avoids editorial illustration.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -450,18 +453,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nBlueprint:\n{{ JSON.stringify($json.blueprint, null, 2) }}\n\nWrite a production-grade GPT Image 1.5 prompt that belongs to this archetype and avoids editorial illustration."
+        "batching": {}
       },
       "id": "f8b1de6e-ecaf-4f06-afc2-f5de3800047f",
       "name": "LLM Final Prompt Smith V2",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        920,
-        260
+        1104,
+        320
       ]
     },
     {
@@ -473,8 +473,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1140,
-        260
+        1456,
+        320
       ]
     },
     {
@@ -486,8 +486,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1360,
-        260
+        1680,
+        320
       ]
     },
     {
@@ -499,9 +499,6 @@
           "cachedResultName": "TVPX__30A__Fal Batch Render Submit And Poll",
           "cachedResultUrl": "/workflow/2uSefQgL3Y5q90Vc"
         },
-        "options": {
-          "waitForSubWorkflow": true
-        },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {},
@@ -509,6 +506,9 @@
           "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
         }
       },
       "id": "e40bcafc-c290-4999-abb7-80f4a3ccd8a0",
@@ -516,8 +516,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1580,
-        260
+        1904,
+        320
       ]
     },
     {
@@ -572,8 +572,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1800,
-        120
+        2128,
+        128
       ]
     },
     {
@@ -617,8 +617,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1800,
-        200
+        2128,
+        320
       ]
     },
     {
@@ -640,8 +640,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1800,
-        300
+        2128,
+        608
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -658,8 +658,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2020,
-        260
+        2352,
+        536
       ]
     },
     {
@@ -671,8 +671,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
-        260
+        2576,
+        536
       ]
     },
     {
@@ -723,8 +723,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2460,
-        180
+        2800,
+        248
       ]
     },
     {
@@ -778,8 +778,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2460,
-        260
+        2800,
+        440
       ]
     },
     {
@@ -791,8 +791,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2680,
-        260
+        2800,
+        632
       ]
     },
     {
@@ -837,8 +837,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2900,
-        140
+        3024,
+        536
       ]
     },
     {
@@ -850,8 +850,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2900,
-        260
+        3024,
+        728
       ]
     },
     {
@@ -863,9 +863,6 @@
           "cachedResultName": "TVPX__40__Asset Finalizer And Telegram Dispatch",
           "cachedResultUrl": "/workflow/vaFfkhqKgBk2VCGh"
         },
-        "options": {
-          "waitForSubWorkflow": true
-        },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {},
@@ -873,6 +870,9 @@
           "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
         }
       },
       "id": "8a23368d-981d-43b1-a05f-1873321667cd",
@@ -880,8 +880,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3120,
-        260
+        3248,
+        728
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -896,8 +896,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3340,
-        260
+        3472,
+        728
       ]
     },
     {
@@ -909,9 +909,6 @@
           "cachedResultName": "TVPX__30A__Fal Batch Render Submit And Poll",
           "cachedResultUrl": "/workflow/2uSefQgL3Y5q90Vc"
         },
-        "options": {
-          "waitForSubWorkflow": true
-        },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {},
@@ -919,6 +916,9 @@
           "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
         }
       },
       "id": "14b6f7cd-231a-419f-ab09-cf347ef72c10",
@@ -926,8 +926,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3560,
-        260
+        3696,
+        728
       ]
     },
     {
@@ -939,8 +939,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3780,
-        260
+        3920,
+        728
       ]
     },
     {
@@ -952,9 +952,6 @@
           "cachedResultName": "TVPX__41__B W Finalizer And Telegram Dispatch",
           "cachedResultUrl": "/workflow/3nJbW4QhL9r2YpCk"
         },
-        "options": {
-          "waitForSubWorkflow": true
-        },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {},
@@ -962,6 +959,9 @@
           "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
         }
       },
       "id": "2813bf17-595a-4159-a89b-1f48aa014fac",
@@ -969,8 +969,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4000,
-        260
+        4144,
+        728
       ]
     },
     {
@@ -1020,8 +1020,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        4220,
-        260
+        4368,
+        728
       ]
     }
   ],
@@ -1439,15 +1439,15 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "77447146-b888-45a1-a79b-1ebd42c8a6c3",
+  "versionId": "85614858-6da9-456f-986d-af5ee68aeae6",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 3,
   "triggerCount": 0,
   "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-03-06T19:52:04.092Z",
-      "createdAt": "2026-03-06T19:52:04.092Z",
+      "updatedAt": "2026-03-06T20:19:00.602Z",
+      "createdAt": "2026-03-06T20:19:00.602Z",
       "role": "workflow:owner",
       "workflowId": "XtyvRQfTLySqT16o",
       "projectId": "NK3VX1YKPgfTJeSY",

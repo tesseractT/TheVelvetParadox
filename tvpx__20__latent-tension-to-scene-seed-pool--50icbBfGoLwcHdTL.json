@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "updatedAt": "2026-03-06T20:28:44.062Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "50icbBfGoLwcHdTL",
   "name": "TVPX__20__Latent Tension To Scene Seed Pool",
@@ -14,7 +14,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [
-        -1700,
+        -1696,
         320
       ]
     },
@@ -27,7 +27,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1480,
+        -1472,
         320
       ]
     },
@@ -60,7 +60,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1260,
+        -1248,
         320
       ]
     },
@@ -89,8 +89,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -1040,
-        220
+        -352,
+        224
       ]
     },
     {
@@ -119,8 +119,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -1040,
-        420
+        -1024,
+        416
       ],
       "alwaysOutputData": true
     },
@@ -141,8 +141,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -820,
-        420
+        -800,
+        416
       ],
       "alwaysOutputData": true,
       "executeOnce": true
@@ -156,8 +156,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -600,
-        420
+        -576,
+        416
       ]
     },
     {
@@ -186,8 +186,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -380,
-        420
+        -352,
+        416
       ],
       "alwaysOutputData": true
     },
@@ -200,7 +200,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -140,
+        -128,
         320
       ]
     },
@@ -233,7 +233,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        80,
+        96,
         320
       ]
     },
@@ -246,8 +246,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        300,
-        480
+        320,
+        416
       ]
     },
     {
@@ -362,8 +362,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        520,
-        480
+        544,
+        416
       ]
     },
     {
@@ -375,8 +375,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        300,
-        220
+        320,
+        224
       ]
     },
     {
@@ -394,8 +394,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        920,
-        560
+        1000,
+        448
       ],
       "credentials": {
         "openAiApi": {
@@ -405,14 +405,6 @@
       }
     },
     {
-      "id": "2879c324-5a2f-468f-9999-7d43e5d9d0ef",
-      "name": "Director Model xAI Fallback Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
-      "typeVersion": 1,
-      "position": [
-        920,
-        760
-      ],
       "parameters": {
         "model": {
           "__rl": true,
@@ -421,7 +413,15 @@
           "cachedResultName": "grok-4-1-fast-reasoning"
         },
         "options": {}
-      }
+      },
+      "id": "2879c324-5a2f-468f-9999-7d43e5d9d0ef",
+      "name": "Director Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        1128,
+        448
+      ]
     },
     {
       "parameters": {
@@ -449,8 +449,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        520,
-        220
+        544,
+        224
       ],
       "alwaysOutputData": true
     },
@@ -463,12 +463,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        740,
-        220
+        768,
+        224
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Brand: {{ $json.ctx.brand_name }}\n\nReference rule:\nThe output must help create images that feel like authored cinematic stills, not article illustrations.\n\nFragment bundle:\n{{ $json.bundle.excerpt_block }}\n\nGive me only the pressures that should survive into image generation.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -476,18 +479,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Brand: {{ $json.ctx.brand_name }}\n\nReference rule:\nThe output must help create images that feel like authored cinematic stills, not article illustrations.\n\nFragment bundle:\n{{ $json.bundle.excerpt_block }}\n\nGive me only the pressures that should survive into image generation."
+        "batching": {}
       },
       "id": "10a3dae8-23c3-486a-ac71-464dc9d0089f",
       "name": "LLM Latent Tension Distiller",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        980,
-        220
+        992,
+        224
       ]
     },
     {
@@ -499,8 +499,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1200,
-        220
+        1344,
+        224
       ]
     },
     {
@@ -512,8 +512,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1420,
-        220
+        1568,
+        224
       ]
     },
     {
@@ -562,12 +562,15 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1640,
-        120
+        1856,
+        128
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Archetype registry:\n{{ $json.archetype_registry_json }}\n\nLatent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nChoose the strongest TVPX archetype lane.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -575,18 +578,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Archetype registry:\n{{ $json.archetype_registry_json }}\n\nLatent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nChoose the strongest TVPX archetype lane."
+        "batching": {}
       },
       "id": "b8254c6a-ecd4-449f-a140-e726e2a06808",
       "name": "LLM Archetype Router",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        1640,
-        220
+        1792,
+        320
       ]
     },
     {
@@ -598,12 +598,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1860,
-        220
+        2144,
+        320
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Latent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nArchetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nBuild the strongest human situation for the chosen archetype.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -611,18 +614,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Latent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nArchetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nBuild the strongest human situation for the chosen archetype."
+        "batching": {}
       },
       "id": "600c3336-66a5-4800-a092-c3b8478d4068",
       "name": "LLM Human Situation Builder",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2080,
-        220
+        2368,
+        320
       ]
     },
     {
@@ -634,12 +634,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2300,
-        220
+        2720,
+        320
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Archetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nHuman situation:\n{{ JSON.stringify($json.human_situation, null, 2) }}\n\nLatent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nRemove article residue brutally.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -647,18 +650,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Archetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nHuman situation:\n{{ JSON.stringify($json.human_situation, null, 2) }}\n\nLatent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nRemove article residue brutally."
+        "batching": {}
       },
       "id": "ada80285-7686-4437-acf0-27f31c9e1eb9",
       "name": "LLM Prop Suppressor",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2520,
-        220
+        2944,
+        320
       ]
     },
     {
@@ -670,12 +670,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2740,
-        220
+        3296,
+        320
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Archetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nHuman situation:\n{{ JSON.stringify($json.human_situation, null, 2) }}\n\nProp suppression:\n{{ JSON.stringify($json.prop_suppression, null, 2) }}\n\nWrite one scene seed only.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -683,18 +686,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Archetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nHuman situation:\n{{ JSON.stringify($json.human_situation, null, 2) }}\n\nProp suppression:\n{{ JSON.stringify($json.prop_suppression, null, 2) }}\n\nWrite one scene seed only."
+        "batching": {}
       },
       "id": "4d3e270d-6990-426d-a6e9-704716f28e29",
       "name": "LLM Scene Seed Composer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2960,
-        220
+        3520,
+        320
       ]
     },
     {
@@ -706,12 +706,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3180,
-        220
+        3872,
+        320
       ]
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Scene seed:\n{{ JSON.stringify($json.scene_seed, null, 2) }}\n\nArchetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nJudge this as an image, not as an idea.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -719,18 +722,15 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Scene seed:\n{{ JSON.stringify($json.scene_seed, null, 2) }}\n\nArchetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nJudge this as an image, not as an idea."
+        "batching": {}
       },
       "id": "a34bdd5f-a889-4ade-a8e2-4d14cc238377",
       "name": "LLM Image Native Critic",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        3400,
-        220
+        4096,
+        320
       ]
     },
     {
@@ -742,8 +742,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3620,
-        220
+        4448,
+        320
       ]
     },
     {
@@ -755,8 +755,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3840,
-        220
+        4672,
+        320
       ]
     },
     {
@@ -787,8 +787,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        4060,
-        220
+        4896,
+        320
       ]
     },
     {
@@ -800,8 +800,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4280,
-        180
+        5120,
+        224
       ]
     },
     {
@@ -873,8 +873,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        4500,
-        180
+        5344,
+        224
       ]
     },
     {
@@ -886,8 +886,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4280,
-        320
+        5120,
+        416
       ]
     },
     {
@@ -1002,8 +1002,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        4500,
-        320
+        5344,
+        416
       ]
     }
   ],
@@ -1458,15 +1458,15 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "8120a21a-71cb-46ec-a963-94f4efe20f96",
+  "versionId": "e738326b-1caa-4759-949c-a29320c6fc78",
   "activeVersionId": null,
-  "versionCounter": 1,
+  "versionCounter": 3,
   "triggerCount": 0,
   "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-03-06T19:52:04.092Z",
-      "createdAt": "2026-03-06T19:52:04.092Z",
+      "updatedAt": "2026-03-06T20:19:00.602Z",
+      "createdAt": "2026-03-06T20:19:00.602Z",
       "role": "workflow:owner",
       "workflowId": "50icbBfGoLwcHdTL",
       "projectId": "NK3VX1YKPgfTJeSY",
