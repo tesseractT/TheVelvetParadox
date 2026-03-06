@@ -35,7 +35,7 @@
           "conditions": [
             {
               "keyName": "crawl_run_id",
-              "keyValue": "={{$items(\"Loop Candidate Runs\", 0, 0)[0]?.json?.ctx?.crawl_run_id || \"\"}}"
+              "keyValue": "={{$json.ctx.crawl_run_id || \"\"}}"
             },
             {
               "keyName": "qa_status",
@@ -50,9 +50,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -192,
+        32,
         348
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -110,7 +111,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build Candidate Run Packets\n * Hydrates the same crawl-run context TVPX__10 would have handed downstream.\n */\nfunction toInt(value, fallback = 0) {\n  const n = Number(value);\n  return Number.isFinite(n) ? Math.round(n) : fallback;\n}\n\nfunction stampOf(row) {\n  return String(\n    row.completed_at ||\n    row.started_at ||\n    row.updated_at ||\n    row.created_at ||\n    ''\n  ).trim();\n}\n\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst providedFragments = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst requestedRunId = String(baseCtx.crawl_run_id || '').trim();\nconst requestedSourceId = String(baseCtx.source_id || '').trim();\nconst maxRuns = Math.max(1, Math.min(Number(baseCtx.autonomous_run_limit || 3), 12));\nconst minFragmentsPerRun = Math.max(1, Math.min(Number(baseCtx.min_fragments_per_run || 3), 20));\nconst allowReprocess = Boolean(baseCtx.allow_reprocess_runs);\n\nconst runRows = $items('Get Candidate Crawl Runs')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length)\n  .map((row) => ({\n    crawl_run_id: String(row.crawl_run_id || '').trim(),\n    trace_id: String(row.trace_id || '').trim(),\n    source_id: String(row.source_id || '').trim(),\n    trigger_mode: String(row.trigger_mode || '').trim(),\n    status: String(row.status || '').trim().toLowerCase(),\n    started_at: String(row.started_at || '').trim(),\n    completed_at: String(row.completed_at || '').trim(),\n    fragment_count: toInt(row.fragment_count, 0),\n    page_count: toInt(row.page_count, 0),\n    raw_item_count: toInt(row.raw_item_count, 0),\n  }))\n  .filter((row) => row.crawl_run_id);\n\nconst existingSceneSeedRows = $items('Get Existing Scene Seeds')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length);\n\nconst consumedRunIds = allowReprocess\n  ? new Set()\n  : new Set(\n      existingSceneSeedRows\n        .map((row) => String(row.crawl_run_id || '').trim())\n        .filter(Boolean)\n    );\n\nif (providedFragments.length) {\n  const inferredRunId = requestedRunId || String(providedFragments[0]?.crawl_run_id || '').trim();\n  const inferredSourceId = requestedSourceId || String(providedFragments[0]?.source_id || '').trim();\n\n  return [{\n    json: {\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n      },\n      source: baseSource,\n      provided_fragments: providedFragments,\n      candidate_run: {\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n        trace_id: String(baseCtx.trace_id || '').trim(),\n        trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n        status: 'provided_fragments',\n        fragment_count: providedFragments.length,\n      },\n      candidate_debug: {\n        selection_mode: 'provided_fragments',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 1,\n        selected_rank: 1,\n        run_rows_scanned: runRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n    },\n  }];\n}\n\nlet selectedRuns = [];\nif (requestedRunId) {\n  const exact = runRows.find((row) => row.crawl_run_id === requestedRunId);\n  selectedRuns = [exact || {\n    crawl_run_id: requestedRunId,\n    trace_id: String(baseCtx.trace_id || '').trim(),\n    source_id: requestedSourceId,\n    trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n    status: 'requested_manual',\n    fragment_count: 0,\n    page_count: 0,\n    raw_item_count: 0,\n    started_at: '',\n    completed_at: '',\n  }];\n} else {\n  selectedRuns = runRows\n    .filter((row) => !requestedSourceId || row.source_id === requestedSourceId)\n    .filter((row) => !row.status || ['completed', 'ready', 'done'].includes(row.status))\n    .filter((row) => allowReprocess || !consumedRunIds.has(row.crawl_run_id))\n    .filter((row) => row.fragment_count === 0 || row.fragment_count >= minFragmentsPerRun)\n    .sort((a, b) => {\n      if (b.fragment_count !== a.fragment_count) return b.fragment_count - a.fragment_count;\n      return stampOf(b).localeCompare(stampOf(a));\n    })\n    .slice(0, maxRuns);\n}\n\nif (!selectedRuns.length) {\n  return [{\n    json: {\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: requestedRunId,\n        source_id: requestedSourceId,\n      },\n      source: baseSource,\n      provided_fragments: [],\n      candidate_run: null,\n      candidate_debug: {\n        selection_mode: requestedRunId ? 'requested_run' : 'crawl_run_ledger',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 0,\n        selected_rank: 0,\n        run_rows_scanned: runRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n    },\n  }];\n}\n\nreturn selectedRuns.map((run, index) => ({\n  json: {\n    ctx: {\n      ...baseCtx,\n      trace_id: String(run.trace_id || baseCtx.trace_id || '').trim() || baseCtx.trace_id,\n      trigger_mode: String(run.trigger_mode || baseCtx.trigger_mode || 'internal').trim(),\n      crawl_run_id: String(run.crawl_run_id || '').trim(),\n      source_id: String(run.source_id || requestedSourceId || '').trim(),\n    },\n    source: baseSource,\n    provided_fragments: [],\n    candidate_run: run,\n    candidate_debug: {\n      selection_mode: requestedRunId ? 'requested_run' : 'crawl_run_ledger',\n      requested_crawl_run_id: requestedRunId || null,\n      requested_source_id: requestedSourceId || null,\n      selected_run_count: selectedRuns.length,\n      selected_rank: index + 1,\n      run_rows_scanned: runRows.length,\n      existing_scene_seed_rows: existingSceneSeedRows.length,\n      allow_reprocess_runs: allowReprocess,\n    },\n  },\n}));"
+        "jsCode": "/**\n * Build Candidate Run Packets\n * Hydrates the same crawl-run context TVPX__10 would have handed downstream.\n */\nfunction toInt(value, fallback = 0) {\n  const n = Number(value);\n  return Number.isFinite(n) ? Math.round(n) : fallback;\n}\n\nfunction stampOf(row) {\n  return String(\n    row.completed_at ||\n    row.started_at ||\n    row.updated_at ||\n    row.created_at ||\n    ''\n  ).trim();\n}\n\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst providedFragments = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst requestedRunId = String(baseCtx.crawl_run_id || '').trim();\nconst requestedSourceId = String(baseCtx.source_id || '').trim();\nconst maxRuns = Math.max(1, Math.min(Number(baseCtx.autonomous_run_limit || 3), 12));\nconst minFragmentsPerRun = Math.max(1, Math.min(Number(baseCtx.min_fragments_per_run || 3), 20));\nconst allowReprocess = Boolean(baseCtx.allow_reprocess_runs);\n\nconst runRows = $items('Get Candidate Crawl Runs')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length)\n  .map((row) => ({\n    crawl_run_id: String(row.crawl_run_id || '').trim(),\n    trace_id: String(row.trace_id || '').trim(),\n    source_id: String(row.source_id || '').trim(),\n    trigger_mode: String(row.trigger_mode || '').trim(),\n    status: String(row.status || '').trim().toLowerCase(),\n    started_at: String(row.started_at || '').trim(),\n    completed_at: String(row.completed_at || '').trim(),\n    fragment_count: toInt(row.fragment_count, 0),\n    page_count: toInt(row.page_count, 0),\n    raw_item_count: toInt(row.raw_item_count, 0),\n  }))\n  .filter((row) => row.crawl_run_id);\n\nconst existingSceneSeedRows = $items('Get Existing Scene Seeds')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length);\n\nconst consumedRunIds = allowReprocess\n  ? new Set()\n  : new Set(\n      existingSceneSeedRows\n        .map((row) => String(row.crawl_run_id || '').trim())\n        .filter(Boolean)\n    );\n\nif (providedFragments.length) {\n  const inferredRunId = requestedRunId || String(providedFragments[0]?.crawl_run_id || '').trim();\n  const inferredSourceId = requestedSourceId || String(providedFragments[0]?.source_id || '').trim();\n\n  return [{\n    json: {\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n      },\n      source: baseSource,\n      provided_fragments: providedFragments,\n      candidate_run: {\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n        trace_id: String(baseCtx.trace_id || '').trim(),\n        trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n        status: 'provided_fragments',\n        fragment_count: providedFragments.length,\n      },\n      candidate_debug: {\n        selection_mode: 'provided_fragments',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 1,\n        selected_rank: 1,\n        run_rows_scanned: runRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n    },\n  }];\n}\n\nlet selectedRuns = [];\nif (requestedRunId) {\n  const exact = runRows.find((row) => row.crawl_run_id === requestedRunId);\n  selectedRuns = [exact || {\n    crawl_run_id: requestedRunId,\n    trace_id: String(baseCtx.trace_id || '').trim(),\n    source_id: requestedSourceId,\n    trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n    status: 'requested_manual',\n    fragment_count: 0,\n    page_count: 0,\n    raw_item_count: 0,\n    started_at: '',\n    completed_at: '',\n  }];\n} else {\n  selectedRuns = runRows\n    .filter((row) => !requestedSourceId || row.source_id === requestedSourceId)\n    .filter((row) => !row.status || ['completed', 'ready', 'done'].includes(row.status))\n    .filter((row) => allowReprocess || !consumedRunIds.has(row.crawl_run_id))\n    .filter((row) => row.fragment_count >= minFragmentsPerRun)\n    .sort((a, b) => {\n      if (b.fragment_count !== a.fragment_count) return b.fragment_count - a.fragment_count;\n      return stampOf(b).localeCompare(stampOf(a));\n    })\n    .slice(0, maxRuns);\n}\n\nif (!selectedRuns.length) {\n  return [{\n    json: {\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: requestedRunId,\n        source_id: requestedSourceId,\n      },\n      source: baseSource,\n      provided_fragments: [],\n      candidate_run: null,\n      candidate_debug: {\n        selection_mode: requestedRunId ? 'requested_run' : 'crawl_run_ledger',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 0,\n        selected_rank: 0,\n        run_rows_scanned: runRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n    },\n  }];\n}\n\nreturn selectedRuns.map((run, index) => ({\n  json: {\n    ctx: {\n      ...baseCtx,\n      trace_id: String(run.trace_id || baseCtx.trace_id || '').trim() || baseCtx.trace_id,\n      trigger_mode: String(run.trigger_mode || baseCtx.trigger_mode || 'internal').trim(),\n      crawl_run_id: String(run.crawl_run_id || '').trim(),\n      source_id: String(run.source_id || requestedSourceId || '').trim(),\n    },\n    source: baseSource,\n    provided_fragments: [],\n    candidate_run: run,\n    candidate_debug: {\n      selection_mode: requestedRunId ? 'requested_run' : 'crawl_run_ledger',\n      requested_crawl_run_id: requestedRunId || null,\n      requested_source_id: requestedSourceId || null,\n      selected_run_count: selectedRuns.length,\n      selected_rank: index + 1,\n      run_rows_scanned: runRows.length,\n      existing_scene_seed_rows: existingSceneSeedRows.length,\n      allow_reprocess_runs: allowReprocess,\n    },\n  },\n}));"
       },
       "id": "b8f3f949-6ff2-4582-9f02-1bc3ecb0ac4b",
       "name": "Build Candidate Run Packets",
@@ -119,6 +120,19 @@
       "position": [
         -864,
         420
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Prepare Active Candidate Run\n * Materializes the active split-in-batches item onto $json for downstream DataTable lookups.\n */\nconst item = $json || {};\nconst ctx = (item.ctx && typeof item.ctx === 'object') ? item.ctx : {};\nconst source = (item.source && typeof item.source === 'object') ? item.source : {};\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    provided_fragments: Array.isArray(item.provided_fragments) ? item.provided_fragments : [],\n    candidate_run: item.candidate_run || null,\n    candidate_debug: item.candidate_debug || null,\n  },\n}];"
+      },
+      "id": "3d6e8f7b-1b26-4d69-a5f9-773214bf6a2e",
+      "name": "Prepare Active Candidate Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        348
       ]
     },
     {
@@ -136,7 +150,7 @@
           "conditions": [
             {
               "keyName": "source_id",
-              "keyValue": "={{$items(\"Loop Candidate Runs\", 0, 0)[0]?.json?.ctx?.source_id || \"\"}}"
+              "keyValue": "={{$json.ctx.source_id || \"\"}}"
             }
           ]
         },
@@ -147,21 +161,34 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -416,
+        -288,
         348
       ],
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Reattach Context After Fragments\n * Rebuild a full runtime packet for the active split-in-batches candidate run.\n */\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst loopItem = $items('Loop Candidate Runs', 0, 0)[0]?.json || {};\nconst sourceRow = $items('Get Source For Run', 0, 0)[0]?.json || {};\nconst inputRows = $input.all().map((item) => item.json || {});\n\nconst fragments = inputRows.filter((row) => row && String(row.fragment_id || row.id || row.dt_row_id || '').trim());\nconst providedFragments = Array.isArray(loopItem.provided_fragments)\n  ? loopItem.provided_fragments\n  : (Array.isArray(base.provided_fragments) ? base.provided_fragments : []);\n\nconst ctx = (loopItem.ctx && typeof loopItem.ctx === 'object')\n  ? loopItem.ctx\n  : ((base.ctx && typeof base.ctx === 'object') ? base.ctx : {});\n\nconst loopSource = (loopItem.source && typeof loopItem.source === 'object') ? loopItem.source : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst source = Object.keys(sourceRow).length ? sourceRow : (Object.keys(loopSource).length ? loopSource : baseSource);\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    fragments: fragments.length ? fragments : providedFragments,\n    candidate_run: loopItem.candidate_run || null,\n    candidate_debug: loopItem.candidate_debug || null,\n  },\n}];"
+        "jsCode": "/**\n * Attach Source To Candidate\n * Restores the active candidate packet after source lookup and tolerates a missing registry row.\n */\nconst candidate = $items('Prepare Active Candidate Run')[0]?.json || {};\nconst sourceRows = $input.all().map((item) => item.json || {}).filter((row) => row && Object.keys(row).length);\n\nconst ctx = (candidate.ctx && typeof candidate.ctx === 'object') ? candidate.ctx : {};\nconst candidateSource = (candidate.source && typeof candidate.source === 'object') ? candidate.source : {};\nconst source = sourceRows[0]\n  || (Object.keys(candidateSource).length ? candidateSource : (ctx.source_id ? { source_id: ctx.source_id } : {}));\n\nreturn [{\n  json: {\n    ...candidate,\n    source,\n  },\n}];"
+      },
+      "id": "6cb59a64-40dd-4ca8-bafb-0a5aa094ec7a",
+      "name": "Attach Source To Candidate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        348
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Reattach Context After Fragments\n * Rebuilds the runtime packet from the active candidate plus the fetched fragment rows.\n */\nconst envelope = $items('Initialize Envelope')[0]?.json || {};\nconst base = $items('Attach Source To Candidate')[0]?.json || {};\nconst inputRows = $input.all().map((item) => item.json || {});\n\nconst fragments = inputRows.filter((row) => row && String(row.fragment_id || row.id || row.dt_row_id || '').trim());\nconst providedFragments = Array.isArray(base.provided_fragments)\n  ? base.provided_fragments\n  : (Array.isArray(envelope.provided_fragments) ? envelope.provided_fragments : []);\n\nconst ctx = (base.ctx && typeof base.ctx === 'object')\n  ? base.ctx\n  : ((envelope.ctx && typeof envelope.ctx === 'object') ? envelope.ctx : {});\n\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst envelopeSource = (envelope.source && typeof envelope.source === 'object') ? envelope.source : {};\nconst source = Object.keys(baseSource).length ? baseSource : envelopeSource;\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    fragments: fragments.length ? fragments : providedFragments,\n    candidate_run: base.candidate_run || null,\n    candidate_debug: base.candidate_debug || null,\n  },\n}];"
       },
       "id": "ee925050-b69c-497b-95e0-0d7a08784efd",
       "name": "Reattach Context After Fragments",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        32,
+        256,
         348
       ]
     },
@@ -194,7 +221,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        256,
+        480,
         348
       ]
     },
@@ -1544,7 +1571,7 @@
       "main": [
         [
           {
-            "node": "Get Fragments For Run",
+            "node": "Attach Source To Candidate",
             "type": "main",
             "index": 0
           }
@@ -1911,7 +1938,7 @@
         [],
         [
           {
-            "node": "Get Source For Run",
+            "node": "Prepare Active Candidate Run",
             "type": "main",
             "index": 0
           }
@@ -1967,6 +1994,28 @@
         [
           {
             "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Active Candidate Run": {
+      "main": [
+        [
+          {
+            "node": "Get Source For Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Source To Candidate": {
+      "main": [
+        [
+          {
+            "node": "Get Fragments For Run",
             "type": "main",
             "index": 0
           }
