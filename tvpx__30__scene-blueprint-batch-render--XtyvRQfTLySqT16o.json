@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T22:03:56.583Z",
+  "updatedAt": "2026-03-06T22:33:46.516Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "XtyvRQfTLySqT16o",
   "name": "TVPX__30__Scene Blueprint Batch Render",
@@ -8,24 +8,8 @@
   "isArchived": false,
   "nodes": [
     {
-      "parameters": {},
-      "id": "8f561ace-da86-4c2c-9997-f27f95cccdad",
-      "name": "When Executed By Another Workflow",
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1,
-      "position": [
-        -2160,
-        200
-      ]
-    },
-    {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-5.2",
-          "mode": "list",
-          "cachedResultName": "gpt-5.2"
-        },
+        "model": "gpt-5.1",
         "options": {}
       },
       "id": "3872ab30-a67d-4a4c-922a-dd946e582c1a",
@@ -34,7 +18,7 @@
       "typeVersion": 1,
       "position": [
         312,
-        424
+        448
       ],
       "credentials": {
         "openAiApi": {
@@ -45,12 +29,7 @@
     },
     {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "mode": "list",
-          "value": "grok-4-1-fast-reasoning",
-          "cachedResultName": "grok-4-1-fast-reasoning"
-        },
+        "model": "grok-4-1-fast-reasoning",
         "options": {}
       },
       "id": "09dc3ece-12de-4c4a-b0c1-c4faca36bb7b",
@@ -59,8 +38,14 @@
       "typeVersion": 1,
       "position": [
         440,
-        424
-      ]
+        448
+      ],
+      "credentials": {
+        "xAiApi": {
+          "id": "Bs1Wj3VI1HQ71xYB",
+          "name": "xAi account"
+        }
+      }
     },
     {
       "parameters": {
@@ -72,7 +57,7 @@
       "typeVersion": 2,
       "position": [
         -1936,
-        200
+        224
       ]
     },
     {
@@ -104,7 +89,7 @@
       "typeVersion": 2,
       "position": [
         -1712,
-        200
+        224
       ]
     },
     {
@@ -133,7 +118,7 @@
       "typeVersion": 1,
       "position": [
         -1488,
-        128
+        224
       ]
     },
     {
@@ -162,7 +147,7 @@
       "typeVersion": 1,
       "position": [
         -1488,
-        320
+        416
       ]
     },
     {
@@ -175,7 +160,7 @@
       "typeVersion": 2,
       "position": [
         -1264,
-        320
+        416
       ]
     },
     {
@@ -188,12 +173,12 @@
       "typeVersion": 2,
       "position": [
         -1264,
-        128
+        224
       ]
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build Lock Payload\n */\n\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date();\nconst expires = new Date(now.getTime() + (Number(ctx.lock_ttl_minutes || 15) * 60_000));\n\nreturn [{\n  json: {\n    scene_seed_id: j.scene_seed_id,\n    concept_id: j.scene_seed_id,\n    scene_seed_row: j.scene_seed_row,\n    lock: {\n      lock_owner: ctx.trace_id,\n      lock_expires_at: expires.toISOString(),\n      locked_at: now.toISOString()\n    }\n  }\n}];"
+        "jsCode": "const j = $json || {};\nconst ctx = j.ctx || {};\nconst now = new Date();\nconst expires = new Date(now.getTime() + (Number(ctx.lock_ttl_minutes || 15) * 60_000));\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(j.scene_seed_id || '').trim(),\n    concept_id: String(j.scene_seed_id || '').trim(),\n    scene_seed_row: j.scene_seed_row || null,\n    selector_audit: j.selector_audit || null,\n    lock: {\n      lock_owner: String(ctx.trace_id || '').trim(),\n      lock_expires_at: expires.toISOString(),\n      locked_at: now.toISOString(),\n    },\n  },\n}];"
       },
       "id": "e8837124-20a6-456d-a965-daab2b60ff84",
       "name": "Build Lock Payload",
@@ -201,7 +186,7 @@
       "typeVersion": 2,
       "position": [
         -1040,
-        200
+        224
       ]
     },
     {
@@ -245,7 +230,7 @@
       "typeVersion": 1,
       "position": [
         -816,
-        200
+        224
       ]
     },
     {
@@ -274,7 +259,7 @@
       "typeVersion": 1,
       "position": [
         -592,
-        200
+        224
       ]
     },
     {
@@ -287,7 +272,7 @@
       "typeVersion": 2,
       "position": [
         -368,
-        200
+        224
       ]
     },
     {
@@ -317,13 +302,13 @@
       "typeVersion": 1,
       "position": [
         -144,
-        200
+        224
       ],
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "const seedBase = $items('Verify Lock Ownership')[0]?.json;\nif (!seedBase) throw new Error('TVPX__30: missing locked scene seed payload.');\n\nconst row = seedBase.scene_seed_row || {};\nconst archetype = $input.all()[0]?.json || null;\nif (!archetype) throw new Error('TVPX__30: archetype lookup failed.');\n\nreturn [{\n  json: {\n    ctx: seedBase.ctx,\n    scene_seed_id: seedBase.scene_seed_id,\n    concept_id: seedBase.scene_seed_id,\n    scene_seed_row: row,\n    archetype_row: archetype,\n  },\n}];"
+        "jsCode": "const seedBase = $items('Verify Lock Ownership')[0]?.json;\nif (!seedBase) throw new Error('TVPX__30: missing locked scene seed payload.');\n\nconst row = seedBase.scene_seed_row || {};\nconst archetype = $input.all()[0]?.json || {};\nif (!archetype || !String(archetype.archetype_id || '').trim()) {\n  throw new Error('TVPX__30: archetype lookup failed.');\n}\n\nreturn [{\n  json: {\n    ctx: seedBase.ctx,\n    scene_seed_id: seedBase.scene_seed_id,\n    concept_id: seedBase.scene_seed_id,\n    scene_seed_row: row,\n    archetype_row: archetype,\n  },\n}];"
       },
       "id": "ee84f74f-09c9-4011-a36d-bd663f104ed0",
       "name": "Assemble Scene Seed Packet",
@@ -331,7 +316,7 @@
       "typeVersion": 2,
       "position": [
         80,
-        200
+        224
       ]
     },
     {
@@ -354,7 +339,7 @@
       "typeVersion": 1.9,
       "position": [
         304,
-        200
+        224
       ]
     },
     {
@@ -367,7 +352,7 @@
       "typeVersion": 2,
       "position": [
         656,
-        200
+        224
       ]
     },
     {
@@ -380,7 +365,7 @@
       "typeVersion": 2,
       "position": [
         880,
-        200
+        224
       ]
     },
     {
@@ -438,7 +423,7 @@
       "typeVersion": 1,
       "position": [
         1168,
-        128
+        152
       ]
     },
     {
@@ -461,7 +446,7 @@
       "typeVersion": 1.9,
       "position": [
         1104,
-        320
+        440
       ]
     },
     {
@@ -473,8 +458,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1456,
-        320
+        1680,
+        296
       ]
     },
     {
@@ -486,8 +471,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1680,
-        320
+        1904,
+        296
       ]
     },
     {
@@ -516,8 +501,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1904,
-        320
+        2128,
+        296
       ]
     },
     {
@@ -525,10 +510,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK",
+          "value": "bl0wuJZHWZ7NA5WL",
           "mode": "list",
           "cachedResultName": "tvpx_render_candidate_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/bl0wuJZHWZ7NA5WL"
         },
         "matchType": "allConditions",
         "filters": {
@@ -557,11 +542,203 @@
             "negative_prompt_text": "={{$json.negative_prompt_raw}}",
             "image_url": "={{$json.image_url}}",
             "critic_score": 0,
-            "critic_notes": "",
             "state": "rendered",
             "created_at": "={{$json.completed_at}}",
             "updated_at": "={{$json.completed_at}}"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "render_candidate_id",
+              "displayName": "render_candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "asset_family_id",
+              "displayName": "asset_family_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_blueprint_id",
+              "displayName": "scene_blueprint_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_label",
+              "displayName": "blueprint_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "candidate_index",
+              "displayName": "candidate_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "render_variant",
+              "displayName": "render_variant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "provider_name",
+              "displayName": "provider_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "provider_job_id",
+              "displayName": "provider_job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prompt_text",
+              "displayName": "prompt_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "negative_prompt_text",
+              "displayName": "negative_prompt_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_score",
+              "displayName": "critic_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_notes",
+              "displayName": "critic_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -572,7 +749,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2128,
+        2352,
         128
       ]
     },
@@ -581,10 +758,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "value": "tb5enwr7N1RFgRsg",
           "mode": "list",
           "cachedResultName": "tvpx_scene_blueprint_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/tb5enwr7N1RFgRsg"
         },
         "matchType": "allConditions",
         "filters": {
@@ -598,15 +775,282 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
-            "scene_seed_id": "={{$json.scene_seed_id}}",
             "trace_id": "={{$json.ctx.trace_id}}",
-            "asset_family_id": "={{$json.ctx.asset_family_id}}",
-            "archetype_id": "={{$json.archetype_id}}",
-            "blueprint_label": "={{$json.blueprint_label}}",
-            "state": "rendered",
             "updated_at": "={{$now}}"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "scene_blueprint_id",
+              "displayName": "scene_blueprint_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_label",
+              "displayName": "blueprint_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_rank",
+              "displayName": "blueprint_rank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_mode",
+              "displayName": "blueprint_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reference_family",
+              "displayName": "reference_family",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "person_count",
+              "displayName": "person_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "subject_grouping",
+              "displayName": "subject_grouping",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "environment_type",
+              "displayName": "environment_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "composition_formula",
+              "displayName": "composition_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "camera_formula",
+              "displayName": "camera_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lens_formula",
+              "displayName": "lens_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lighting_formula",
+              "displayName": "lighting_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "palette_formula",
+              "displayName": "palette_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "texture_formula",
+              "displayName": "texture_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "negative_space_formula",
+              "displayName": "negative_space_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "symbolic_pressure_formula",
+              "displayName": "symbolic_pressure_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "realism_guardrails_json",
+              "displayName": "realism_guardrails_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prop_budget",
+              "displayName": "prop_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "background_motif_budget",
+              "displayName": "background_motif_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_prompt_core",
+              "displayName": "blueprint_prompt_core",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_notes",
+              "displayName": "blueprint_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -617,7 +1061,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2128,
+        2352,
         320
       ]
     },
@@ -640,12 +1084,18 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2128,
+        2352,
         608
       ],
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VijtmjxOSOWVCI5m",
+          "name": "falTextToImage"
+        }
+      }
     },
     {
       "parameters": {
@@ -658,7 +1108,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2352,
+        2576,
         536
       ]
     },
@@ -671,7 +1121,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2576,
+        2800,
         536
       ]
     },
@@ -680,16 +1130,16 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_RENDER_CRITIC_BANK",
+          "value": "PvVdyIswRZgIt9tp",
           "mode": "list",
           "cachedResultName": "tvpx_render_critic_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_RENDER_CRITIC_BANK"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/PvVdyIswRZgIt9tp"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "critic_run_id",
+              "keyName": "critic_id",
               "keyValue": "={{$json.critic_run_id}}"
             }
           ]
@@ -697,22 +1147,236 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "critic_run_id": "={{$json.critic_run_id}}",
             "render_candidate_id": "={{$json.render_candidate_id}}",
             "scene_seed_id": "={{$json.scene_seed_id}}",
             "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
             "archetype_id": "={{$json.archetype_id}}",
-            "reference_alignment_score": "={{$json.render_critic.reference_alignment_score}}",
-            "ceremonial_force_score": "={{$json.render_critic.ceremonial_force_score}}",
-            "anti_editorial_score": "={{$json.render_critic.anti_editorial_score}}",
-            "tactile_score": "={{$json.render_critic.tactile_score}}",
-            "surreal_restraint_score": "={{$json.render_critic.surreal_restraint_score}}",
-            "stock_risk_score": "={{$json.render_critic.stock_risk_score}}",
-            "overall_score": "={{$json.render_critic.overall_score}}",
-            "verdict": "={{$json.render_critic.verdict}}",
-            "notes": "={{$json.render_critic.notes}}",
-            "created_at": "={{$now}}"
+            "created_at": "={{$now}}",
+            "critic_id": "={{$json.critic_run_id}}"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "critic_id",
+              "displayName": "critic_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "asset_family_id",
+              "displayName": "asset_family_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "render_candidate_id",
+              "displayName": "render_candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_blueprint_id",
+              "displayName": "scene_blueprint_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_model",
+              "displayName": "critic_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_stage",
+              "displayName": "critic_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_overall",
+              "displayName": "score_overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_reference_match",
+              "displayName": "score_reference_match",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_composition",
+              "displayName": "score_composition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_palette",
+              "displayName": "score_palette",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_stylization_control",
+              "displayName": "score_stylization_control",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_photographic_credibility",
+              "displayName": "score_photographic_credibility",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_symbolic_pressure",
+              "displayName": "score_symbolic_pressure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "approve",
+              "displayName": "approve",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reject_reason",
+              "displayName": "reject_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_notes",
+              "displayName": "critic_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -723,7 +1387,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2800,
+        3024,
         248
       ]
     },
@@ -732,10 +1396,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK",
+          "value": "bl0wuJZHWZ7NA5WL",
           "mode": "list",
           "cachedResultName": "tvpx_render_candidate_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/bl0wuJZHWZ7NA5WL"
         },
         "matchType": "allConditions",
         "filters": {
@@ -768,6 +1432,199 @@
             "state": "critiqued",
             "updated_at": "={{$now}}"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "render_candidate_id",
+              "displayName": "render_candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "asset_family_id",
+              "displayName": "asset_family_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_blueprint_id",
+              "displayName": "scene_blueprint_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_label",
+              "displayName": "blueprint_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "candidate_index",
+              "displayName": "candidate_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "render_variant",
+              "displayName": "render_variant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "provider_name",
+              "displayName": "provider_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "provider_job_id",
+              "displayName": "provider_job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prompt_text",
+              "displayName": "prompt_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "negative_prompt_text",
+              "displayName": "negative_prompt_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_score",
+              "displayName": "critic_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "critic_notes",
+              "displayName": "critic_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -778,7 +1635,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2800,
+        3024,
         440
       ]
     },
@@ -791,7 +1648,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2800,
+        3024,
         632
       ]
     },
@@ -800,10 +1657,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "value": "iIAkutR0qSvPi5fX",
           "mode": "list",
-          "cachedResultName": "tvpx_scene_blueprint_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+          "cachedResultName": "tvpx_prompt_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/iIAkutR0qSvPi5fX"
         },
         "matchType": "allConditions",
         "filters": {
@@ -837,7 +1694,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3024,
+        3248,
         536
       ]
     },
@@ -850,7 +1707,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3024,
+        3248,
         728
       ]
     },
@@ -880,7 +1737,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3248,
+        3472,
         728
       ],
       "retryOnFail": true,
@@ -889,14 +1746,14 @@
     },
     {
       "parameters": {
-        "jsCode": "const winner = $json || {};\nconst prompt = String(winner.prompt_final || '').trim();\nif (!prompt) throw new Error('TVPX__30: winner prompt missing.');\n\nreturn [{\n  json: {\n    ctx: winner.ctx,\n    concept_id: String(winner.scene_seed_id || '').trim(),\n    scene_seed_id: String(winner.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(winner.scene_blueprint_id || '').trim(),\n    archetype_id: String(winner.archetype_id || '').trim(),\n    blueprint_label: String(winner.blueprint_label || '').trim(),\n    render_variant: 'bw',\n    prompt: \\`\\${prompt} Black-and-white only. Rich silver-gelatin tonal realism, tactile midtones, restrained contrast, photographic grain only if natural, no stylized monochrome gimmicks.\\`,\n    negative_prompt: String(winner.negative_prompt_raw || '').trim(),\n    provider_controls: {\n      image_size: '1024x1536',\n      background: 'opaque',\n      quality: 'high',\n      output_format: 'png',\n      num_images: 1,\n    },\n  },\n}];"
+        "jsCode": "const winner = $items('Select Winning Candidate')[0]?.json || {};\nconst prompt = String(winner.prompt_final || '').trim();\nif (!prompt) throw new Error('TVPX__30: winner prompt missing.');\n\nreturn [{\n  json: {\n    ctx: winner.ctx || {},\n    concept_id: String(winner.scene_seed_id || '').trim(),\n    scene_seed_id: String(winner.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(winner.scene_blueprint_id || '').trim(),\n    archetype_id: String(winner.archetype_id || '').trim(),\n    blueprint_label: String(winner.blueprint_label || '').trim(),\n    render_variant: 'bw',\n    prompt: `${prompt} Black-and-white only. Rich silver-gelatin tonal realism, tactile midtones, restrained contrast, photographic grain only if natural, no stylized monochrome gimmicks.`,\n    negative_prompt: String(winner.negative_prompt_raw || '').trim(),\n    provider_controls: {\n      image_size: String(winner.ctx?.image_size || '1024x1536'),\n      background: String(winner.ctx?.background || 'opaque'),\n      quality: String(winner.ctx?.quality || 'high'),\n      output_format: String(winner.ctx?.output_format || 'png'),\n      num_images: 1,\n    },\n  },\n}];"
       },
       "id": "8f60642b-30a6-4474-a8e1-8a9466842d03",
       "name": "Build Winner B W Render Packet",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3472,
+        3696,
         728
       ]
     },
@@ -926,7 +1783,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3696,
+        3920,
         728
       ]
     },
@@ -939,7 +1796,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3920,
+        4144,
         728
       ]
     },
@@ -969,7 +1826,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4144,
+        4368,
         728
       ]
     },
@@ -978,10 +1835,10 @@
         "operation": "update",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "value": "ZquAVdSdqKEpnZQx",
           "mode": "list",
           "cachedResultName": "tvpx_scene_seed_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/ZquAVdSdqKEpnZQx"
         },
         "matchType": "allConditions",
         "filters": {
@@ -1020,23 +1877,38 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        4368,
+        4592,
         728
       ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        224
+      ],
+      "id": "165a5aac-076d-4a65-9b98-0cf734c515d3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1456,
+        296
+      ],
+      "id": "f5656b41-e034-44a6-b2a6-93d5cf650b06",
+      "name": "Merge"
     }
   ],
   "connections": {
-    "When Executed By Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "Initialize Envelope",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Initialize Envelope": {
       "main": [
         [
@@ -1210,6 +2082,11 @@
             "node": "LLM Final Prompt Smith V2",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1218,9 +2095,9 @@
       "main": [
         [
           {
-            "node": "Parse Prompt Spec V2",
+            "node": "Merge",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -1429,6 +2306,28 @@
           }
         ]
       ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Parse Prompt Spec V2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1437,11 +2336,13 @@
     "availableInMCP": false
   },
   "staticData": null,
-  "meta": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
   "pinData": {},
-  "versionId": "92858f07-ab26-4371-a790-fbc085d3498c",
+  "versionId": "1dcb3a76-de05-4ea6-9f81-d1e924389a03",
   "activeVersionId": null,
-  "versionCounter": 9,
+  "versionCounter": 55,
   "triggerCount": 0,
   "tags": [],
   "shared": [
