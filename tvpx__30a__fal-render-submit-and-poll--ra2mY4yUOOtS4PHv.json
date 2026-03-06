@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__30A)\n * Bulletproof normalization for a single fal render job.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\n// Required inputs\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\nconst variant = String(incoming.render_variant || incoming.variant_key || '').trim();\nconst prompt = String(incoming.prompt || '').trim();\nconst neg = String(incoming.negative_prompt || '').trim();\n\nif (!conceptId) throw new Error('TVPX__30A: Missing concept_id.');\nif (!variant) throw new Error('TVPX__30A: Missing render_variant (color|bw).');\nif (prompt.length < 40) throw new Error('TVPX__30A: prompt too short / missing.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  poll_interval_seconds: Number(baseCtx.poll_interval_seconds || incoming.poll_interval_seconds || 8)\n};\n\n// Auth: use n8n HTTP Header Auth credentials on Fal Submit Render and Fal Poll Status nodes (no fal_api_key in input required).\n\nconst controls = (incoming.provider_controls && typeof incoming.provider_controls === 'object') ? incoming.provider_controls : {};\nconst conceptRow = (incoming.concept_row && typeof incoming.concept_row === 'object') ? incoming.concept_row : {};\n\nconst imageSize = String(controls.image_size || incoming.image_size || baseCtx.image_size || '1024x1280');\nconst background = String(controls.background || incoming.background || baseCtx.background || 'opaque');\nconst quality = String(controls.quality || incoming.quality || baseCtx.quality || 'high');\nconst outputFormat = String(controls.output_format || incoming.output_format || baseCtx.output_format || 'png');\n\n// Provider endpoint key: keep configurable per project later; default to proven legacy still endpoint\nconst endpointUrl = String(incoming.fal_endpoint_url || baseCtx.fal_endpoint_url || 'https://queue.fal.run/fal-ai/gpt-image-1.5');\n\n// Make one robust prompt body: keep negative guidance inside prompt to avoid provider schema mismatch\nconst finalPrompt = neg\n  ? `${prompt}\\n\\nAVOID (negative guidance): ${neg}`\n  : prompt;\n\nconst jobId = `tvpx_job_${fnv1a(`${traceId}::${conceptId}::${variant}::${now}`)}`;\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      job_id: jobId,\n      concept_id: conceptId,\n      render_variant: variant,\n      provider_name: 'fal',\n      endpoint_url: endpointUrl,\n      request: {\n        prompt: finalPrompt,\n        image_size: imageSize,\n        background,\n        quality,\n        num_images: 1,\n        output_format: outputFormat,\n        sync_mode: false\n      },\n      provider_controls: {\n        image_size: imageSize,\n        background,\n        quality,\n        output_format: outputFormat\n      },\n      concept_snapshot: {\n        concept_id: conceptId,\n        concept_thesis: String(conceptRow.concept_thesis || '').trim(),\n        symbolic_tension: String(conceptRow.symbolic_tension || '').trim(),\n        material_anchor: String(conceptRow.material_anchor || '').trim(),\n        spatial_directive: String(conceptRow.spatial_directive || '').trim(),\n        abstraction_target: Number(conceptRow.abstraction_target || 6.2),\n        palette_directive: String(conceptRow.palette_directive || '{}'),\n        texture_directive: String(conceptRow.texture_directive || '{}'),\n        series_dna_json: String(conceptRow.series_dna_json || '{}'),\n        prompt_guardrails_json: String(conceptRow.prompt_guardrails_json || '{}')\n      },\n      // Keep original prompt + negative separately for audit and downstream captioning.\n      prompt_raw: prompt,\n      negative_prompt_raw: neg\n    }\n  }\n}];"
+        "jsCode": "/**\n * Initialize Envelope (TVPX__30A)\n * Bulletproof normalization for a single fal render job.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\n// Required inputs\nconst conceptId = String(incoming.concept_id || baseCtx.concept_id || '').trim();\nconst variant = String(incoming.render_variant || incoming.variant_key || '').trim();\nconst prompt = String(incoming.prompt || '').trim();\nconst neg = String(incoming.negative_prompt || '').trim();\n\nif (!conceptId) throw new Error('TVPX__30A: Missing concept_id.');\nif (!variant) throw new Error('TVPX__30A: Missing render_variant (color|bw).');\nif (prompt.length < 40) throw new Error('TVPX__30A: prompt too short / missing.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  poll_interval_seconds: Number(baseCtx.poll_interval_seconds || incoming.poll_interval_seconds || 8)\n};\n\n// Auth: use n8n HTTP Header Auth credentials on Fal Submit Render and Fal Poll Status nodes (no fal_api_key in input required).\n\nconst controls = (incoming.provider_controls && typeof incoming.provider_controls === 'object') ? incoming.provider_controls : {};\nconst conceptRow = (incoming.concept_row && typeof incoming.concept_row === 'object') ? incoming.concept_row : {};\n\nconst FAL_IMAGE_SIZES = ['1024x1024', '1536x1024', '1024x1536', 'auto'];\nconst rawSize = String(controls.image_size || incoming.image_size || baseCtx.image_size || '1024x1024').trim();\nconst imageSize = FAL_IMAGE_SIZES.includes(rawSize) ? rawSize : '1024x1024';\nconst background = String(controls.background || incoming.background || baseCtx.background || 'opaque');\nconst quality = String(controls.quality || incoming.quality || baseCtx.quality || 'high');\nconst outputFormat = String(controls.output_format || incoming.output_format || baseCtx.output_format || 'png');\n\n// Provider endpoint key: keep configurable per project later; default to proven legacy still endpoint\nconst endpointUrl = String(incoming.fal_endpoint_url || baseCtx.fal_endpoint_url || 'https://queue.fal.run/fal-ai/gpt-image-1.5');\n\n// Make one robust prompt body: keep negative guidance inside prompt to avoid provider schema mismatch\nconst finalPrompt = neg\n  ? `${prompt}\\n\\nAVOID (negative guidance): ${neg}`\n  : prompt;\n\nconst jobId = `tvpx_job_${fnv1a(`${traceId}::${conceptId}::${variant}::${now}`)}`;\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      job_id: jobId,\n      concept_id: conceptId,\n      render_variant: variant,\n      provider_name: 'fal',\n      endpoint_url: endpointUrl,\n      request: {\n        prompt: finalPrompt,\n        image_size: imageSize,\n        background,\n        quality,\n        num_images: 1,\n        output_format: outputFormat,\n        sync_mode: false\n      },\n      provider_controls: {\n        image_size: imageSize,\n        background,\n        quality,\n        output_format: outputFormat\n      },\n      concept_snapshot: {\n        concept_id: conceptId,\n        concept_thesis: String(conceptRow.concept_thesis || '').trim(),\n        symbolic_tension: String(conceptRow.symbolic_tension || '').trim(),\n        material_anchor: String(conceptRow.material_anchor || '').trim(),\n        spatial_directive: String(conceptRow.spatial_directive || '').trim(),\n        abstraction_target: Number(conceptRow.abstraction_target || 6.2),\n        palette_directive: String(conceptRow.palette_directive || '{}'),\n        texture_directive: String(conceptRow.texture_directive || '{}'),\n        series_dna_json: String(conceptRow.series_dna_json || '{}'),\n        prompt_guardrails_json: String(conceptRow.prompt_guardrails_json || '{}')\n      },\n      // Keep original prompt + negative separately for audit and downstream captioning.\n      prompt_raw: prompt,\n      negative_prompt_raw: neg\n    }\n  }\n}];"
       },
       "id": "cc050267-f722-4d9e-a7b1-304179b93724",
       "name": "Initialize Envelope",
@@ -81,6 +81,19 @@
     },
     {
       "parameters": {
+        "jsCode": "/** Pass Envelope: re-output envelope so Fal Submit Render receives ctx/job (DataTable returns ledger row). */\nconst envelope = $items('Initialize Envelope')[0]?.json;\nif (!envelope?.ctx || !envelope?.job) throw new Error('TVPX__30A: Pass Envelope could not read envelope from Initialize Envelope.');\nreturn [{ json: envelope }];"
+      },
+      "id": "a1b2c3d4-pass-envelope-30a",
+      "name": "Pass Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2640,
+        256
+      ]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "={{$json.job.endpoint_url}}",
         "authentication": "genericCredentialType",
@@ -97,12 +110,6 @@
       "name": "Fal Submit Render",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "fal_render_placeholder",
-          "name": "fal API (Header Auth)"
-        }
-      },
       "position": [
         -2528,
         256
@@ -207,12 +214,6 @@
       "name": "Fal Poll Status",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "fal_render_placeholder",
-          "name": "fal API (Header Auth)"
-        }
-      },
       "position": [
         -1408,
         80
@@ -223,7 +224,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Normalize Poll Response\n * Common fal poll responses include: { status: 'IN_PROGRESS'|'COMPLETED'|'FAILED', ... , images:[{url}], image:{url} }\n */\n\nconst base = $items('Initialize Poll State')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\nconst poll = base.poll;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\n\nconst statusRaw = String(body.status || body.data?.status || '').trim();\nconst status = statusRaw ? statusRaw.toUpperCase() : '';\n\n// Try to extract image url\nlet imageUrl = '';\nif (Array.isArray(body.images) && body.images.length) {\n  imageUrl = String(body.images[0]?.url || body.images[0] || '').trim();\n}\nif (!imageUrl && body.image) {\n  imageUrl = String(body.image.url || body.image || '').trim();\n}\nif (!imageUrl && body.result && Array.isArray(body.result.images) && body.result.images.length) {\n  imageUrl = String(body.result.images[0]?.url || '').trim();\n}\n\nconst errorText = String(body.error || body.message || body.data?.error || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      ...job,\n      polled_status: status,\n      provider_image_url: imageUrl,\n      error_text: errorText\n    },\n    poll\n  }\n}];"
+        "jsCode": "/**\n * Normalize Poll Response\n * Common fal poll responses include: { status: 'IN_PROGRESS'|'COMPLETED'|'FAILED', ... , images:[{url}], image:{url} }\n */\n\nconst base = $items('Initialize Poll State')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\nconst poll = base.poll;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\n\nconst statusRaw = String(body.status || body.data?.status || '').trim();\nconst status = statusRaw ? statusRaw.toUpperCase() : '';\n\n// Try to extract image url (status payload may omit it; COMPLETED branch fetches response_url)\nlet imageUrl = '';\nif (Array.isArray(body.images) && body.images.length) imageUrl = String(body.images[0]?.url || body.images[0] || '').trim();\nif (!imageUrl && body?.data?.images?.length) imageUrl = String(body.data.images[0]?.url || body.data.images[0] || '').trim();\nif (!imageUrl && body.image) imageUrl = String(body.image?.url || body.image || '').trim();\nif (!imageUrl && body?.result?.images?.length) imageUrl = String(body.result.images[0]?.url || '').trim();\nif (!imageUrl && body?.output?.images?.length) imageUrl = String(body.output.images[0]?.url || body.output.images[0] || '').trim();\n\nconst errorText = String(body.error || body.message || body.data?.error || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      ...job,\n      polled_status: status,\n      provider_image_url: imageUrl,\n      error_text: errorText\n    },\n    poll\n  }\n}];"
       },
       "id": "308701ae-171e-47de-b9d4-c13619df7ae0",
       "name": "Normalize Poll Response",
@@ -263,6 +264,41 @@
       "typeVersion": 2,
       "position": [
         -960,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.job.response_url}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {},
+          "timeout": 120000
+        }
+      },
+      "id": "c3d4e5f6-fetch-result-30a",
+      "name": "Fetch Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -848,
+        -16
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "/** Merge Result Into Job: extract image URL from fal result (GET response_url) for Finalize Success. */\nconst envelope = $items('Normalize Poll Response')[0]?.json;\nif (!envelope?.ctx || !envelope?.job) throw new Error('TVPX__30A: Merge Result could not read envelope.');\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\nlet imageUrl = '';\nif (Array.isArray(body?.images) && body.images.length) imageUrl = String(body.images[0]?.url ?? body.images[0] ?? '').trim();\nif (!imageUrl && body?.data?.images?.length) imageUrl = String(body.data.images[0]?.url ?? body.data.images[0] ?? '').trim();\nif (!imageUrl && body?.image) imageUrl = String(body.image?.url ?? body.image ?? '').trim();\nconst job = { ...envelope.job, provider_image_url: imageUrl || envelope.job?.provider_image_url || '' };\nreturn [{ json: { ctx: envelope.ctx, job } }];"
+      },
+      "id": "b2c3d4e5-merge-result-30a",
+      "name": "Merge Result Into Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
         -16
       ]
     },
@@ -384,14 +420,14 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Finalize Success\n * Return payload contract expected by Workflow 30.\n */\n\nconst ctx = $json.ctx;\nconst job = $json.job;\n\nconst imageUrl = String(job.provider_image_url || '').trim();\nif (!imageUrl) {\n  throw new Error('Fal reported COMPLETED but no image URL was found in response.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    image_url: imageUrl,\n    prompt_raw: String(job.prompt_raw || '').trim(),\n    negative_prompt_raw: String(job.negative_prompt_raw || '').trim(),\n    prompt_final: String(job.request?.prompt || '').trim(),\n    image_size: String(job.provider_controls?.image_size || job.request?.image_size || ''),\n    background: String(job.provider_controls?.background || job.request?.background || ''),\n    quality: String(job.provider_controls?.quality || job.request?.quality || ''),\n    output_format: String(job.provider_controls?.output_format || job.request?.output_format || ''),\n    concept_snapshot: job.concept_snapshot || null,\n    completed_at: new Date().toISOString()\n  }\n}];"
+        "jsCode": "/**\n * Finalize Success\n * Return payload contract expected by Workflow 30.\n */\n\nconst ctx = $json.ctx;\nconst job = $json.job;\n\nconst imageUrl = String(job.provider_image_url || '').trim();\nif (!imageUrl) {\n  throw new Error('Fal reported COMPLETED but no image URL was found (tried status payload and GET response_url).');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job_id: job.job_id,\n    concept_id: job.concept_id,\n    render_variant: job.render_variant,\n    provider_name: job.provider_name,\n    provider_job_id: job.provider_job_id,\n    status_url: job.status_url,\n    response_url: job.response_url,\n    image_url: imageUrl,\n    prompt_raw: String(job.prompt_raw || '').trim(),\n    negative_prompt_raw: String(job.negative_prompt_raw || '').trim(),\n    prompt_final: String(job.request?.prompt || '').trim(),\n    image_size: String(job.provider_controls?.image_size || job.request?.image_size || ''),\n    background: String(job.provider_controls?.background || job.request?.background || ''),\n    quality: String(job.provider_controls?.quality || job.request?.quality || ''),\n    output_format: String(job.provider_controls?.output_format || job.request?.output_format || ''),\n    concept_snapshot: job.concept_snapshot || null,\n    completed_at: new Date().toISOString()\n  }\n}];"
       },
       "id": "46b9c234-cc49-4d68-a020-550350eaf867",
       "name": "Finalize Success",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -736,
+        -624,
         -16
       ]
     },
@@ -782,6 +818,17 @@
       "main": [
         [
           {
+            "node": "Pass Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass Envelope": {
+      "main": [
+        [
+          {
             "node": "Fal Submit Render",
             "type": "main",
             "index": 0
@@ -869,7 +916,7 @@
       "main": [
         [
           {
-            "node": "Finalize Success",
+            "node": "Fetch Result",
             "type": "main",
             "index": 0
           }
@@ -877,6 +924,28 @@
         [
           {
             "node": "Is Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Result Into Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Result Into Job": {
+      "main": [
+        [
+          {
+            "node": "Finalize Success",
             "type": "main",
             "index": 0
           }
