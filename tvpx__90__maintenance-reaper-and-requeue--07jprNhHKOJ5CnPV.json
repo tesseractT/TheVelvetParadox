@@ -167,7 +167,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build Failure Audit Row (Unlock)\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst ctx = $json.ctx;\nconst u = $json.update;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${fnv1a(ctx.trace_id + '::unlock::' + u.concept_id + '::' + now)}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'maintenance_unlock_stale_concept',\n      entity_type: 'concept',\n      entity_id: u.concept_id,\n      severity: 'warn',\n      payload_snapshot_json: JSON.stringify(u).slice(0, 18000),\n      error_text: `Unlocked stale lock (expired at ${u.lock_expires_at}, owner ${u.lock_owner}).`,\n      retry_count: 0,\n      status: 'closed',\n      created_at: now\n    }\n  }\n}];"
+        "jsCode": "/**\n * Build Failure Audit Row (Unlock)\n * Rehydrate from the pre-update payload so Data Table update output cannot drop state.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $items('Build Unlock Update')[0]?.json || $json || {};\nconst ctx = base.ctx;\nconst u = base.update;\nif (!ctx || !u) throw new Error('TVPX__90: missing unlock audit payload.');\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${fnv1a(ctx.trace_id + '::unlock::' + u.concept_id + '::' + now)}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'maintenance_unlock_stale_concept',\n      entity_type: 'concept',\n      entity_id: u.concept_id,\n      severity: 'warn',\n      payload_snapshot_json: JSON.stringify(u).slice(0, 18000),\n      error_text: `Unlocked stale lock (expired at ${u.lock_expires_at}, owner ${u.lock_owner}).`,\n      retry_count: 0,\n      status: 'closed',\n      created_at: now\n    }\n  }\n}];"
       },
       "id": "17027fad-bae0-4598-b56d-d3dc8f780322",
       "name": "Build Audit Unlock",
@@ -346,7 +346,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build Failure Audit Row (Job Timeout)\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst ctx = $json.ctx;\nconst u = $json.update;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${fnv1a(ctx.trace_id + '::job_timeout::' + u.job_id + '::' + now)}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'maintenance_timeout_generation_job',\n      entity_type: 'generation_job',\n      entity_id: u.job_id,\n      severity: 'warn',\n      payload_snapshot_json: JSON.stringify(u).slice(0, 18000),\n      error_text: u.error_text,\n      retry_count: 0,\n      status: 'closed',\n      created_at: now\n    }\n  }\n}];"
+        "jsCode": "/**\n * Build Failure Audit Row (Job Timeout)\n * Rehydrate from the pre-update payload so Data Table update output cannot drop state.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $items('Build Job Timeout Update')[0]?.json || $json || {};\nconst ctx = base.ctx;\nconst u = base.update;\nif (!ctx || !u) throw new Error('TVPX__90: missing job-timeout audit payload.');\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${fnv1a(ctx.trace_id + '::job_timeout::' + u.job_id + '::' + now)}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'maintenance_timeout_generation_job',\n      entity_type: 'generation_job',\n      entity_id: u.job_id,\n      severity: 'warn',\n      payload_snapshot_json: JSON.stringify(u).slice(0, 18000),\n      error_text: u.error_text,\n      retry_count: 0,\n      status: 'closed',\n      created_at: now\n    }\n  }\n}];"
       },
       "id": "17667897-e0ed-4050-8231-ed8edc553705",
       "name": "Build Audit Job Timeout",
@@ -626,19 +626,18 @@
             "node": "Unlock Concept",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Unlock Concept": {
-      "main": [
-        [
+          },
           {
             "node": "Build Audit Unlock",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "Unlock Concept": {
+      "main": [
+        []
       ]
     },
     "Build Audit Unlock": {
@@ -699,19 +698,18 @@
             "node": "Update Job Timed Out",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Job Timed Out": {
-      "main": [
-        [
+          },
           {
             "node": "Build Audit Job Timeout",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "Update Job Timed Out": {
+      "main": [
+        []
       ]
     },
     "Build Audit Job Timeout": {

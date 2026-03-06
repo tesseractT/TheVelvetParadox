@@ -168,7 +168,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Poll State\n */\nconst j = $json;\nconst ctx = j.ctx;\nconst job = j.job;\n\nreturn [{\n  json: {\n    ctx,\n    job,\n    poll: {\n      tries: 0,\n      max: Number(ctx.poll_max || 24),\n      interval_seconds: Number(ctx.poll_interval_seconds || 8)\n    }\n  }\n}];"
+        "jsCode": "/**\n * Initialize Poll State\n * Rehydrate from normalized submit payload so Data Table side effects cannot strip context.\n */\nconst normalized = $items('Normalize Submit Response')[0]?.json || {};\nconst j = ($json && $json.ctx && $json.job) ? $json : normalized;\nconst ctx = j.ctx;\nconst job = j.job;\n\nif (!ctx || !job) {\n  throw new Error('TVPX__30A: missing ctx/job while initializing poll state.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job,\n    poll: {\n      tries: 0,\n      max: Number(ctx.poll_max || 24),\n      interval_seconds: Number(ctx.poll_interval_seconds || 8)\n    }\n  }\n}];"
       },
       "id": "c657b3b5-7ef6-4831-8b13-4c8c12db3438",
       "name": "Initialize Poll State",
@@ -809,19 +809,18 @@
             "node": "Update Job With URLs",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Job With URLs": {
-      "main": [
-        [
+          },
           {
             "node": "Initialize Poll State",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "Update Job With URLs": {
+      "main": [
+        []
       ]
     },
     "Initialize Poll State": {
