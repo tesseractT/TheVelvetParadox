@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T22:58:57.085Z",
+  "updatedAt": "2026-03-06T23:17:14.109Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "XtyvRQfTLySqT16o",
   "name": "TVPX__30__Scene Blueprint Batch Render",
@@ -17,7 +17,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        312,
+        320,
         448
       ],
       "credentials": {
@@ -37,7 +37,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        440,
+        448,
         448
       ],
       "credentials": {
@@ -703,7 +703,7 @@
       "typeVersion": 1,
       "position": [
         1168,
-        152
+        160
       ]
     },
     {
@@ -714,7 +714,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V2 for The Velvet Paradox.\n\nWrite one high-performance GPT Image 1.5 prompt from one scene blueprint.\n\nRules:\n- describe only what the camera sees\n- 80 to 140 words preferred\n- 150 words hard ceiling\n- one dominant subject or grouping\n- one surreal lift only\n- no symbolism language\n- no article language\n- no concept explanation\n- no literary thesis\n- no prompt bloat\n- no long negative guidance\n\nThe output must feel like a premium still-image production brief.\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 2\n  }\n}"
+              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V2 for The Velvet Paradox.\n\nWrite one image-native production prompt from one scene blueprint.\n\nRules:\n- 90 to 135 words preferred\n- 150 words hard ceiling\n- write as one coherent shot, not an inventory list\n- lead with frame, subject, gesture, and atmosphere\n- include only the few material details that will visibly matter\n- preserve negative space and ceremonial restraint\n- one surreal lift only, rendered as plausible physical reality\n- no symbolism language\n- no article language\n- no concept explanation\n- no thesis language\n- no “representing,” “evoking,” “suggesting,” or “symbolizing”\n- no extra props beyond what the blueprint requires\n- avoid checklist rhythm; write like a premium still-image brief\n\nPrefer one complete flowing paragraph with sentence rhythm, not stacked noun phrases.\n\nThe output must feel like a premium still-image production brief.\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 2\n  }\n}"
             }
           ]
         },
@@ -726,12 +726,12 @@
       "typeVersion": 1.9,
       "position": [
         1104,
-        440
+        448
       ]
     },
     {
       "parameters": {
-        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[“”]/g, '\"')\n      .replace(/[‘’]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction clipWords(v, max) {\n  const text = cleanText(v);\n  const parts = text.split(/\\s+/);\n  return parts.length <= max ? text : parts.slice(0, max).join(' ');\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'cgi',\n    '3d render',\n    'illustration',\n    'cartoon',\n    'plastic skin',\n    'waxy skin',\n    'beauty retouching',\n    'bad hands',\n    'extra fingers',\n    'duplicate limbs',\n    'deformed anatomy',\n    'watermark',\n    'logo',\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst base = $json || {};\nconst ctx = base.ctx || {};\nconst raw = $json.text || $json.output || $json.result || $json;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = clipWords(masterPrompt, 150);\nif (wordCount(masterPrompt) < 55) throw new Error('TVPX__30: master_prompt too short.');\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nconst parsedControls = (parsed.provider_controls && typeof parsed.provider_controls === 'object') ? parsed.provider_controls : {};\n\nreturn [{\n  json: {\n    ...base,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n      image_size: String(ctx.image_size || parsed.image_size || '1024x1536'),\n      provider_controls: {\n        image_size: String(ctx.image_size || parsed.image_size || '1024x1536'),\n        quality: String(ctx.quality || parsedControls.quality || 'high'),\n        background: String(ctx.background || parsedControls.background || 'opaque'),\n        output_format: String(ctx.output_format || parsedControls.output_format || 'png'),\n        num_images: Number(parsedControls.num_images || 2),\n      },\n    },\n  },\n}];"
+        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction trimToSentenceBoundary(v, maxWords = 150) {\n  const text = cleanText(v);\n  const words = text.split(/\\s+/);\n  if (words.length <= maxWords) return text;\n\n  const clipped = words.slice(0, maxWords).join(' ');\n  const lastSentenceEnd = Math.max(\n    clipped.lastIndexOf('.'),\n    clipped.lastIndexOf('!'),\n    clipped.lastIndexOf('?')\n  );\n\n  if (lastSentenceEnd > 40) {\n    return clipped.slice(0, lastSentenceEnd + 1).trim();\n  }\n\n  const lastComma = clipped.lastIndexOf(',');\n  if (lastComma > 40) {\n    return clipped.slice(0, lastComma).trim() + '.';\n  }\n\n  return clipped.trim() + '.';\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'text',\n    'logos',\n    'memorial markers',\n    'religious symbols',\n    'candles',\n    'framed photos',\n    'glossy retouching',\n    'editorial illustration',\n    'infographic feel',\n    'concept-art styling',\n    'fantasy effects',\n    'glowing aura',\n    'dramatic beams',\n    'theatrical shadows',\n    'extra figures',\n    'vehicles',\n    'animals',\n    'fences',\n    'urban clutter',\n    'wide-angle distortion',\n    'fisheye',\n    'oversaturated color',\n    'cgi sheen',\n    'prop clutter'\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst base = $items('Explode Blueprint Pack')[0]?.json || $json;\nconst raw = $json.text || $json.output || $json.result || $json;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = trimToSentenceBoundary(masterPrompt, 150);\n\nif (wordCount(masterPrompt) < 55) {\n  throw new Error('TVPX__30: master_prompt too short.');\n}\n\nif (!/[.!?]$/.test(masterPrompt)) {\n  throw new Error('TVPX__30: master_prompt appears truncated.');\n}\n\nconst badEndingPatterns = [\n  /\\bechoing\\.?$/i,\n  /\\bsuggesting\\.?$/i,\n  /\\bshowing\\.?$/i,\n  /\\bwith\\.?$/i,\n  /\\band\\.?$/i,\n  /\\bof\\.?$/i,\n  /\\ba\\.?$/i,\n];\n\nfor (const rx of badEndingPatterns) {\n  if (rx.test(masterPrompt)) {\n    throw new Error('TVPX__30: master_prompt appears clipped at the end.');\n  }\n}\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n  'symbolizing',\n  'representing',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nconst providerControls = parsed.provider_controls || {};\n\nreturn [{\n  json: {\n    ...$items('Explode Blueprint Pack')[0].json,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n      image_size: String(parsed.image_size || base.ctx?.image_size || '1024x1536'),\n      provider_controls: {\n        quality: String(providerControls.quality || base.ctx?.quality || 'high'),\n        background: String(providerControls.background || base.ctx?.background || 'opaque'),\n        output_format: String(providerControls.output_format || base.ctx?.output_format || 'png'),\n        num_images: Number(providerControls.num_images || 2),\n      },\n    },\n  },\n}];"
       },
       "id": "33b1f7b3-73ca-4a00-ab27-1de19b98ebee",
       "name": "Parse Prompt Spec V2",
@@ -739,12 +739,12 @@
       "typeVersion": 2,
       "position": [
         1680,
-        296
+        304
       ]
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const promptSpec = (entry.prompt_spec && typeof entry.prompt_spec === 'object') ? entry.prompt_spec : {};\n  const controls = (promptSpec.provider_controls && typeof promptSpec.provider_controls === 'object') ? promptSpec.provider_controls : {};\n  const imageSize = String(controls.image_size || promptSpec.image_size || entry.ctx?.image_size || '1024x1536');\n  const outputFormat = String(controls.output_format || entry.ctx?.output_format || 'png');\n  const background = String(controls.background || entry.ctx?.background || 'opaque');\n  const quality = String(controls.quality || entry.ctx?.quality || 'high');\n  const numImages = Number(controls.num_images || 2);\n\n  const packetId = `tvpx_rp_${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    promptSpec.master_prompt,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: imageSize,\n        output_format: outputFormat,\n        background,\n        quality,\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || `bp_${idx + 1}`).trim(),\n      blueprint: entry.blueprint,\n      prompt: String(promptSpec.master_prompt || '').trim(),\n      negative_prompt: String(promptSpec.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n        image_size: imageSize,\n        background,\n        quality,\n        output_format: outputFormat,\n        num_images: numImages,\n      },\n    },\n  };\n});"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const promptSpec = (entry.prompt_spec && typeof entry.prompt_spec === 'object') ? entry.prompt_spec : {};\n  const controls = (promptSpec.provider_controls && typeof promptSpec.provider_controls === 'object') ? promptSpec.provider_controls : {};\n  const imageSize = String(controls.image_size || promptSpec.image_size || entry.ctx?.image_size || '1024x1536');\n  const outputFormat = String(controls.output_format || entry.ctx?.output_format || 'png');\n  const background = String(controls.background || entry.ctx?.background || 'opaque');\n  const quality = String(controls.quality || entry.ctx?.quality || 'high');\n  const numImages = Number(controls.num_images || 2);\n\n  const packetId = `tvpx_rp_${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    promptSpec.master_prompt,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: imageSize,\n        output_format: outputFormat,\n        background,\n        quality,\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || `bp_${idx + 1}`).trim(),\n      blueprint: entry.blueprint,\n      prompt: String(promptSpec.master_prompt || '').trim(),\n      negative_prompt: String(promptSpec.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n  image_size: String(entry.prompt_spec?.image_size || entry.ctx?.image_size || '1024x1536'),\n  background: String(entry.prompt_spec?.provider_controls?.background || entry.ctx?.background || 'opaque'),\n  quality: String(entry.prompt_spec?.provider_controls?.quality || entry.ctx?.quality || 'high'),\n  output_format: String(entry.prompt_spec?.provider_controls?.output_format || entry.ctx?.output_format || 'png'),\n  num_images: Number(entry.prompt_spec?.provider_controls?.num_images || 2),\n},\n    },\n  };\n});"
       },
       "id": "90e5bab3-8e0c-4f13-a158-82f6db46e115",
       "name": "Build Color Render Packets",
@@ -752,7 +752,7 @@
       "typeVersion": 2,
       "position": [
         1904,
-        296
+        304
       ]
     },
     {
@@ -797,7 +797,7 @@
       "typeVersion": 1.3,
       "position": [
         2128,
-        296
+        304
       ]
     },
     {
@@ -1429,7 +1429,7 @@
       "typeVersion": 3.2,
       "position": [
         2576,
-        536
+        544
       ]
     },
     {
@@ -1442,7 +1442,7 @@
       "typeVersion": 2,
       "position": [
         2800,
-        536
+        544
       ]
     },
     {
@@ -1708,7 +1708,7 @@
       "typeVersion": 1,
       "position": [
         3024,
-        248
+        256
       ]
     },
     {
@@ -1956,7 +1956,7 @@
       "typeVersion": 1,
       "position": [
         3024,
-        440
+        448
       ]
     },
     {
@@ -1969,7 +1969,7 @@
       "typeVersion": 2,
       "position": [
         3024,
-        632
+        640
       ]
     },
     {
@@ -2015,7 +2015,7 @@
       "typeVersion": 1,
       "position": [
         3248,
-        536
+        544
       ]
     },
     {
@@ -2028,7 +2028,7 @@
       "typeVersion": 2,
       "position": [
         3248,
-        728
+        736
       ]
     },
     {
@@ -2071,7 +2071,7 @@
       "typeVersion": 1.3,
       "position": [
         3472,
-        728
+        736
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -2087,7 +2087,7 @@
       "typeVersion": 2,
       "position": [
         3696,
-        728
+        736
       ]
     },
     {
@@ -2128,7 +2128,7 @@
       "typeVersion": 1.3,
       "position": [
         3920,
-        728
+        736
       ]
     },
     {
@@ -2141,7 +2141,7 @@
       "typeVersion": 2,
       "position": [
         4144,
-        728
+        736
       ]
     },
     {
@@ -2182,7 +2182,7 @@
       "typeVersion": 1.3,
       "position": [
         4368,
-        728
+        736
       ]
     },
     {
@@ -2195,7 +2195,7 @@
       "typeVersion": 2,
       "position": [
         4592,
-        728
+        736
       ]
     },
     {
@@ -2246,7 +2246,7 @@
       "typeVersion": 1,
       "position": [
         4816,
-        728
+        736
       ]
     },
     {
@@ -2270,7 +2270,7 @@
       "typeVersion": 3.2,
       "position": [
         1456,
-        296
+        304
       ],
       "id": "f5656b41-e034-44a6-b2a6-93d5cf650b06",
       "name": "Merge"
@@ -2719,9 +2719,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "5d470b2d-2512-4faa-8309-9f779278343a",
+  "versionId": "0a89a9f3-552e-4491-a69a-48c41d36018c",
   "activeVersionId": null,
-  "versionCounter": 65,
+  "versionCounter": 75,
   "triggerCount": 0,
   "tags": [],
   "shared": [
