@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T22:55:00.000Z",
+  "updatedAt": "2026-03-06T19:52:04.092Z",
   "createdAt": "2026-03-05T22:55:00.000Z",
   "id": "3nJbW4QhL9r2YpCk",
   "name": "TVPX__41__B_W_Finalizer_And_Telegram_Dispatch",
@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__41)\n * Finalizes a reply-driven B&W asset.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim() || null,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'telegram',\n  route_mode: 'bw_finalize_dispatch',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nconst assetId = String(incoming.asset_id || incoming?.family?.bw?.asset_id || '').trim();\nif (!conceptId) throw new Error('TVPX__41: Missing concept_id.');\nif (!assetId) throw new Error('TVPX__41: Missing asset_id.');\n\nconst fam = incoming.family || {};\nconst bw = fam.bw || {};\nconst bwUrl = String(bw.image_url || bw.provider_image_url || '').trim();\nif (!bwUrl) throw new Error('TVPX__41: Missing bw image_url.');\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_id: assetId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      bw: {\n        ...bw,\n        asset_id: assetId,\n        image_url: bwUrl\n      }\n    }\n  }\n}];"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || \\`tvpx_\\${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}\\`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim() || null,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'telegram',\n  route_mode: 'bw_finalize_dispatch',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || '').trim() || null,\n};\n\nconst sceneSeedId = String(incoming.scene_seed_id || '').trim();\nconst conceptId = String(incoming.concept_id || sceneSeedId || '').trim();\nconst fam = incoming.family || {};\nconst bw = fam.bw || {};\nconst bwUrl = String(bw.image_url || bw.provider_image_url || '').trim();\nif (!bwUrl) throw new Error('TVPX__41: Missing bw image_url.');\nconst renderCandidateId = String(incoming.render_candidate_id || bw.render_candidate_id || '').trim();\nconst assetId = String(incoming.asset_id || bw.asset_id || (renderCandidateId ? \\`tvpx_as_\\${renderCandidateId}_bw\\` : \\`tvpx_as_\\${traceId}_\\${conceptId}_bw\\`)).trim();\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    scene_seed_id: sceneSeedId,\n    scene_blueprint_id: String(incoming.scene_blueprint_id || '').trim(),\n    archetype_id: String(incoming.archetype_id || '').trim(),\n    render_candidate_id: renderCandidateId,\n    blueprint_label: String(incoming.blueprint_label || '').trim(),\n    asset_id: assetId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      bw: {\n        ...bw,\n        asset_id: assetId,\n        image_url: bwUrl,\n        render_candidate_id: renderCandidateId,\n      },\n    },\n  },\n}];"
       },
       "id": "4b7839ca-9085-449f-b542-b68b91bf93ea",
       "name": "Initialize Envelope",
@@ -50,7 +50,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const base = $items('Initialize Envelope')[0].json;\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('TVPX__41: No binary found from Download B W Image.');\nconst firstKey = binKeys[0];\nreturn [{ json: { ...base, variant: 'bw' }, binary: { image: $binary[firstKey] } }];"
+        "jsCode": "const base = $items('Initialize Envelope')[0].json;\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('TVPX__41: no binary found from Download B W Image.');\nconst firstKey = binKeys[0];\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: base.concept_id,\n    scene_seed_id: base.scene_seed_id,\n    scene_blueprint_id: base.scene_blueprint_id,\n    archetype_id: base.archetype_id,\n    render_candidate_id: base.render_candidate_id,\n    blueprint_label: base.blueprint_label,\n    asset_id: base.asset_id,\n    asset_family_id: base.asset_family_id,\n    family: base.family,\n    variant: 'bw',\n  },\n  binary: { image: $binary[firstKey] },\n}];"
       },
       "id": "71fc245f-3131-4382-be1e-6b4e46cc2ca6",
       "name": "Ensure Binary For B W",
@@ -102,7 +102,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const base = $items('Make Safe Filename B W')[0].json;\nconst r = $json || {};\nconst fileId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!fileId) throw new Error('TVPX__41: Google Drive upload returned no file id.');\nconst viewUrl = String(r.webViewLink || r.webViewUrl || r.alternateLink || '').trim();\nconst dlUrl = String(r.webContentLink || r.downloadUrl || '').trim();\nreturn [{\n  json: {\n    ...base,\n    assets: {\n      bw: {\n        filename: base.filename,\n        drive_file_id: fileId,\n        drive_view_url: viewUrl,\n        drive_download_url: dlUrl,\n        provider_image_url: String(base.family.bw.image_url || '').trim()\n      }\n    }\n  }\n}];"
+        "jsCode": "const base = $items('Make Safe Filename B W')[0].json;\nconst r = $json || {};\nconst fileId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!fileId) throw new Error('TVPX__41: Google Drive upload returned no file id.');\nconst viewUrl = String(r.webViewLink || r.webViewUrl || r.alternateLink || '').trim();\nconst dlUrl = String(r.webContentLink || r.downloadUrl || '').trim();\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: base.concept_id,\n    scene_seed_id: base.scene_seed_id,\n    scene_blueprint_id: base.scene_blueprint_id,\n    archetype_id: base.archetype_id,\n    render_candidate_id: base.render_candidate_id,\n    blueprint_label: base.blueprint_label,\n    asset_id: base.asset_id,\n    asset_family_id: base.asset_family_id,\n    family: base.family,\n    assets: {\n      bw: {\n        filename: base.filename,\n        drive_file_id: fileId,\n        drive_view_url: viewUrl,\n        drive_download_url: dlUrl,\n        provider_image_url: String(base.family?.bw?.image_url || '').trim(),\n      },\n    },\n  },\n}];"
       },
       "id": "3b84169f-c46e-4f2a-8865-687c84b8f8c3",
       "name": "Normalize Drive Result B W",
@@ -138,6 +138,11 @@
             "asset_id": "={{$json.asset_id}}",
             "trace_id": "={{$json.ctx.trace_id}}",
             "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
             "asset_family_id": "={{$json.asset_family_id}}",
             "variant_key": "bw",
             "render_mode": "reply_bw",
@@ -291,12 +296,16 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "reply_index_id": "={{'tvpx_ridx_' + $json.asset_id}}",
+            "reply_index_id": "={{\"tvpx_ridx_\" + $json.asset_id}}",
             "chat_id": "={{$json.ctx.telegram_chat_id}}",
             "message_id": "={{$json.telegram.bw_message_id}}",
             "asset_id": "={{$json.asset_id}}",
             "asset_family_id": "={{$json.asset_family_id}}",
             "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
             "message_role": "reply_bw",
             "reply_mode": "reply_actions",
             "is_active": true,
@@ -784,7 +793,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "65af3077-4873-4af5-8b4d-b20dce52c4c7",
+  "versionId": "173462a7-97ce-4ad9-aa7b-8f3a13dc491d",
   "activeVersionId": null,
   "versionCounter": 1,
   "triggerCount": 0,

@@ -1,0 +1,1489 @@
+{
+  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "createdAt": "2026-03-06T19:52:04.092Z",
+  "id": "50icbBfGoLwcHdTL",
+  "name": "TVPX__20__Latent Tension To Scene Seed Pool",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6c942f2b-6482-4555-9c00-248ade2f163e",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1700,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Initialize Envelope (TVPX__20)\n * Bulletproof normalization for downstream multi-LLM pipeline.\n */\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: baseCtx.trace_id || `tvpx_${fnv1a(traceSeed)}`,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: baseCtx.route_mode || incoming.route_mode || 'concept_forge',\n  received_at: now,\n  crawl_run_id: String(incoming.crawl_run_id || baseCtx.crawl_run_id || '').trim(),\n  source_id: String(incoming.source_id || baseCtx.source_id || '').trim(),\n  max_fragments_for_llm: Number(baseCtx.max_fragments_for_llm || incoming.max_fragments_for_llm || 10),\n  max_chars_per_fragment_for_llm: Number(baseCtx.max_chars_per_fragment_for_llm || incoming.max_chars_per_fragment_for_llm || 1400),\n  target_abstraction_min: Number(baseCtx.target_abstraction_min || incoming.target_abstraction_min || 5.8),\n  target_abstraction_max: Number(baseCtx.target_abstraction_max || incoming.target_abstraction_max || 6.8)\n};\n\nconst source = (incoming.source && typeof incoming.source === 'object') ? incoming.source : {};\n\nreturn [{ json: { ctx, source, input: incoming.input || incoming, carry: incoming.carry || {}, provided_fragments: Array.isArray(incoming.fragments) ? incoming.fragments : [] } }];"
+      },
+      "id": "36e319c0-5fa5-41b0-88c7-749075fcd95a",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1480,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx?.crawl_run_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Has Crawl Run Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1260,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "DOpMQGynGFn8U3vb",
+          "mode": "list",
+          "cachedResultName": "tvpx_text_fragment_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DOpMQGynGFn8U3vb"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "crawl_run_id",
+              "keyValue": "={{$json.ctx.crawl_run_id}}"
+            }
+          ]
+        }
+      },
+      "id": "f5dd9180-df60-4199-8e19-3807c6e27343",
+      "name": "Get Fragments For Run",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "DOpMQGynGFn8U3vb",
+          "mode": "list",
+          "cachedResultName": "tvpx_text_fragment_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DOpMQGynGFn8U3vb"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "qa_status",
+              "keyValue": "clean"
+            }
+          ]
+        },
+        "limit": 500
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Get Clean Fragments",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        420
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "gVpNusMuiqbDU3pK",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+        },
+        "limit": 500
+      },
+      "id": "5b571c75-6c4f-41c4-b1d7-2f2cf1a3b201",
+      "name": "Get Existing Concepts",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -820,
+        420
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Pick Candidate Run\n * Selects an eligible crawl_run_id from clean fragments when no run was supplied.\n */\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst requestedSourceId = String(baseCtx.source_id || '').trim();\n\nconst fragmentRows = $items('Get Clean Fragments')\n  .map(i => i.json || {})\n  .filter(r => r && Object.keys(r).length);\n\nconst conceptRows = $items('Get Existing Concepts')\n  .map(i => i.json || {})\n  .filter(r => r && Object.keys(r).length);\n\nconst consumedRunIds = new Set(\n  conceptRows\n    .map(r => String(r.crawl_run_id || '').trim())\n    .filter(Boolean)\n);\n\nconst groups = new Map();\nfor (const row of fragmentRows) {\n  const fragmentId = String(row.fragment_id || row.id || row.dt_row_id || '').trim();\n  const crawlRunId = String(row.crawl_run_id || '').trim();\n  const sourceId = String(row.source_id || '').trim();\n  const cleanedText = String(row.cleaned_text || row.text || row.raw_text || '').trim();\n  const qaStatus = String(row.qa_status || '').trim().toLowerCase();\n  const createdAt = String(row.created_at || '').trim();\n\n  if (!fragmentId || !crawlRunId || !sourceId || !cleanedText) continue;\n  if (qaStatus && qaStatus !== 'clean') continue;\n  if (requestedSourceId && sourceId !== requestedSourceId) continue;\n\n  if (!groups.has(crawlRunId)) {\n    groups.set(crawlRunId, {\n      crawl_run_id: crawlRunId,\n      source_id: sourceId,\n      fragments: [],\n      newest_created_at: '',\n    });\n  }\n\n  const group = groups.get(crawlRunId);\n  if (group.fragments.some(f => String(f.fragment_id || '').trim() === fragmentId)) continue;\n  group.fragments.push(row);\n  if (createdAt && (!group.newest_created_at || createdAt > group.newest_created_at)) {\n    group.newest_created_at = createdAt;\n  }\n}\n\nconst candidates = Array.from(groups.values())\n  .map(group => ({\n    ...group,\n    fragment_count: group.fragments.length,\n  }))\n  .filter(group => group.fragment_count >= 3)\n  .filter(group => !consumedRunIds.has(group.crawl_run_id))\n  .sort((a, b) => {\n    if (b.fragment_count !== a.fragment_count) return b.fragment_count - a.fragment_count;\n    return String(b.newest_created_at || '').localeCompare(String(a.newest_created_at || ''));\n  });\n\nconst picked = candidates[0] || null;\nconst nextCtx = {\n  ...baseCtx,\n  crawl_run_id: String(picked?.crawl_run_id || baseCtx.crawl_run_id || '').trim(),\n  source_id: String(picked?.source_id || baseCtx.source_id || '').trim(),\n};\n\nreturn [{\n  json: {\n    ctx: nextCtx,\n    source: baseSource,\n    fragments: Array.isArray(picked?.fragments) ? picked.fragments : [],\n    candidate_run: picked ? {\n      crawl_run_id: picked.crawl_run_id,\n      source_id: picked.source_id,\n      fragment_count: picked.fragment_count,\n      newest_created_at: picked.newest_created_at,\n    } : null,\n    candidate_debug: {\n      requested_source_id: requestedSourceId,\n      total_clean_fragments_scanned: fragmentRows.length,\n      grouped_runs: groups.size,\n      consumed_runs_count: consumedRunIds.size,\n      eligible_runs_count: candidates.length,\n    },\n  }\n}];"
+      },
+      "id": "b8f3f949-6ff2-4582-9f02-1bc3ecb0ac4b",
+      "name": "Pick Candidate Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "T3ws14nAvLePi5js",
+          "mode": "list",
+          "cachedResultName": "tvpx_source_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/T3ws14nAvLePi5js"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_id",
+              "keyValue": "={{$json.ctx.source_id}}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "8e7d6dcf-2459-47fb-9d5e-71e9b47128e7",
+      "name": "Get Source For Run",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        420
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Reattach Context After Fragments\n * Supports both direct crawl_run_id lookups and autonomous run selection.\n */\nconst base = $items('Initialize Envelope')[0]?.json || {};\nlet autonomous = {};\ntry {\n  autonomous = $items('Pick Candidate Run')[0]?.json || {};\n} catch {\n  autonomous = {};\n}\n\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst autoCtx = (autonomous.ctx && typeof autonomous.ctx === 'object') ? autonomous.ctx : {};\nconst ctx = String(autoCtx.crawl_run_id || '').trim() ? autoCtx : baseCtx;\n\nconst inputRows = $input.all().map(i => i.json || {});\nconst dtFragmentRows = inputRows.filter(row => row && String(row.fragment_id || '').trim());\nconst autonomousFragments = Array.isArray(autonomous.fragments) ? autonomous.fragments : [];\nconst providedFragments = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst fragments = dtFragmentRows.length ? dtFragmentRows : (autonomousFragments.length ? autonomousFragments : providedFragments);\n\nconst sourceLookupRow = inputRows.find(row => {\n  if (!row || String(row.fragment_id || '').trim()) return false;\n  return Boolean(row.source_id || row.source_url || row.url || row.source_label || row.source_type || row.crawl_profile);\n});\n\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst autonomousSource = (autonomous.source && typeof autonomous.source === 'object') ? autonomous.source : {};\nconst source = (sourceLookupRow && Object.keys(sourceLookupRow).length)\n  ? sourceLookupRow\n  : (Object.keys(autonomousSource).length ? autonomousSource : baseSource);\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    fragments,\n    candidate_run: autonomous.candidate_run || null,\n    candidate_debug: autonomous.candidate_debug || null,\n  }\n}];"
+      },
+      "id": "ee925050-b69c-497b-95e0-0d7a08784efd",
+      "name": "Reattach Context After Fragments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{Array.isArray($json.fragments) && $json.fragments.length > 0 ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a636e536-7400-49fd-9e75-c8f40afe508c",
+      "name": "Has Fragments",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        80,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/** Build No Fragments Reject */\nconst base = $items('Reattach Context After Fragments')[0].json;\nconst ctx = base.ctx;\nconst now = new Date().toISOString();\nreturn [{\n  json: {\n    ctx,\n    reject: {\n      reject_id: `tvpx_rej_${ctx.trace_id}_no_fragments`,\n      trace_id: ctx.trace_id,\n      stage_name: 'concept_forge_ingress',\n      rejection_reason: 'No eligible fragments were found for concept forging. The selected crawl run may be empty, already consumed, or missing clean fragments.',\n      raw_output_json: JSON.stringify({ crawl_run_id: ctx.crawl_run_id, source_id: ctx.source_id }),\n      created_at: now\n    }\n  }\n}];"
+      },
+      "id": "83fd6a90-9672-4e9f-aa77-5e4d9196910b",
+      "name": "Build No Fragments Reject",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "DimXJ3nOKPWyV1bE",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_reject_log",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DimXJ3nOKPWyV1bE"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "reject_id",
+              "keyValue": "={{$json.reject.reject_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reject_id": "={{$json.reject.reject_id}}",
+            "trace_id": "={{$json.reject.trace_id}}",
+            "stage_name": "={{$json.reject.stage_name}}",
+            "rejection_reason": "={{$json.reject.rejection_reason}}",
+            "raw_output_json": "={{$json.reject.raw_output_json}}",
+            "created_at": "={{$json.reject.created_at}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "reject_id",
+              "displayName": "reject_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "concept_id",
+              "displayName": "concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "stage_name",
+              "displayName": "stage_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rejection_reason",
+              "displayName": "rejection_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "raw_output_json",
+              "displayName": "raw_output_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f753a1d8-3a75-432d-8c93-a6ba9689dbb3",
+      "name": "Upsert Reject Log",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        520,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Assemble Fragment Bundle\n * Selects high-signal fragments aligned with The Velvet Paradox creative DNA.\n */\nfunction clean(s) {\n  return String(s || '').replace(/\\r/g, '').replace(/[\\t ]+/g, ' ').trim();\n}\nfunction clip(s, n) {\n  const t = clean(s);\n  return t.length > n ? t.slice(0, n) + '…' : t;\n}\nconst base = $json;\nconst ctx = base.ctx;\nconst source = base.source || {};\nconst frags = Array.isArray(base.fragments) ? base.fragments : [];\n\nconst SIGNAL = ['pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain','residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile','ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'];\nfunction scoreFrag(t) {\n  const s = t.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (s.includes(w)) score += 1;\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle|mirror|arch|stair)/i.test(t)) score += 3;\n  if (t.length > 500) score += 1;\n  return score;\n}\n\nconst normalized = frags.map(f => {\n  const cleaned = clean(f.cleaned_text || f.text || f.raw_text || '');\n  return {\n    fragment_id: String(f.fragment_id || f.id || f.dt_row_id || '').trim(),\n    page_url: String(f.page_url || f.url || '').trim(),\n    page_title: String(f.page_title || f.title || '').trim(),\n    cleaned_text: cleaned\n  };\n}).filter(x => x.cleaned_text);\n\nnormalized.sort((a,b) => scoreFrag(b.cleaned_text) - scoreFrag(a.cleaned_text));\n\nconst takeN = Math.max(3, Math.min(Number(ctx.max_fragments_for_llm || 10), 16));\nconst maxChars = Math.max(600, Math.min(Number(ctx.max_chars_per_fragment_for_llm || 1400), 2200));\n\nconst picked = normalized.slice(0, takeN).map(x => ({\n  fragment_id: x.fragment_id,\n  page_url: x.page_url,\n  page_title: x.page_title,\n  excerpt: clip(x.cleaned_text, maxChars)\n}));\n\nconst excerptBlock = picked.map((p, i) => {\n  const head = `[#${i+1}] ${p.page_title || 'Untitled'} | ${p.page_url || ''}`.trim();\n  return `${head}\\n${p.excerpt}`;\n}).join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    bundle: {\n      source_id: ctx.source_id,\n      crawl_run_id: ctx.crawl_run_id,\n      fragment_ids: picked.map(p => p.fragment_id).filter(Boolean),\n      excerpt_block: excerptBlock\n    }\n  }\n}];"
+      },
+      "id": "211f88cc-c34e-4468-94db-34eabc8090cb",
+      "name": "Assemble Fragment Bundle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "options": {}
+      },
+      "id": "a07bb513-dc85-4880-8c86-c07d3ddc9bda",
+      "name": "OpenAI Director Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        920,
+        560
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "2879c324-5a2f-468f-9999-7d43e5d9d0ef",
+      "name": "Director Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        920,
+        760
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "grok-4-1-fast-reasoning",
+          "cachedResultName": "grok-4-1-fast-reasoning"
+        },
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY",
+          "mode": "list",
+          "cachedResultName": "tvpx_ref_archetype_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "keyValue": "active"
+            }
+          ]
+        },
+        "limit": 100
+      },
+      "id": "5d2297bd-2acf-45eb-ad27-441b1591ade2",
+      "name": "Get Archetype Registry",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        520,
+        220
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Assemble Fragment Bundle')[0]?.json;\nif (!base) throw new Error('TVPX__20: missing Assemble Fragment Bundle payload.');\n\nconst rows = $input.all().map((i) => i.json || {}).filter(Boolean);\n\nconst archetypes = rows.map((r) => ({\n  archetype_id: String(r.archetype_id || '').trim(),\n  archetype_name: String(r.archetype_name || '').trim(),\n  allowed_text_role: String(r.allowed_text_role || 'none').trim(),\n  subject_mode_bias_json: String(r.subject_mode_bias_json || '[]'),\n  camera_dna: String(r.camera_dna || '').trim(),\n  palette_dna: String(r.palette_dna || '').trim(),\n  material_dna_json: String(r.material_dna_json || '[]'),\n  surreal_lift_rules_json: String(r.surreal_lift_rules_json || '[]'),\n  negative_space_dna: String(r.negative_space_dna || '').trim(),\n  forbidden_tells_json: String(r.forbidden_tells_json || '[]'),\n  notes: String(r.notes || '').trim(),\n})).filter((x) => x.archetype_id);\n\nreturn [{\n  json: {\n    ...base,\n    archetype_registry_json: JSON.stringify(archetypes, null, 2),\n  },\n}];"
+      },
+      "id": "f0527603-adda-4f82-ac6c-eeb69422321a",
+      "name": "Attach Archetype Registry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Latent_Tension_Distiller for The Velvet Paradox.\n\nYour job is to extract only the image-usable pressure from the source text.\n\nYou must remove article machinery.\nYou must remove explainer nouns.\nYou must remove institutional or scientific surface logic unless it survives only as emotional weather.\n\nKeep only:\n- relational pressure\n- ritual contradiction\n- environmental unease\n- interior/exterior tension\n- body/world tension\n- social staging pressure\n- secrecy, ceremony, displacement, witness, absence, obsession, devotion, decay\n\nHard bans for carry-forward focal matter:\n- scans\n- graphs\n- diagrams\n- leases\n- contracts\n- forms\n- labels\n- readable documents\n- monitors\n- dashboards\n- explicit scientific machinery\n- article nouns presented as props\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"latent_tensions\": [\"...\"],\n  \"relational_modes\": [\"...\"],\n  \"ritual_forms\": [\"...\"],\n  \"environmental_pressures\": [\"...\"],\n  \"forbidden_literal_carryovers\": [\"...\"],\n  \"source_distillate\": \"...\"\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Brand: {{ $json.ctx.brand_name }}\n\nReference rule:\nThe output must help create images that feel like authored cinematic stills, not article illustrations.\n\nFragment bundle:\n{{ $json.bundle.excerpt_block }}\n\nGive me only the pressures that should survive into image generation."
+      },
+      "id": "10a3dae8-23c3-486a-ac71-464dc9d0089f",
+      "name": "LLM Latent Tension Distiller",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        980,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Attach Archetype Registry')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Attach Archetype Registry\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    latent_tension: parsed,\n  },\n}];"
+      },
+      "id": "d8344239-02af-42aa-aac0-6505db79dbfa",
+      "name": "Parse Latent Tension JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst ctx = j.ctx || {};\nconst bundle = j.bundle || {};\nconst latent = j.latent_tension || {};\nconst now = new Date().toISOString();\nconst fragmentIds = Array.isArray(bundle.fragment_ids) ? bundle.fragment_ids.filter(Boolean) : [];\n\nconst tensionId = \\`tvpx_tn_\\${fnv1a([\n  ctx.trace_id,\n  ctx.crawl_run_id,\n  ctx.source_id,\n  fragmentIds.join(','),\n].join('::'))}\\`;\n\nreturn [{\n  json: {\n    ...j,\n    latent_tension_row: {\n      tension_id: tensionId,\n      trace_id: String(ctx.trace_id || '').trim(),\n      crawl_run_id: String(ctx.crawl_run_id || '').trim(),\n      source_id: String(ctx.source_id || '').trim(),\n      fragment_ids_json: JSON.stringify(fragmentIds),\n      latent_tensions_json: JSON.stringify(Array.isArray(latent.latent_tensions) ? latent.latent_tensions : []),\n      relational_modes_json: JSON.stringify(Array.isArray(latent.relational_modes) ? latent.relational_modes : []),\n      ritual_forms_json: JSON.stringify(Array.isArray(latent.ritual_forms) ? latent.ritual_forms : []),\n      environmental_pressures_json: JSON.stringify(Array.isArray(latent.environmental_pressures) ? latent.environmental_pressures : []),\n      forbidden_literal_carryovers_json: JSON.stringify(Array.isArray(latent.forbidden_literal_carryovers) ? latent.forbidden_literal_carryovers : []),\n      status: 'active',\n      created_at: now,\n      updated_at: now,\n    },\n  },\n}];"
+      },
+      "id": "43aa6120-dc65-4da4-ac2e-f28721d3e040",
+      "name": "Build Latent Tension Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_LATENT_TENSION_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_latent_tension_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_LATENT_TENSION_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tension_id",
+              "keyValue": "={{$json.latent_tension_row.tension_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tension_id": "={{$json.latent_tension_row.tension_id}}",
+            "trace_id": "={{$json.latent_tension_row.trace_id}}",
+            "crawl_run_id": "={{$json.latent_tension_row.crawl_run_id}}",
+            "source_id": "={{$json.latent_tension_row.source_id}}",
+            "fragment_ids_json": "={{$json.latent_tension_row.fragment_ids_json}}",
+            "latent_tensions_json": "={{$json.latent_tension_row.latent_tensions_json}}",
+            "relational_modes_json": "={{$json.latent_tension_row.relational_modes_json}}",
+            "ritual_forms_json": "={{$json.latent_tension_row.ritual_forms_json}}",
+            "environmental_pressures_json": "={{$json.latent_tension_row.environmental_pressures_json}}",
+            "forbidden_literal_carryovers_json": "={{$json.latent_tension_row.forbidden_literal_carryovers_json}}",
+            "status": "={{$json.latent_tension_row.status}}",
+            "created_at": "={{$json.latent_tension_row.created_at}}",
+            "updated_at": "={{$json.latent_tension_row.updated_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "deab9289-8231-4bc2-a16e-85ee75961450",
+      "name": "Upsert Latent Tension Pool",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Archetype_Router for The Velvet Paradox.\n\nYour job is to choose exactly one archetype family from the supplied registry.\n\nYou are not choosing the safest archetype.\nYou are choosing the archetype that would make the strongest still-image translation of the latent tensions.\n\nRules:\n- choose one archetype only\n- preserve the emotional engine, not article residue\n- suppress any element that would turn the frame into editorial illustration\n- prefer the archetype that creates the strongest human or ceremonial image pressure\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"archetype_id\": \"...\",\n  \"why_this_family\": \"...\",\n  \"carry_forward_only\": [\"...\"],\n  \"suppress\": [\"...\"]\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Archetype registry:\n{{ $json.archetype_registry_json }}\n\nLatent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nChoose the strongest TVPX archetype lane."
+      },
+      "id": "b8254c6a-ecd4-449f-a140-e726e2a06808",
+      "name": "LLM Archetype Router",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1640,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Build Latent Tension Row')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Build Latent Tension Row\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    archetype_route: parsed,\n  },\n}];"
+      },
+      "id": "f71bb964-a4df-426f-a5d3-d1111a3898f1",
+      "name": "Parse Archetype Router JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Human_Situation_Builder for The Velvet Paradox.\n\nYour job is to turn the routed tension into an image-native human situation.\n\nThe result must be one of:\n- single_figure\n- pair\n- small_group\n- implied_absence\n\nDo not default to object tableau.\nDo not default to document symbolism.\nThe frame must feel like a discovered still.\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"subject_mode\": \"...\",\n  \"situation_seed\": \"...\",\n  \"gesture_logic\": \"...\",\n  \"presence_logic\": \"...\",\n  \"absence_logic\": \"...\",\n  \"wardrobe_surface_bias\": \"...\"\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Latent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nArchetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nBuild the strongest human situation for the chosen archetype."
+      },
+      "id": "600c3336-66a5-4800-a092-c3b8478d4068",
+      "name": "LLM Human Situation Builder",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2080,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Parse Archetype Router JSON')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Parse Archetype Router JSON\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    human_situation: parsed,\n  },\n}];"
+      },
+      "id": "d1d0b104-09eb-4808-aea3-ccb4026e2906",
+      "name": "Parse Human Situation JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2300,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Prop_Suppressor for The Velvet Paradox.\n\nYour job is to strip away article residue and convert it into image-native matter.\n\nYou must suppress:\n- explainers\n- diagrams\n- documents carrying the thesis\n- scientific or institutional spectacle\n- any prop that summarizes the article too directly\n\nTranslate pressure into:\n- bodies\n- rooms\n- thresholds\n- weather\n- surfaces\n- flowers\n- fabric\n- animals\n- ruins\n- landscape\n- ritual arrangement\n- obstruction\n- omission\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"translated_core\": \"...\",\n  \"removed_props\": [\"...\"],\n  \"allowed_props\": [\"...\"],\n  \"ordinary_anchor\": \"...\",\n  \"surreal_lift\": \"...\",\n  \"do_not_literalize\": \"...\"\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Archetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nHuman situation:\n{{ JSON.stringify($json.human_situation, null, 2) }}\n\nLatent tensions:\n{{ JSON.stringify($json.latent_tension, null, 2) }}\n\nRemove article residue brutally."
+      },
+      "id": "ada80285-7686-4437-acf0-27f31c9e1eb9",
+      "name": "LLM Prop Suppressor",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2520,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Parse Human Situation JSON')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Parse Human Situation JSON\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    prop_suppression: parsed,\n  },\n}];"
+      },
+      "id": "ab2d2982-647a-401a-aa46-068e8ae4684f",
+      "name": "Parse Prop Suppressor JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2740,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Scene_Seed_Composer for The Velvet Paradox.\n\nYour job is to create one image-native scene seed.\n\nThe seed must:\n- belong clearly to the chosen archetype\n- contain one dominant subject or grouping\n- contain one dominant symbolic engine\n- preserve negative space as pressure\n- stay photographically plausible\n- feel sparse, tactile, cinematic, and quietly uncanny\n- avoid article-illustration logic completely\n\nDo not build a plot.\nDo not explain the meaning.\nDo not use many named props.\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"scene_kernel\": \"...\",\n  \"concept_thesis\": \"...\",\n  \"symbolic_tension\": \"...\",\n  \"material_anchor\": \"...\",\n  \"spatial_directive\": \"...\",\n  \"palette_directive\": \"...\",\n  \"texture_directive\": \"...\",\n  \"subject_mode\": \"...\",\n  \"dominant_subject\": \"...\",\n  \"setting_family\": \"...\",\n  \"ceremonial_logic\": \"...\",\n  \"surreal_pressure\": \"...\",\n  \"negative_space_note\": \"...\",\n  \"omission_notes\": \"...\",\n  \"forbidden_excess\": [\"...\"],\n  \"render_budget\": {\n    \"max_named_props\": 5,\n    \"max_background_motifs\": 2,\n    \"max_prompt_words\": 140\n  }\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Archetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nHuman situation:\n{{ JSON.stringify($json.human_situation, null, 2) }}\n\nProp suppression:\n{{ JSON.stringify($json.prop_suppression, null, 2) }}\n\nWrite one scene seed only."
+      },
+      "id": "4d3e270d-6990-426d-a6e9-704716f28e29",
+      "name": "LLM Scene Seed Composer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2960,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Parse Prop Suppressor JSON')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Parse Prop Suppressor JSON\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    scene_seed: parsed,\n  },\n}];"
+      },
+      "id": "1edccd49-df53-410c-a82a-80e934b063fc",
+      "name": "Parse Scene Seed JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Image_Native_Critic for The Velvet Paradox.\n\nApprove only if the scene seed feels like a strong member of the reference family.\n\nHard fail conditions:\n- focal object is an article explainer\n- readable text is carrying the concept\n- scientific or institutional apparatus is focal\n- the image feels like editorial illustration\n- there is no human, ceremonial, environmental, or absence pressure\n- the scene can be summarized as a clever prop metaphor\n\nReward:\n- archetype clarity\n- negative space pressure\n- tactile specificity\n- human or implied-human charge\n- one clear symbolic engine\n- sparse environment\n- cinematic authorship\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"approve\": true,\n  \"score\": 0.0,\n  \"brand_fit\": 0.0,\n  \"reference_alignment\": 0.0,\n  \"human_presence_charge\": 0.0,\n  \"anti_editorial\": 0.0,\n  \"literalism_penalty\": 0.0,\n  \"prop_penalty\": 0.0,\n  \"rejection_reason\": \"\",\n  \"improvement_notes\": \"\"\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Scene seed:\n{{ JSON.stringify($json.scene_seed, null, 2) }}\n\nArchetype route:\n{{ JSON.stringify($json.archetype_route, null, 2) }}\n\nJudge this as an image, not as an idea."
+      },
+      "id": "a34bdd5f-a889-4ade-a8e2-4d14cc238377",
+      "name": "LLM Image Native Critic",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3400,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Parse Scene Seed JSON')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Parse Scene Seed JSON\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    image_native_critic: parsed,\n  },\n}];"
+      },
+      "id": "be2b41d0-c1aa-40f7-a222-f910e0afb27c",
+      "name": "Parse Image Native Critic JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3620,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function textBlob(parts) {\n  return parts\n    .flat()\n    .map((v) => String(v || '').trim())\n    .filter(Boolean)\n    .join(' ')\n    .toLowerCase();\n}\n\nconst j = $json || {};\nconst seed = j.scene_seed || {};\nconst critic = j.image_native_critic || {};\nconst route = j.archetype_route || {};\nconst archetypeId = String(route.archetype_id || '').trim();\n\nconst blob = textBlob([\n  seed.scene_kernel,\n  seed.concept_thesis,\n  seed.symbolic_tension,\n  seed.material_anchor,\n  seed.spatial_directive,\n  seed.palette_directive,\n  seed.texture_directive,\n  seed.dominant_subject,\n  seed.setting_family,\n  seed.ceremonial_logic,\n  seed.surreal_pressure,\n  seed.negative_space_note,\n  seed.omission_notes,\n  Array.isArray(seed.forbidden_excess) ? seed.forbidden_excess : [],\n]);\n\nconst hardBans = [\n  'mri',\n  'brain scan',\n  'scan print',\n  'graph',\n  'chart',\n  'diagram',\n  'contract',\n  'lease',\n  'form',\n  'legal form',\n  'medical form',\n  'clipboard',\n  'monitor',\n  'dashboard',\n  'spreadsheet',\n  'infographic',\n  'paperwork',\n  'article illustration',\n];\n\nconst foundHardBans = hardBans.filter((term) => blob.includes(term));\nconst subjectMode = String(seed.subject_mode || '').trim();\nconst score = Number(critic.score || 0);\nconst brandFit = Number(critic.brand_fit || 0);\nconst refAlign = Number(critic.reference_alignment || 0);\nconst antiEditorial = Number(critic.anti_editorial || 0);\n\nconst reasons = [];\nif (foundHardBans.length) reasons.push(...foundHardBans.map((term) => \\`hard-ban:\\${term}\\`));\nif (!['single_figure', 'pair', 'small_group', 'implied_absence'].includes(subjectMode)) {\n  reasons.push(\\`bad-subject-mode:\\${subjectMode || 'missing'}\\`);\n}\nif (subjectMode === 'implied_absence' && !/threshold|door|window|bed|chair|couch|altar|mirror|flowers|ruin|pond|field|hall/i.test(blob)) {\n  reasons.push('implied-absence-too-weak');\n}\nif (score < 8.2) reasons.push('critic-score-low');\nif (brandFit < 8.2) reasons.push('brand-fit-low');\nif (refAlign < 8.2) reasons.push('reference-alignment-low');\nif (antiEditorial < 8.2) reasons.push('anti-editorial-low');\n\nreturn [{\n  json: {\n    ...j,\n    gate: {\n      approve: reasons.length === 0,\n      reasons,\n      archetype_id: archetypeId,\n      found_hard_bans: foundHardBans,\n    },\n  },\n}];"
+      },
+      "id": "d55f1f7f-98c1-4a54-ad7d-604a3c8da251",
+      "name": "Deterministic Image Native Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "approve_scene_seed_cond",
+              "leftValue": "={{$json.gate.approve ? \"true\" : \"false\"}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1ef4ca49-4d03-41d9-a21b-8399a6e5efb7",
+      "name": "Approve Scene Seed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4060,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst ctx = j.ctx || {};\nconst bundle = j.bundle || {};\nconst seed = j.scene_seed || {};\nconst critic = j.image_native_critic || {};\nconst route = j.archetype_route || {};\nconst now = new Date().toISOString();\n\nconst fragmentIds = Array.isArray(bundle.fragment_ids) ? bundle.fragment_ids.filter(Boolean) : [];\nif (!fragmentIds.length) {\n  throw new Error('TVPX__20: scene seed cannot be written without fragment_ids.');\n}\n\nconst seedHashBase = [\n  ctx.trace_id,\n  ctx.crawl_run_id,\n  ctx.source_id,\n  route.archetype_id,\n  seed.scene_kernel,\n  fragmentIds.join(','),\n].join('::');\n\nconst sceneSeedId = \\`tvpx_ss_\\${fnv1a(seedHashBase)}\\`;\n\nconst row = {\n  scene_seed_id: sceneSeedId,\n  trace_id: String(ctx.trace_id || '').trim(),\n  crawl_run_id: String(ctx.crawl_run_id || '').trim(),\n  origin_type: 'crawler',\n  source_id: String(ctx.source_id || '').trim(),\n  parent_scene_seed_id: null,\n  root_scene_seed_id: sceneSeedId,\n  seed_fragment_ids_json: JSON.stringify(fragmentIds),\n  archetype_id: String(route.archetype_id || '').trim(),\n  subject_mode: String(seed.subject_mode || '').trim(),\n  scene_kernel: String(seed.scene_kernel || '').trim(),\n  concept_thesis: String(seed.concept_thesis || '').trim(),\n  symbolic_tension: String(seed.symbolic_tension || '').trim(),\n  material_anchor: String(seed.material_anchor || '').trim(),\n  spatial_directive: String(seed.spatial_directive || '').trim(),\n  palette_directive: String(seed.palette_directive || '').trim(),\n  texture_directive: String(seed.texture_directive || '').trim(),\n  dominant_subject: String(seed.dominant_subject || '').trim(),\n  setting_family: String(seed.setting_family || '').trim(),\n  ceremonial_logic: String(seed.ceremonial_logic || '').trim(),\n  surreal_pressure: String(seed.surreal_pressure || '').trim(),\n  negative_space_note: String(seed.negative_space_note || '').trim(),\n  omission_notes: String(seed.omission_notes || '').trim(),\n  forbidden_excess_json: JSON.stringify(Array.isArray(seed.forbidden_excess) ? seed.forbidden_excess : []),\n  render_budget_json: JSON.stringify(seed.render_budget || { max_named_props: 5, max_background_motifs: 2, max_prompt_words: 140 }),\n  quality_score: Number(critic.score || 0),\n  brand_fit_score: Number(critic.brand_fit || 0),\n  reference_alignment_score: Number(critic.reference_alignment || 0),\n  state: 'ready',\n  lock_owner: '',\n  lock_expires_at: null,\n  used_count: 0,\n  last_used_at: null,\n  rejection_reason: '',\n  created_at: now,\n  updated_at: now,\n};\n\nreturn [{\n  json: {\n    ctx: {\n      ...ctx,\n      scene_seed_id: sceneSeedId,\n      root_scene_seed_id: sceneSeedId,\n    },\n    scene_seed_row: row,\n  },\n}];"
+      },
+      "id": "87f7cc95-b2e0-4b57-a91b-f914f5d340e4",
+      "name": "Build Scene Seed Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4280,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.scene_seed_row.scene_seed_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "scene_seed_id": "={{$json.scene_seed_row.scene_seed_id}}",
+            "trace_id": "={{$json.scene_seed_row.trace_id}}",
+            "crawl_run_id": "={{$json.scene_seed_row.crawl_run_id}}",
+            "origin_type": "={{$json.scene_seed_row.origin_type}}",
+            "source_id": "={{$json.scene_seed_row.source_id}}",
+            "parent_scene_seed_id": "={{$json.scene_seed_row.parent_scene_seed_id}}",
+            "root_scene_seed_id": "={{$json.scene_seed_row.root_scene_seed_id}}",
+            "seed_fragment_ids_json": "={{$json.scene_seed_row.seed_fragment_ids_json}}",
+            "archetype_id": "={{$json.scene_seed_row.archetype_id}}",
+            "subject_mode": "={{$json.scene_seed_row.subject_mode}}",
+            "scene_kernel": "={{$json.scene_seed_row.scene_kernel}}",
+            "concept_thesis": "={{$json.scene_seed_row.concept_thesis}}",
+            "symbolic_tension": "={{$json.scene_seed_row.symbolic_tension}}",
+            "material_anchor": "={{$json.scene_seed_row.material_anchor}}",
+            "spatial_directive": "={{$json.scene_seed_row.spatial_directive}}",
+            "palette_directive": "={{$json.scene_seed_row.palette_directive}}",
+            "texture_directive": "={{$json.scene_seed_row.texture_directive}}",
+            "dominant_subject": "={{$json.scene_seed_row.dominant_subject}}",
+            "setting_family": "={{$json.scene_seed_row.setting_family}}",
+            "ceremonial_logic": "={{$json.scene_seed_row.ceremonial_logic}}",
+            "surreal_pressure": "={{$json.scene_seed_row.surreal_pressure}}",
+            "negative_space_note": "={{$json.scene_seed_row.negative_space_note}}",
+            "omission_notes": "={{$json.scene_seed_row.omission_notes}}",
+            "forbidden_excess_json": "={{$json.scene_seed_row.forbidden_excess_json}}",
+            "render_budget_json": "={{$json.scene_seed_row.render_budget_json}}",
+            "quality_score": "={{$json.scene_seed_row.quality_score}}",
+            "brand_fit_score": "={{$json.scene_seed_row.brand_fit_score}}",
+            "reference_alignment_score": "={{$json.scene_seed_row.reference_alignment_score}}",
+            "state": "={{$json.scene_seed_row.state}}",
+            "lock_owner": "={{$json.scene_seed_row.lock_owner}}",
+            "lock_expires_at": "={{$json.scene_seed_row.lock_expires_at}}",
+            "used_count": "={{$json.scene_seed_row.used_count}}",
+            "last_used_at": "={{$json.scene_seed_row.last_used_at}}",
+            "rejection_reason": "={{$json.scene_seed_row.rejection_reason}}",
+            "created_at": "={{$json.scene_seed_row.created_at}}",
+            "updated_at": "={{$json.scene_seed_row.updated_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "69abb01e-1c2e-4ee7-a542-29b585583ad8",
+      "name": "Upsert Scene Seed Pool",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        4500,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json || {};\nconst now = new Date().toISOString();\nconst critic = j.image_native_critic || {};\nconst gate = j.gate || {};\n\nconst reasons = [\n  String(critic.rejection_reason || '').trim(),\n  ...(Array.isArray(gate.reasons) ? gate.reasons : []),\n].filter(Boolean);\n\nreturn [{\n  json: {\n    ctx: j.ctx || {},\n    reject: {\n      reject_id: \\`tvpx_rej_\\${String(j.ctx?.trace_id || 'trace').trim()}_scene_seed_\\${now.replace(/[:.]/g, '')}\\`,\n      trace_id: String(j.ctx?.trace_id || '').trim(),\n      stage_name: 'scene_seed_gate',\n      rejection_reason: reasons.join(' | ') || 'Rejected by deterministic image-native gate.',\n      raw_output_json: JSON.stringify({\n        gate,\n        critic,\n        scene_seed: j.scene_seed || {},\n        archetype_route: j.archetype_route || {},\n      }),\n      created_at: now,\n    },\n  },\n}];"
+      },
+      "id": "eacd4c8e-944e-467e-a541-4253287572e8",
+      "name": "Build Scene Seed Reject Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4280,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "DimXJ3nOKPWyV1bE",
+          "mode": "list",
+          "cachedResultName": "tvpx_concept_reject_log",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DimXJ3nOKPWyV1bE"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "reject_id",
+              "keyValue": "={{$json.reject.reject_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "reject_id": "={{$json.reject.reject_id}}",
+            "trace_id": "={{$json.reject.trace_id}}",
+            "stage_name": "={{$json.reject.stage_name}}",
+            "rejection_reason": "={{$json.reject.rejection_reason}}",
+            "raw_output_json": "={{$json.reject.raw_output_json}}",
+            "created_at": "={{$json.reject.created_at}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "reject_id",
+              "displayName": "reject_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "concept_id",
+              "displayName": "concept_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "stage_name",
+              "displayName": "stage_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rejection_reason",
+              "displayName": "rejection_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "raw_output_json",
+              "displayName": "raw_output_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9c9dc217-f5cd-4d4d-a3ef-a71edb5743df",
+      "name": "Upsert Scene Seed Reject Log",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        4500,
+        320
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Has Crawl Run Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Crawl Run Id": {
+      "main": [
+        [
+          {
+            "node": "Get Fragments For Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Clean Fragments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Clean Fragments": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Concepts": {
+      "main": [
+        [
+          {
+            "node": "Pick Candidate Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Candidate Run": {
+      "main": [
+        [
+          {
+            "node": "Get Source For Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Source For Run": {
+      "main": [
+        [
+          {
+            "node": "Reattach Context After Fragments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Fragments For Run": {
+      "main": [
+        [
+          {
+            "node": "Reattach Context After Fragments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach Context After Fragments": {
+      "main": [
+        [
+          {
+            "node": "Has Fragments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Fragments": {
+      "main": [
+        [
+          {
+            "node": "Assemble Fragment Bundle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build No Fragments Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build No Fragments Reject": {
+      "main": [
+        [
+          {
+            "node": "Upsert Reject Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Fragment Bundle": {
+      "main": [
+        [
+          {
+            "node": "Get Archetype Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Archetype Registry": {
+      "main": [
+        [
+          {
+            "node": "Attach Archetype Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Archetype Registry": {
+      "main": [
+        [
+          {
+            "node": "LLM Latent Tension Distiller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Latent Tension Distiller": {
+      "main": [
+        [
+          {
+            "node": "Parse Latent Tension JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Latent Tension JSON": {
+      "main": [
+        [
+          {
+            "node": "Build Latent Tension Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Latent Tension Row": {
+      "main": [
+        [
+          {
+            "node": "Upsert Latent Tension Pool",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LLM Archetype Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Archetype Router": {
+      "main": [
+        [
+          {
+            "node": "Parse Archetype Router JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Archetype Router JSON": {
+      "main": [
+        [
+          {
+            "node": "LLM Human Situation Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Human Situation Builder": {
+      "main": [
+        [
+          {
+            "node": "Parse Human Situation JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Human Situation JSON": {
+      "main": [
+        [
+          {
+            "node": "LLM Prop Suppressor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Prop Suppressor": {
+      "main": [
+        [
+          {
+            "node": "Parse Prop Suppressor JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Prop Suppressor JSON": {
+      "main": [
+        [
+          {
+            "node": "LLM Scene Seed Composer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Scene Seed Composer": {
+      "main": [
+        [
+          {
+            "node": "Parse Scene Seed JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Scene Seed JSON": {
+      "main": [
+        [
+          {
+            "node": "LLM Image Native Critic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Image Native Critic": {
+      "main": [
+        [
+          {
+            "node": "Parse Image Native Critic JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Image Native Critic JSON": {
+      "main": [
+        [
+          {
+            "node": "Deterministic Image Native Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Image Native Gate": {
+      "main": [
+        [
+          {
+            "node": "Approve Scene Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approve Scene Seed": {
+      "main": [
+        [
+          {
+            "node": "Build Scene Seed Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Scene Seed Reject Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Scene Seed Row": {
+      "main": [
+        [
+          {
+            "node": "Upsert Scene Seed Pool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Scene Seed Reject Row": {
+      "main": [
+        [
+          {
+            "node": "Upsert Scene Seed Reject Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Director Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Latent Tension Distiller",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LLM Archetype Router",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LLM Human Situation Builder",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LLM Prop Suppressor",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LLM Scene Seed Composer",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LLM Image Native Critic",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Latent Tension Distiller",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Archetype Router",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Human Situation Builder",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Prop Suppressor",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Scene Seed Composer",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Image Native Critic",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8120a21a-71cb-46ec-a963-94f4efe20f96",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-06T19:52:04.092Z",
+      "createdAt": "2026-03-06T19:52:04.092Z",
+      "role": "workflow:owner",
+      "workflowId": "50icbBfGoLwcHdTL",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

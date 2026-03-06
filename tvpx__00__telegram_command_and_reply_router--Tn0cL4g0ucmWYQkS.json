@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T20:11:28.715Z",
+  "updatedAt": "2026-03-06T19:52:04.092Z",
   "createdAt": "2026-03-05T13:47:38.063Z",
   "id": "Tn0cL4g0ucmWYQkS",
   "name": "TVPX__00__Telegram_Command_And_Reply_Router",
@@ -173,10 +173,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "EKpVMmrlNf2ESBSO",
+          "value": "sYmAtmmBITCgC6Ks",
           "mode": "list",
-          "cachedResultName": "TVPX__50__Series From Telegram Reply",
-          "cachedResultUrl": "/workflow/EKpVMmrlNf2ESBSO"
+          "cachedResultName": "TVPX__50__Series Mutation From Telegram Reply",
+          "cachedResultUrl": "/workflow/sYmAtmmBITCgC6Ks"
         },
         "options": {
           "waitForSubWorkflow": false
@@ -233,10 +233,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "8KjucHiZTtdGzCrh",
+          "value": "XtyvRQfTLySqT16o",
           "mode": "list",
-          "cachedResultName": "TVPX__30__Image Generation Dual Mode",
-          "cachedResultUrl": "/workflow/8KjucHiZTtdGzCrh"
+          "cachedResultName": "TVPX__30__Scene Blueprint Batch Render",
+          "cachedResultUrl": "/workflow/XtyvRQfTLySqT16o"
         },
         "options": {
           "waitForSubWorkflow": false
@@ -359,7 +359,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "51f8bd72-6a0d-4d19-812e-37a3c6a61e1a",
+  "versionId": "2624e7e2-be4d-430c-a18f-9e9e05fe1f80",
   "activeVersionId": null,
   "versionCounter": 59,
   "triggerCount": 0,

@@ -1,0 +1,1470 @@
+{
+  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "createdAt": "2026-03-06T19:52:04.092Z",
+  "id": "XtyvRQfTLySqT16o",
+  "name": "TVPX__30__Scene Blueprint Batch Render",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8f561ace-da86-4c2c-9997-f27f95cccdad",
+      "name": "When Executed By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "options": {}
+      },
+      "id": "3872ab30-a67d-4a4c-922a-dd946e582c1a",
+      "name": "OpenAI Director Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        520
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "lkPV4yTxQh2YAZDW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "09dc3ece-12de-4c4a-b0c1-c4faca36bb7b",
+      "name": "Director Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        720
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "grok-4-1-fast-reasoning",
+          "cachedResultName": "grok-4-1-fast-reasoning"
+        },
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = String(baseCtx.trace_id || '').trim() || \\`tvpx_\\${fnv1a(traceSeed)}\\`;\nconst familyId = String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim() || \\`tvpxfam_\\${fnv1a(traceId + '::family')}\\`;\nconst sceneSeedId = String(incoming.scene_seed_id || incoming.concept_id || baseCtx.scene_seed_id || baseCtx.concept_id || '').trim();\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'scene_blueprint_batch_render',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || incoming.chat_id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1536'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15),\n};\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    scene_seed_id: sceneSeedId || null,\n    concept_id: sceneSeedId || null,\n  },\n}];"
+      },
+      "id": "8d23db01-0b6a-462f-ad2b-e4cc1526822c",
+      "name": "Initialize Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1940,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "has_scene_seed_id_cond",
+              "leftValue": "={{$json.scene_seed_id ? \"true\" : \"false\"}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3bdba0d4-ac4e-4a10-aa5c-24b94317e494",
+      "name": "Has Scene Seed Id",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1720,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.scene_seed_id}}"
+            }
+          ]
+        }
+      },
+      "id": "32549575-3e9e-4ac6-af68-dd8b04102edf",
+      "name": "Get Scene Seed By Id",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1500,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "state",
+              "keyValue": "ready"
+            }
+          ]
+        }
+      },
+      "id": "a867d952-3e77-4ce4-aa11-801b5fff84d8",
+      "name": "Get Ready Scene Seeds",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Initialize Envelope')[0]?.json || {};\nconst ctx = base.ctx || {};\n\nconst rows = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no ready scene seeds found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nfunction text(row) {\n  return [\n    row.scene_kernel,\n    row.concept_thesis,\n    row.symbolic_tension,\n    row.material_anchor,\n    row.spatial_directive,\n    row.dominant_subject,\n  ].map((v) => String(v || '')).join(' ').toLowerCase();\n}\n\nconst banned = ['mri', 'brain scan', 'graph', 'chart', 'diagram', 'lease', 'contract', 'form', 'dashboard', 'monitor', 'paperwork'];\n\nconst scored = rows.map((row) => {\n  const quality = n(row.quality_score, 0);\n  const brandFit = n(row.brand_fit_score, 0);\n  const align = n(row.reference_alignment_score, 0);\n  const used = n(row.used_count, 0);\n  const mode = String(row.subject_mode || '').trim();\n\n  let modeBonus = -1.5;\n  if (mode === 'pair') modeBonus = 0.8;\n  else if (mode === 'single_figure') modeBonus = 0.6;\n  else if (mode === 'small_group') modeBonus = 0.7;\n  else if (mode === 'implied_absence') modeBonus = 0.25;\n\n  const blob = text(row);\n  const bannedHits = banned.filter((term) => blob.includes(term)).length;\n  const articlePenalty = bannedHits * 0.8;\n  const reusePenalty = Math.min(used * 0.45, 2.0);\n  const selectorScore = (quality * 0.42) + (brandFit * 0.23) + (align * 0.35) + modeBonus - articlePenalty - reusePenalty;\n\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst picked = scored[0]?.row;\nif (!picked) throw new Error('TVPX__30: failed to select scene seed.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(picked.scene_seed_id || '').trim(),\n    concept_id: String(picked.scene_seed_id || '').trim(),\n    scene_seed_row: picked,\n    selector_audit: scored.slice(0, 8).map((entry) => ({\n      scene_seed_id: entry.row.scene_seed_id,\n      selector_score: entry.selectorScore,\n      quality_score: entry.row.quality_score,\n      brand_fit_score: entry.row.brand_fit_score,\n      reference_alignment_score: entry.row.reference_alignment_score,\n      subject_mode: entry.row.subject_mode,\n    })),\n  },\n}];"
+      },
+      "id": "5ad7b2e3-afb8-45b3-a7c2-afac2fa0ea20",
+      "name": "Select Best Scene Seed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx || {};\nconst row = $input.all()[0]?.json || null;\nif (!row) throw new Error('TVPX__30: scene seed not found for provided scene_seed_id.');\n\nconst sceneSeedId = String(row.scene_seed_id || row.id || row.dt_row_id || '').trim();\nif (!sceneSeedId) throw new Error('TVPX__30: fetched scene seed row missing scene_seed_id.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: sceneSeedId,\n    concept_id: sceneSeedId,\n    scene_seed_row: row,\n  },\n}];"
+      },
+      "id": "27b4d674-9651-4a53-a417-4d80d338fdb3",
+      "name": "Reattach Context After Get Scene Seed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Lock Payload\n */\n\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date();\nconst expires = new Date(now.getTime() + (Number(ctx.lock_ttl_minutes || 15) * 60_000));\n\nreturn [{\n  json: {\n    scene_seed_id: j.scene_seed_id,\n    concept_id: j.scene_seed_id,\n    scene_seed_row: j.scene_seed_row,\n    lock: {\n      lock_owner: ctx.trace_id,\n      lock_expires_at: expires.toISOString(),\n      locked_at: now.toISOString()\n    }\n  }\n}];"
+      },
+      "id": "e8837124-20a6-456d-a965-daab2b60ff84",
+      "name": "Build Lock Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1060,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.scene_seed_id}}"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "ready"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "locked",
+            "lock_owner": "={{$json.lock.lock_owner}}",
+            "lock_expires_at": "={{$json.lock.lock_expires_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5804b6d5-fbfb-4486-ada3-8d06ccfc0eab",
+      "name": "Lock Scene Seed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.scene_seed_id}}"
+            }
+          ]
+        }
+      },
+      "id": "f5b71d9b-1047-43d5-a0cc-7e3c3ce3d139",
+      "name": "Fetch Locked Scene Seed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Build Lock Payload')[0]?.json || {};\nconst ctx = base.ctx || {};\nconst row = $input.all()[0]?.json || null;\nif (!row) throw new Error('TVPX__30: failed to refetch locked scene seed row.');\n\nconst owner = String(row.lock_owner || '').trim();\nconst state = String(row.state || '').trim();\nif (state !== 'locked' || owner !== ctx.trace_id) {\n  throw new Error(\\`TVPX__30: lock not acquired. state=\"\\${state}\" lock_owner=\"\\${owner}\" expected=\"\\${ctx.trace_id}\"\\`);\n}\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(base.scene_seed_id || '').trim(),\n    concept_id: String(base.scene_seed_id || '').trim(),\n    scene_seed_row: row,\n  },\n}];"
+      },
+      "id": "e41873d6-d9ac-49ca-a6f1-a60e754a515b",
+      "name": "Verify Lock Ownership",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY",
+          "mode": "list",
+          "cachedResultName": "tvpx_ref_archetype_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "archetype_id",
+              "keyValue": "={{$json.scene_seed_row.archetype_id}}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "254be220-0a63-45d2-a06f-012ccb769c2d",
+      "name": "Get Archetype By Id",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        260
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const seedBase = $items('Verify Lock Ownership')[0]?.json;\nif (!seedBase) throw new Error('TVPX__30: missing locked scene seed payload.');\n\nconst row = seedBase.scene_seed_row || {};\nconst archetype = $input.all()[0]?.json || null;\nif (!archetype) throw new Error('TVPX__30: archetype lookup failed.');\n\nreturn [{\n  json: {\n    ctx: seedBase.ctx,\n    scene_seed_id: seedBase.scene_seed_id,\n    concept_id: seedBase.scene_seed_id,\n    scene_seed_row: row,\n    archetype_row: archetype,\n  },\n}];"
+      },
+      "id": "ee84f74f-09c9-4011-a36d-bd663f104ed0",
+      "name": "Assemble Scene Seed Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Scene_Blueprint_Director for The Velvet Paradox.\n\nYour job is to turn one scene seed into three candidate shot blueprints.\n\nThe three labels must be:\n- grounded\n- hero\n- wildcard\n\nAll three must remain inside the same archetype family.\nDo not change the concept.\nChange only:\n- camera logic\n- distance\n- arrangement\n- emphasis\n- one controlled surreal lift\n\nThe blueprint must think like a cinematographer and production designer, not a critic.\n\nHard bans:\n- article summary language\n- symbolism explanation\n- focal documents\n- prop clutter\n- multiple surreal mechanisms\n- text carrying the image unless the archetype explicitly allows minimal signage\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"blueprints\": [\n    {\n      \"blueprint_label\": \"grounded\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    },\n    {\n      \"blueprint_label\": \"hero\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    },\n    {\n      \"blueprint_label\": \"wildcard\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nReference rule:\nThe result must feel like one of the uploaded reference families: cinematic, authored, sparse, tactile, image-native.\n\nBuild three blueprints only."
+      },
+      "id": "0312f809-6197-4f34-affc-5e5f8de94081",
+      "name": "LLM Scene Blueprint Director",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        260,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Assemble Scene Seed Packet')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Assemble Scene Seed Packet\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    scene_blueprint_pack: parsed,\n  },\n}];"
+      },
+      "id": "0b742b35-1c38-4428-a922-cd5aca484b64",
+      "name": "Parse Scene Blueprint Pack JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $json || {};\nconst ctx = base.ctx || {};\nconst pack = base.scene_blueprint_pack || {};\nconst blueprints = Array.isArray(pack.blueprints) ? pack.blueprints : [];\nif (!blueprints.length) throw new Error('TVPX__30: no blueprints returned.');\n\nconst now = new Date().toISOString();\n\nreturn blueprints.map((bp, idx) => {\n  const label = String(bp.blueprint_label || \\`bp_\\${idx + 1}\\`).trim();\n  const sceneBlueprintId = \\`tvpx_sb_\\${fnv1a([\n    ctx.trace_id,\n    base.scene_seed_id,\n    label,\n    bp.candidate_prompt_core,\n  ].join('::'))}\\`;\n\n  return {\n    json: {\n      ctx,\n      scene_seed_id: base.scene_seed_id,\n      concept_id: base.scene_seed_id,\n      scene_seed_row: base.scene_seed_row,\n      archetype_row: base.archetype_row,\n      scene_blueprint_id: sceneBlueprintId,\n      blueprint: {\n        blueprint_label: label,\n        shot_type: String(bp.shot_type || '').trim(),\n        camera_height: String(bp.camera_height || '').trim(),\n        camera_distance: String(bp.camera_distance || '').trim(),\n        subject_arrangement: String(bp.subject_arrangement || '').trim(),\n        environment: String(bp.environment || '').trim(),\n        light_weather: String(bp.light_weather || '').trim(),\n        wardrobe_surface_logic: String(bp.wardrobe_surface_logic || '').trim(),\n        palette_weather: String(bp.palette_weather || '').trim(),\n        one_surreal_lift: String(bp.one_surreal_lift || '').trim(),\n        what_is_not_shown: String(bp.what_is_not_shown || '').trim(),\n        candidate_prompt_core: String(bp.candidate_prompt_core || '').trim(),\n        created_at: now,\n        updated_at: now,\n      },\n    },\n  };\n});"
+      },
+      "id": "1e5b232f-89d1-4b5a-ad84-7ef480ef9d44",
+      "name": "Explode Blueprint Pack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_blueprint_id",
+              "keyValue": "={{$json.scene_blueprint_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "archetype_id": "={{$json.archetype_row.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint.blueprint_label}}",
+            "shot_type": "={{$json.blueprint.shot_type}}",
+            "camera_height": "={{$json.blueprint.camera_height}}",
+            "camera_distance": "={{$json.blueprint.camera_distance}}",
+            "subject_arrangement": "={{$json.blueprint.subject_arrangement}}",
+            "environment": "={{$json.blueprint.environment}}",
+            "light_weather": "={{$json.blueprint.light_weather}}",
+            "wardrobe_surface_logic": "={{$json.blueprint.wardrobe_surface_logic}}",
+            "palette_weather": "={{$json.blueprint.palette_weather}}",
+            "one_surreal_lift": "={{$json.blueprint.one_surreal_lift}}",
+            "what_is_not_shown": "={{$json.blueprint.what_is_not_shown}}",
+            "candidate_prompt_core": "={{$json.blueprint.candidate_prompt_core}}",
+            "blueprint_score": 0,
+            "state": "pending",
+            "created_at": "={{$json.blueprint.created_at}}",
+            "updated_at": "={{$json.blueprint.updated_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1453955f-0030-4afb-aff1-42e07f4d0aa0",
+      "name": "Upsert Scene Blueprint Bank",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        920,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V2 for The Velvet Paradox.\n\nWrite one high-performance GPT Image 1.5 prompt from one scene blueprint.\n\nRules:\n- describe only what the camera sees\n- 80 to 140 words preferred\n- 150 words hard ceiling\n- one dominant subject or grouping\n- one surreal lift only\n- no symbolism language\n- no article language\n- no concept explanation\n- no literary thesis\n- no prompt bloat\n- no long negative guidance\n\nThe output must feel like a premium still-image production brief.\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 2\n  }\n}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "needsFallback": true,
+        "batching": {},
+        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nBlueprint:\n{{ JSON.stringify($json.blueprint, null, 2) }}\n\nWrite a production-grade GPT Image 1.5 prompt that belongs to this archetype and avoids editorial illustration."
+      },
+      "id": "f8b1de6e-ecaf-4f06-afc2-f5de3800047f",
+      "name": "LLM Final Prompt Smith V2",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        920,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction clipWords(v, max) {\n  const text = cleanText(v);\n  const parts = text.split(/\\s+/);\n  return parts.length <= max ? text : parts.slice(0, max).join(' ');\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'cgi',\n    '3d render',\n    'illustration',\n    'cartoon',\n    'plastic skin',\n    'waxy skin',\n    'beauty retouching',\n    'bad hands',\n    'extra fingers',\n    'duplicate limbs',\n    'deformed anatomy',\n    'watermark',\n    'logo',\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst base = $items('Explode Blueprint Pack')[0]?.json || $json;\nconst raw = $json.text || $json.output || $json.result || $json;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = clipWords(masterPrompt, 150);\nif (wordCount(masterPrompt) < 55) throw new Error('TVPX__30: master_prompt too short.');\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(\\`TVPX__30: banned phrase leaked into prompt: \\${phrase}\\`);\n  }\n}\n\nreturn [{\n  json: {\n    ...$items('Explode Blueprint Pack')[0].json,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n      image_size: '1024x1536',\n      provider_controls: {\n        quality: 'high',\n        background: 'opaque',\n        output_format: 'png',\n        num_images: 2,\n      },\n    },\n  },\n}];"
+      },
+      "id": "33b1f7b3-73ca-4a00-ab27-1de19b98ebee",
+      "name": "Parse Prompt Spec V2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const packetId = \\`tvpx_rp_\\${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    entry.prompt_spec?.master_prompt,\n  ].join('::'))}\\`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: '1024x1536',\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || \\`bp_\\${idx + 1}\\`).trim(),\n      blueprint: entry.blueprint,\n      prompt: String(entry.prompt_spec?.master_prompt || '').trim(),\n      negative_prompt: String(entry.prompt_spec?.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n        image_size: '1024x1536',\n        background: 'opaque',\n        quality: 'high',\n        output_format: 'png',\n        num_images: 2,\n      },\n    },\n  };\n});"
+      },
+      "id": "90e5bab3-8e0c-4f13-a158-82f6db46e115",
+      "name": "Build Color Render Packets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2uSefQgL3Y5q90Vc",
+          "mode": "list",
+          "cachedResultName": "TVPX__30A__Fal Batch Render Submit And Poll",
+          "cachedResultUrl": "/workflow/2uSefQgL3Y5q90Vc"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "e40bcafc-c290-4999-abb7-80f4a3ccd8a0",
+      "name": "Call TVPX__30A__Fal Batch Render Submit And Poll",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1580,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_render_candidate_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "render_candidate_id",
+              "keyValue": "={{$json.render_candidate_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "candidate_index": "={{$json.candidate_index}}",
+            "render_variant": "={{$json.render_variant}}",
+            "provider_name": "={{$json.provider_name}}",
+            "provider_job_id": "={{$json.provider_job_id}}",
+            "prompt_text": "={{$json.prompt_final}}",
+            "negative_prompt_text": "={{$json.negative_prompt_raw}}",
+            "image_url": "={{$json.image_url}}",
+            "critic_score": 0,
+            "critic_notes": "",
+            "state": "rendered",
+            "created_at": "={{$json.completed_at}}",
+            "updated_at": "={{$json.completed_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ba3f2c03-cfd1-4bdb-ab9d-3835a247bb37",
+      "name": "Upsert Render Candidate Bank",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_blueprint_id",
+              "keyValue": "={{$json.scene_blueprint_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "state": "rendered",
+            "updated_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c25b2a00-db07-49e4-af77-0ed4b7990636",
+      "name": "Update Scene Blueprint Rendered",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{({\n        model: 'gpt-4.1',\n        input: [\n          {\n            role: 'developer',\n            content: [\n              {\n                type: 'input_text',\n                text: \"You are TVPX__LLM__Render_Vision_Critic for The Velvet Paradox.\\n\\nJudge the rendered image against the scene seed and archetype family.\\n\\nReward:\\n- strong reference-family resemblance\\n- cinematic authorship\\n- negative space pressure\\n- tactile richness\\n- one clean surreal lift\\n- human or ceremonial charge\\n- anti-stock quality\\n- anti-editorial quality\\n\\nPenalize:\\n- article-illustration feel\\n- goofy symbolism\\n- flat prompt literalism\\n- CGI sheen\\n- overexplained props\\n- weak composition\\n- dead atmosphere\\n\\nReturn JSON only.\\n\\nReturn exactly:\\n{\\n  \\\"reference_alignment_score\\\": 0.0,\\n  \\\"ceremonial_force_score\\\": 0.0,\\n  \\\"anti_editorial_score\\\": 0.0,\\n  \\\"tactile_score\\\": 0.0,\\n  \\\"surreal_restraint_score\\\": 0.0,\\n  \\\"stock_risk_score\\\": 0.0,\\n  \\\"overall_score\\\": 0.0,\\n  \\\"verdict\\\": \\\"pass\\\",\\n  \\\"notes\\\": \\\"...\\\"\\n}\",\n              },\n            ],\n          },\n          {\n            role: 'user',\n            content: [\n              {\n                type: 'input_text',\n                text: 'Archetype:\\n' + JSON.stringify($json.archetype_row || {}, null, 2) + '\\n\\nScene seed:\\n' + JSON.stringify($json.scene_seed_row || {}, null, 2) + '\\n\\nBlueprint label:\\n' + String($json.blueprint_label || '') + '\\n\\nJudge the attached candidate image as a member of this family.',\n              },\n              {\n                type: 'input_image',\n                image_url: $json.image_url,\n                detail: 'high',\n              },\n            ],\n          },\n        ],\n        max_output_tokens: 900,\n      })}}",
+        "options": {
+          "response": {},
+          "timeout": 120000
+        }
+      },
+      "id": "61177d83-7f4a-4769-aad9-8c31dd3c05c2",
+      "name": "LLM Render Vision Critic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "7a2f05a1-3c8c-40e7-a155-95851ac08d2e",
+      "name": "Merge Candidate And Critic Raw",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2020,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nfunction extractJsonText(raw) {\n  const body = raw?.body ?? raw?.data ?? raw ?? {};\n  if (typeof body.output_text === 'string' && body.output_text.trim()) return body.output_text;\n\n  const chunks = [];\n  const output = Array.isArray(body.output) ? body.output : [];\n  for (const item of output) {\n    const content = Array.isArray(item?.content) ? item.content : [];\n    for (const block of content) {\n      if (typeof block?.text === 'string' && block.text.trim()) chunks.push(block.text);\n      if (typeof block?.output_text === 'string' && block.output_text.trim()) chunks.push(block.output_text);\n    }\n  }\n\n  return chunks.join('\\n') || JSON.stringify(body);\n}\n\nfunction parseStrictJson(raw) {\n  const text = String(raw || '').trim();\n  if (!text) throw new Error('TVPX__30: empty vision critic output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse vision critic JSON.');\n}\n\nconst merged = $json || {};\nconst parsed = parseStrictJson(extractJsonText(merged));\nconst criticRunId = \\`tvpx_crc_\\${fnv1a(String(merged.render_candidate_id || 'candidate'))}\\`;\n\nreturn [{\n  json: {\n    ...merged,\n    critic_run_id: criticRunId,\n    render_critic: parsed,\n  },\n}];"
+      },
+      "id": "cdc06ab3-1c6d-498c-aef2-1551271854f3",
+      "name": "Parse Render Vision Critic JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_RENDER_CRITIC_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_render_critic_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_RENDER_CRITIC_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "critic_run_id",
+              "keyValue": "={{$json.critic_run_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "critic_run_id": "={{$json.critic_run_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "reference_alignment_score": "={{$json.render_critic.reference_alignment_score}}",
+            "ceremonial_force_score": "={{$json.render_critic.ceremonial_force_score}}",
+            "anti_editorial_score": "={{$json.render_critic.anti_editorial_score}}",
+            "tactile_score": "={{$json.render_critic.tactile_score}}",
+            "surreal_restraint_score": "={{$json.render_critic.surreal_restraint_score}}",
+            "stock_risk_score": "={{$json.render_critic.stock_risk_score}}",
+            "overall_score": "={{$json.render_critic.overall_score}}",
+            "verdict": "={{$json.render_critic.verdict}}",
+            "notes": "={{$json.render_critic.notes}}",
+            "created_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "fc2b6a64-4d25-48a7-ab0e-da08f37f5ca6",
+      "name": "Upsert Render Critic Bank",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2460,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_render_candidate_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_RENDER_CANDIDATE_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "render_candidate_id",
+              "keyValue": "={{$json.render_candidate_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "candidate_index": "={{$json.candidate_index}}",
+            "render_variant": "={{$json.render_variant}}",
+            "provider_name": "={{$json.provider_name}}",
+            "provider_job_id": "={{$json.provider_job_id}}",
+            "prompt_text": "={{$json.prompt_final}}",
+            "negative_prompt_text": "={{$json.negative_prompt_raw}}",
+            "image_url": "={{$json.image_url}}",
+            "critic_score": "={{$json.render_critic.overall_score}}",
+            "critic_notes": "={{$json.render_critic.notes}}",
+            "state": "critiqued",
+            "updated_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6f59cbc2-8316-4b7b-a426-cc120211f332",
+      "name": "Update Render Candidate Bank With Critic",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no critiqued render candidates found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nconst scored = rows.map((row) => {\n  const critic = row.render_critic || row.vision_critic || {};\n  const overall = n(critic.overall_score, 0);\n  const align = n(critic.reference_alignment_score, 0);\n  const antiEditorial = n(critic.anti_editorial_score, 0);\n  const tactile = n(critic.tactile_score, 0);\n  const stockRisk = n(critic.stock_risk_score, 10);\n\n  const selectorScore = (overall * 0.45) + (align * 0.25) + (antiEditorial * 0.20) + (tactile * 0.10) - (stockRisk * 0.30);\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst winner = scored[0]?.row;\nif (!winner) throw new Error('TVPX__30: winner selection failed.');\nif (Number((winner.render_critic || winner.vision_critic || {}).overall_score || 0) < 8.4) {\n  throw new Error('TVPX__30: best candidate still below release threshold. Do not finalize.');\n}\n\nreturn [{\n  json: {\n    ...winner,\n    winner_selector_score: scored[0].selectorScore,\n    winner_audit: scored.map((entry) => ({\n      render_candidate_id: entry.row.render_candidate_id,\n      selectorScore: entry.selectorScore,\n      overall_score: Number((entry.row.render_critic || entry.row.vision_critic || {}).overall_score || 0),\n      reference_alignment_score: Number((entry.row.render_critic || entry.row.vision_critic || {}).reference_alignment_score || 0),\n      stock_risk_score: Number((entry.row.render_critic || entry.row.vision_critic || {}).stock_risk_score || 0),\n    })),\n  },\n}];"
+      },
+      "id": "92ce0295-80ef-49ff-abe4-d2ef95139596",
+      "name": "Select Winning Candidate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_blueprint_id",
+              "keyValue": "={{$json.scene_blueprint_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "blueprint_score": "={{$json.render_critic.overall_score}}",
+            "state": "winner",
+            "updated_at": "={{$now}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a88c4e40-7f03-4ac8-a99d-96c8cd63cda3",
+      "name": "Mark Winning Blueprint",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2900,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const winner = $json || {};\nconst critic = winner.render_critic || winner.vision_critic || {};\nconst imageUrl = String(winner.image_url || '').trim();\nif (!imageUrl) throw new Error('TVPX__30: winner image_url missing.');\n\nreturn [{\n  json: {\n    ctx: winner.ctx,\n    concept_id: String(winner.scene_seed_id || '').trim(),\n    scene_seed_id: String(winner.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(winner.scene_blueprint_id || '').trim(),\n    archetype_id: String(winner.archetype_id || '').trim(),\n    render_candidate_id: String(winner.render_candidate_id || '').trim(),\n    blueprint_label: String(winner.blueprint_label || '').trim(),\n    reference_alignment_score: Number(critic.reference_alignment_score || 0),\n    critic_overall_score: Number(critic.overall_score || 0),\n    asset_family_id: String(winner.ctx?.asset_family_id || '').trim() || null,\n    asset_id: String(winner.render_candidate_id || '').trim() ? \\`tvpx_as_\\${winner.render_candidate_id}_color\\` : null,\n    family: {\n      color: {\n        image_url: imageUrl,\n        provider_image_url: imageUrl,\n        provider_name: String(winner.provider_name || '').trim(),\n        provider_job_id: String(winner.provider_job_id || '').trim(),\n        prompt_final: String(winner.prompt_final || '').trim(),\n        negative_prompt_raw: String(winner.negative_prompt_raw || '').trim(),\n        output_format: String(winner.output_format || 'png').trim(),\n        render_candidate_id: String(winner.render_candidate_id || '').trim(),\n        concept_snapshot: winner.scene_seed_row || null,\n      },\n    },\n  },\n}];"
+      },
+      "id": "3f2d676c-871e-4c6a-a563-d3a455cc6246",
+      "name": "Build Winner Color Finalizer Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2900,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vaFfkhqKgBk2VCGh",
+          "mode": "list",
+          "cachedResultName": "TVPX__40__Asset Finalizer And Telegram Dispatch",
+          "cachedResultUrl": "/workflow/vaFfkhqKgBk2VCGh"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "8a23368d-981d-43b1-a05f-1873321667cd",
+      "name": "Call TVPX__40__Asset Finalizer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3120,
+        260
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const winner = $json || {};\nconst prompt = String(winner.prompt_final || '').trim();\nif (!prompt) throw new Error('TVPX__30: winner prompt missing.');\n\nreturn [{\n  json: {\n    ctx: winner.ctx,\n    concept_id: String(winner.scene_seed_id || '').trim(),\n    scene_seed_id: String(winner.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(winner.scene_blueprint_id || '').trim(),\n    archetype_id: String(winner.archetype_id || '').trim(),\n    blueprint_label: String(winner.blueprint_label || '').trim(),\n    render_variant: 'bw',\n    prompt: \\`\\${prompt} Black-and-white only. Rich silver-gelatin tonal realism, tactile midtones, restrained contrast, photographic grain only if natural, no stylized monochrome gimmicks.\\`,\n    negative_prompt: String(winner.negative_prompt_raw || '').trim(),\n    provider_controls: {\n      image_size: '1024x1536',\n      background: 'opaque',\n      quality: 'high',\n      output_format: 'png',\n      num_images: 1,\n    },\n  },\n}];"
+      },
+      "id": "8f60642b-30a6-4474-a8e1-8a9466842d03",
+      "name": "Build Winner B W Render Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3340,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2uSefQgL3Y5q90Vc",
+          "mode": "list",
+          "cachedResultName": "TVPX__30A__Fal Batch Render Submit And Poll",
+          "cachedResultUrl": "/workflow/2uSefQgL3Y5q90Vc"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "14b6f7cd-231a-419f-ab09-cf347ef72c10",
+      "name": "Call TVPX__30A__Fal Batch Render Submit And Poll (BW)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3560,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const render = $json || {};\nconst base = $items('Select Winning Candidate')[0]?.json || {};\nconst critic = base.render_critic || base.vision_critic || {};\nconst imageUrl = String(render.image_url || '').trim();\nif (!imageUrl) throw new Error('TVPX__30: B/W render returned no image_url.');\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(base.scene_seed_id || '').trim(),\n    scene_seed_id: String(base.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(base.scene_blueprint_id || '').trim(),\n    archetype_id: String(base.archetype_id || '').trim(),\n    render_candidate_id: String(render.render_candidate_id || '').trim(),\n    blueprint_label: String(base.blueprint_label || '').trim(),\n    reference_alignment_score: Number(critic.reference_alignment_score || 0),\n    critic_overall_score: Number(critic.overall_score || 0),\n    asset_family_id: String(base.ctx?.asset_family_id || '').trim() || null,\n    asset_id: String(render.render_candidate_id || '').trim() ? \\`tvpx_as_\\${render.render_candidate_id}_bw\\` : null,\n    family: {\n      bw: {\n        image_url: imageUrl,\n        provider_image_url: imageUrl,\n        provider_name: String(render.provider_name || '').trim(),\n        provider_job_id: String(render.provider_job_id || '').trim(),\n        prompt_final: String(render.prompt_final || '').trim(),\n        negative_prompt_raw: String(render.negative_prompt_raw || '').trim(),\n        output_format: String(render.output_format || 'png').trim(),\n        render_candidate_id: String(render.render_candidate_id || '').trim(),\n      },\n    },\n  },\n}];"
+      },
+      "id": "5bf5ef00-f030-41a5-a96b-feb80e6370cb",
+      "name": "Build Winner B W Finalizer Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3780,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "3nJbW4QhL9r2YpCk",
+          "mode": "list",
+          "cachedResultName": "TVPX__41__B W Finalizer And Telegram Dispatch",
+          "cachedResultUrl": "/workflow/3nJbW4QhL9r2YpCk"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "2813bf17-595a-4159-a89b-1f48aa014fac",
+      "name": "Call TVPX__41__BW Finalizer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4000,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.scene_seed_id}}"
+            },
+            {
+              "keyName": "state",
+              "keyValue": "locked"
+            },
+            {
+              "keyName": "lock_owner",
+              "keyValue": "={{$json.ctx.trace_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "state": "rendered",
+            "updated_at": "={{$now}}",
+            "last_used_at": "={{$now}}",
+            "used_count": "={{Number($json.scene_seed_row.used_count || 0) + 1}}",
+            "lock_owner": "={{null}}",
+            "lock_expires_at": "={{null}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6da3414a-0895-4270-aa7d-3676d0122a49",
+      "name": "Mark Scene Seed Rendered",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        4220,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed By Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Initialize Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Envelope": {
+      "main": [
+        [
+          {
+            "node": "Has Scene Seed Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Scene Seed Id": {
+      "main": [
+        [
+          {
+            "node": "Get Scene Seed By Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Ready Scene Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Scene Seed By Id": {
+      "main": [
+        [
+          {
+            "node": "Reattach Context After Get Scene Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ready Scene Seeds": {
+      "main": [
+        [
+          {
+            "node": "Select Best Scene Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Best Scene Seed": {
+      "main": [
+        [
+          {
+            "node": "Build Lock Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach Context After Get Scene Seed": {
+      "main": [
+        [
+          {
+            "node": "Build Lock Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Lock Payload": {
+      "main": [
+        [
+          {
+            "node": "Lock Scene Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lock Scene Seed": {
+      "main": [
+        [
+          {
+            "node": "Fetch Locked Scene Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Locked Scene Seed": {
+      "main": [
+        [
+          {
+            "node": "Verify Lock Ownership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Lock Ownership": {
+      "main": [
+        [
+          {
+            "node": "Get Archetype By Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Archetype By Id": {
+      "main": [
+        [
+          {
+            "node": "Assemble Scene Seed Packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Scene Seed Packet": {
+      "main": [
+        [
+          {
+            "node": "LLM Scene Blueprint Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Scene Blueprint Director": {
+      "main": [
+        [
+          {
+            "node": "Parse Scene Blueprint Pack JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Scene Blueprint Pack JSON": {
+      "main": [
+        [
+          {
+            "node": "Explode Blueprint Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Explode Blueprint Pack": {
+      "main": [
+        [
+          {
+            "node": "Upsert Scene Blueprint Bank",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LLM Final Prompt Smith V2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Final Prompt Smith V2": {
+      "main": [
+        [
+          {
+            "node": "Parse Prompt Spec V2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Prompt Spec V2": {
+      "main": [
+        [
+          {
+            "node": "Build Color Render Packets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Color Render Packets": {
+      "main": [
+        [
+          {
+            "node": "Call TVPX__30A__Fal Batch Render Submit And Poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call TVPX__30A__Fal Batch Render Submit And Poll": {
+      "main": [
+        [
+          {
+            "node": "Upsert Render Candidate Bank",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Scene Blueprint Rendered",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LLM Render Vision Critic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Candidate And Critic Raw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Render Vision Critic": {
+      "main": [
+        [
+          {
+            "node": "Merge Candidate And Critic Raw",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Candidate And Critic Raw": {
+      "main": [
+        [
+          {
+            "node": "Parse Render Vision Critic JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Render Vision Critic JSON": {
+      "main": [
+        [
+          {
+            "node": "Upsert Render Critic Bank",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Render Candidate Bank With Critic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Select Winning Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Winning Candidate": {
+      "main": [
+        [
+          {
+            "node": "Mark Winning Blueprint",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Winner Color Finalizer Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Winner Color Finalizer Payload": {
+      "main": [
+        [
+          {
+            "node": "Call TVPX__40__Asset Finalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call TVPX__40__Asset Finalizer": {
+      "main": [
+        [
+          {
+            "node": "Build Winner B W Render Packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Winner B W Render Packet": {
+      "main": [
+        [
+          {
+            "node": "Call TVPX__30A__Fal Batch Render Submit And Poll (BW)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call TVPX__30A__Fal Batch Render Submit And Poll (BW)": {
+      "main": [
+        [
+          {
+            "node": "Build Winner B W Finalizer Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Winner B W Finalizer Payload": {
+      "main": [
+        [
+          {
+            "node": "Call TVPX__41__BW Finalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call TVPX__41__BW Finalizer": {
+      "main": [
+        [
+          {
+            "node": "Mark Scene Seed Rendered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Director Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Scene Blueprint Director",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LLM Final Prompt Smith V2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director Model xAI Fallback Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LLM Scene Blueprint Director",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "LLM Final Prompt Smith V2",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "77447146-b888-45a1-a79b-1ebd42c8a6c3",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-06T19:52:04.092Z",
+      "createdAt": "2026-03-06T19:52:04.092Z",
+      "role": "workflow:owner",
+      "workflowId": "XtyvRQfTLySqT16o",
+      "projectId": "NK3VX1YKPgfTJeSY",
+      "project": {
+        "updatedAt": "2025-12-08T15:00:57.909Z",
+        "createdAt": "2025-12-08T14:54:00.172Z",
+        "id": "NK3VX1YKPgfTJeSY",
+        "name": "Benny Ebere <ebere.benny97@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4cb24128-c146-45db-a1a6-9dd54603f17a"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

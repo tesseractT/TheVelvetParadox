@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T20:15:35.856Z",
+  "updatedAt": "2026-03-06T19:52:04.092Z",
   "createdAt": "2026-03-05T16:30:11.594Z",
   "id": "1ik7wsmxCMqRD01E",
   "name": "TVPX__60__Video Seed Preparer",
@@ -121,23 +121,23 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "gVpNusMuiqbDU3pK",
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
           "mode": "list",
-          "cachedResultName": "tvpx_concept_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "concept_id",
-              "keyValue": "={{$json.concept_id}}"
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.seed.scene_seed_id || $json.seed.concept_id}}"
             }
           ]
         }
       },
       "id": "0dd4f7ad-6db3-4f58-8f7d-16e47a7baf5d",
-      "name": "Get Source Concept",
+      "name": "Get Source Scene Seed",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "alwaysOutputData": true,
@@ -148,7 +148,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const current = $items('Reattach Context After Seeds', 0, 0)[$itemIndex]?.json || {};\nconst ctx = current.ctx || {};\nconst seed = current.seed || {};\nconst assetRow = $items('Get Source Asset', 0, 0)[$itemIndex]?.json || {};\nconst conceptRow = $json || {};\n\nif (!assetRow || typeof assetRow !== 'object' || !Object.keys(assetRow).length) {\n  throw new Error('TVPX__60: source asset row missing.');\n}\nif (!conceptRow || typeof conceptRow !== 'object' || !Object.keys(conceptRow).length) {\n  throw new Error('TVPX__60: source concept row missing.');\n}\n\nconst stillUrl = String(seed.still_image_drive_url || assetRow.drive_view_url || '').trim();\nif (!stillUrl) {\n  throw new Error('TVPX__60: missing still image URL.');\n}\n\nconst guardrails = {\n  pace: 'slow',\n  camera: ['glide', 'hover', 'micro-dolly'],\n  preserve: [\n    'composition identity',\n    'symbolic logic',\n    'lighting mood',\n    'tactile textures',\n    'abstraction band 5.8-6.8',\n    'staged inevitability',\n    'negative space as pressure',\n    'real-world optics',\n    'believable anatomy',\n    'natural skin texture',\n    'cloth and hair physics'\n  ],\n  avoid: [\n    'scene changes',\n    'fast cuts',\n    'hyperactive motion',\n    'rubbery morphing',\n    'new objects',\n    'breaking the singular focal point',\n    'temporal face drift',\n    'plastic skin',\n    'cg sheen'\n  ]\n};\n\nreturn [{\n  json: {\n    ctx,\n    seed,\n    asset: assetRow,\n    concept: conceptRow,\n    motion_brief: {\n      still_reference_url: stillUrl,\n      concept_id: String(seed.concept_id || conceptRow.concept_id || assetRow.concept_id || '').trim(),\n      operator_motion_hint: String(seed.motion_prompt || '').trim(),\n      concept_thesis: String(conceptRow.concept_thesis || '').trim(),\n      symbolic_tension: String(conceptRow.symbolic_tension || '').trim(),\n      material_anchor: String(conceptRow.material_anchor || '').trim(),\n      spatial_directive: String(conceptRow.spatial_directive || '').trim(),\n      abstraction_target: Number(conceptRow.abstraction_target || 6.2),\n      palette_directive: String(conceptRow.palette_directive || '{}'),\n      texture_directive: String(conceptRow.texture_directive || '{}'),\n      series_dna_json: String(conceptRow.series_dna_json || '{}'),\n      guardrails\n    }\n  }\n}];"
+        "jsCode": "const current = $items('Reattach Context After Seeds', 0, 0)[$itemIndex]?.json || {};\nconst ctx = current.ctx || {};\nconst seed = current.seed || {};\nconst assetRow = $items('Get Source Asset', 0, 0)[$itemIndex]?.json || {};\nconst sceneSeedRow = $items('Get Source Scene Seed', 0, 0)[$itemIndex]?.json || {};\nconst sceneBlueprintRow = $items('Get Source Scene Blueprint', 0, 0)[$itemIndex]?.json || {};\nconst archetypeRow = $items('Get Source Archetype', 0, 0)[$itemIndex]?.json || {};\n\nif (!assetRow || !Object.keys(assetRow).length) throw new Error('TVPX__60: source asset row missing.');\nif (!sceneSeedRow || !Object.keys(sceneSeedRow).length) throw new Error('TVPX__60: source scene seed row missing.');\n\nconst stillUrl = String(seed.still_image_drive_url || assetRow.drive_view_url || assetRow.drive_download_url || assetRow.provider_image_url || '').trim();\nif (!stillUrl) throw new Error('TVPX__60: missing still image URL.');\n\nconst guardrails = {\n  pace: 'slow',\n  camera: ['glide', 'hover', 'micro-dolly'],\n  preserve: [\n    'composition identity',\n    'archetype family',\n    'lighting mood',\n    'tactile textures',\n    'negative space as pressure',\n    'real-world optics',\n    'believable anatomy',\n    'natural skin texture',\n    'cloth and hair physics',\n  ],\n  avoid: [\n    'scene changes',\n    'fast cuts',\n    'hyperactive motion',\n    'rubbery morphing',\n    'new objects',\n    'breaking the singular focal point',\n    'temporal face drift',\n    'plastic skin',\n    'cg sheen',\n  ],\n};\n\nreturn [{\n  json: {\n    ctx,\n    seed,\n    asset: assetRow,\n    scene_seed: sceneSeedRow,\n    scene_blueprint: sceneBlueprintRow,\n    archetype: archetypeRow,\n    motion_brief: {\n      still_reference_url: stillUrl,\n      scene_seed_id: String(seed.scene_seed_id || sceneSeedRow.scene_seed_id || '').trim(),\n      scene_blueprint_id: String(seed.scene_blueprint_id || sceneBlueprintRow.scene_blueprint_id || '').trim(),\n      archetype_id: String(seed.archetype_id || archetypeRow.archetype_id || sceneSeedRow.archetype_id || '').trim(),\n      operator_motion_hint: String(seed.motion_prompt || '').trim(),\n      scene_kernel: String(sceneSeedRow.scene_kernel || '').trim(),\n      symbolic_tension: String(sceneSeedRow.symbolic_tension || '').trim(),\n      spatial_directive: String(sceneSeedRow.spatial_directive || '').trim(),\n      palette_directive: String(sceneSeedRow.palette_directive || '').trim(),\n      texture_directive: String(sceneSeedRow.texture_directive || '').trim(),\n      blueprint: sceneBlueprintRow,\n      archetype: archetypeRow,\n      guardrails,\n    },\n  },\n}];"
       },
       "id": "9d058922-ac78-42fe-be7b-aba4e00e62e6",
       "name": "Assemble Motion Brief",
@@ -196,7 +196,7 @@
         "promptType": "define",
         "needsFallback": true,
         "batching": {},
-        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nSource concept:\n{{ JSON.stringify($json.concept, null, 2) }}\n\nSource asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nTranslate the still into motion without breaking its dignity or collapsing the visual grammar into generic movement. The future video should still feel like a real photographed moment rather than synthetic AI animation."
+        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nWinning asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nWinning scene seed:\n{{ JSON.stringify($json.scene_seed, null, 2) }}\n\nWinning scene blueprint:\n{{ JSON.stringify($json.scene_blueprint, null, 2) }}\n\nArchetype:\n{{ JSON.stringify($json.archetype, null, 2) }}\n\nTranslate the still into motion without breaking its dignity or collapsing the visual grammar into generic movement. The future video should still feel like a real photographed moment rather than synthetic AI animation."
       },
       "id": "6ce26d7c-c804-47ec-83f4-3875cc292e14",
       "name": "LLM Video Motion Translator",
@@ -304,6 +304,68 @@
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_blueprint_id",
+              "keyValue": "={{$json.seed.scene_blueprint_id}}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "7e21c67e-f344-49da-a827-0ab615c8fe41",
+      "name": "Get Source Scene Blueprint",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        96
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY",
+          "mode": "list",
+          "cachedResultName": "tvpx_ref_archetype_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "archetype_id",
+              "keyValue": "={{$json.seed.archetype_id || $items('Get Source Scene Seed')[0]?.json?.archetype_id}}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "f5102403-9024-499e-ad2b-fcf2b386bc9b",
+      "name": "Get Source Archetype",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        96
+      ],
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -367,18 +429,7 @@
       "main": [
         [
           {
-            "node": "Get Source Concept",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Source Concept": {
-      "main": [
-        [
-          {
-            "node": "Assemble Motion Brief",
+            "node": "Get Source Scene Seed",
             "type": "main",
             "index": 0
           }
@@ -472,6 +523,39 @@
           }
         ]
       ]
+    },
+    "Get Source Scene Seed": {
+      "main": [
+        [
+          {
+            "node": "Get Source Scene Blueprint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Source Scene Blueprint": {
+      "main": [
+        [
+          {
+            "node": "Get Source Archetype",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Source Archetype": {
+      "main": [
+        [
+          {
+            "node": "Assemble Motion Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -484,7 +568,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "d892e7df-6b98-48dd-b103-4d2a6b6f2388",
+  "versionId": "2ff7df43-838f-409e-aded-ef786679043a",
   "activeVersionId": null,
   "versionCounter": 20,
   "triggerCount": 0,

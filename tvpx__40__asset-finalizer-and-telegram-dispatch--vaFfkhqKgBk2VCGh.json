@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T20:01:34.914Z",
+  "updatedAt": "2026-03-06T19:52:04.092Z",
   "createdAt": "2026-03-05T16:11:43.797Z",
   "id": "vaFfkhqKgBk2VCGh",
   "name": "TVPX__40__Asset Finalizer And Telegram Dispatch",
@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Envelope (TVPX__40)\n * Primary generation now finalizes the color asset only.\n */\n\nfunction fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\n\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || `tvpx_${fnv1a(JSON.stringify(incoming).slice(0,5000) + '::' + now)}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'asset_finalize_dispatch',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || baseCtx.chat_id || '').trim() || null,\n  drive_id: String(baseCtx.drive_id || incoming.drive_id || '').trim() || null,\n  drive_folder_id: String(baseCtx.drive_folder_id || incoming.drive_folder_id || '').trim() || null\n};\n\nconst conceptId = String(incoming.concept_id || '').trim();\nif (!conceptId) throw new Error('TVPX__40: Missing concept_id.');\nif (!ctx.asset_family_id) ctx.asset_family_id = `tvpxfam_${fnv1a(traceId + '::family')}`;\n\nconst fam = incoming.family || {};\nconst color = fam.color || {};\nconst colorUrl = String(color.image_url || color.provider_image_url || '').trim();\nif (!colorUrl) {\n  throw new Error('TVPX__40: Missing color image_url from generation results.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color: { ...color, image_url: colorUrl }\n    }\n  }\n}];"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\nconst traceId = String(baseCtx.trace_id || '').trim() || \\`tvpx_\\${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}\\`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: String(incoming.asset_family_id || baseCtx.asset_family_id || '').trim(),\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'asset_finalize_dispatch',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || baseCtx.chat_id || '').trim() || null,\n  drive_id: String(baseCtx.drive_id || incoming.drive_id || '').trim() || null,\n  drive_folder_id: String(baseCtx.drive_folder_id || incoming.drive_folder_id || '').trim() || null,\n};\n\nconst sceneSeedId = String(incoming.scene_seed_id || '').trim();\nconst conceptId = String(incoming.concept_id || sceneSeedId || '').trim();\nconst fam = incoming.family || {};\nconst color = fam.color || {};\nconst colorUrl = String(color.image_url || color.provider_image_url || '').trim();\nconst renderCandidateId = String(incoming.render_candidate_id || color.render_candidate_id || '').trim();\nif (!colorUrl) throw new Error('TVPX__40: Missing color image_url from generation results.');\nif (!ctx.asset_family_id) ctx.asset_family_id = \\`tvpxfam_\\${fnv1a(traceId + '::family')}\\`;\n\nconst assetId = String(incoming.asset_id || color.asset_id || (renderCandidateId ? \\`tvpx_as_\\${renderCandidateId}_color\\` : \\`tvpx_as_\\${traceId}_\\${conceptId}_color\\`)).trim();\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    scene_seed_id: sceneSeedId,\n    scene_blueprint_id: String(incoming.scene_blueprint_id || '').trim(),\n    archetype_id: String(incoming.archetype_id || '').trim(),\n    render_candidate_id: renderCandidateId,\n    blueprint_label: String(incoming.blueprint_label || '').trim(),\n    reference_alignment_score: Number(incoming.reference_alignment_score || 0),\n    critic_overall_score: Number(incoming.critic_overall_score || 0),\n    asset_id: assetId,\n    asset_family_id: ctx.asset_family_id,\n    family: {\n      color: { ...color, image_url: colorUrl, asset_id: assetId, render_candidate_id: renderCandidateId },\n    },\n  },\n}];"
       },
       "id": "0ea173b1-0d9d-43c3-a8db-e03cbbf78041",
       "name": "Initialize Envelope",
@@ -95,7 +95,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Ensure Binary For Color\n * Normalizes binary property name to 'image' for downstream nodes.\n */\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst conceptId = base.concept_id;\nconst fam = base.family;\n\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('No binary found from Download Color Image.');\n\nconst firstKey = binKeys[0];\nconst b = $binary[firstKey];\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: base.asset_family_id,\n    family: fam,\n    variant: 'color'\n  },\n  binary: {\n    image: b\n  }\n}];"
+        "jsCode": "const base = $items('Initialize Envelope')[0].json;\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('No binary found from Download Color Image.');\nconst firstKey = binKeys[0];\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: base.concept_id,\n    scene_seed_id: base.scene_seed_id,\n    scene_blueprint_id: base.scene_blueprint_id,\n    archetype_id: base.archetype_id,\n    render_candidate_id: base.render_candidate_id,\n    blueprint_label: base.blueprint_label,\n    reference_alignment_score: base.reference_alignment_score,\n    critic_overall_score: base.critic_overall_score,\n    asset_id: base.asset_id,\n    asset_family_id: base.asset_family_id,\n    family: base.family,\n    variant: 'color',\n  },\n  binary: { image: $binary[firstKey] },\n}];"
       },
       "id": "d00ba8ee-772f-4e5a-8af2-721c6afd6449",
       "name": "Ensure Binary For Color",
@@ -147,7 +147,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Normalize Drive Result (Color)\n */\nconst base = $items('Make Safe Filename Color')[0].json;\nconst ctx = base.ctx;\nconst conceptId = base.concept_id;\nconst fam = base.family;\n\nconst r = $json || {};\nconst fileId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!fileId) throw new Error('Google Drive upload returned no file id.');\n\nconst viewUrl = String(r.webViewLink || r.webViewUrl || r.alternateLink || '').trim();\nconst dlUrl = String(r.webContentLink || r.downloadUrl || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: base.asset_family_id,\n    family: fam,\n    assets: {\n      color: {\n        filename: base.filename,\n        drive_file_id: fileId,\n        drive_view_url: viewUrl,\n        drive_download_url: dlUrl,\n        provider_image_url: String(fam.color.image_url || '').trim()\n      }\n    }\n  }\n}];"
+        "jsCode": "const base = $items('Make Safe Filename Color')[0].json;\nconst r = $json || {};\nconst fileId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!fileId) throw new Error('Google Drive upload returned no file id.');\nconst viewUrl = String(r.webViewLink || r.webViewUrl || r.alternateLink || '').trim();\nconst dlUrl = String(r.webContentLink || r.downloadUrl || '').trim();\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: base.concept_id,\n    scene_seed_id: base.scene_seed_id,\n    scene_blueprint_id: base.scene_blueprint_id,\n    archetype_id: base.archetype_id,\n    render_candidate_id: base.render_candidate_id,\n    blueprint_label: base.blueprint_label,\n    reference_alignment_score: base.reference_alignment_score,\n    critic_overall_score: base.critic_overall_score,\n    asset_id: base.asset_id,\n    asset_family_id: base.asset_family_id,\n    family: base.family,\n    assets: {\n      color: {\n        filename: base.filename,\n        drive_file_id: fileId,\n        drive_view_url: viewUrl,\n        drive_download_url: dlUrl,\n        provider_image_url: String(base.family?.color?.image_url || '').trim(),\n      },\n    },\n  },\n}];"
       },
       "id": "c9b65a46-883b-4c21-84ab-bb82e495cd04",
       "name": "Normalize Drive Result Color",
@@ -173,16 +173,23 @@
           "conditions": [
             {
               "keyName": "asset_id",
-              "keyValue": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_color'}}"
+              "keyValue": "={{$json.asset_id}}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "asset_id": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_color'}}",
+            "asset_id": "={{$json.asset_id}}",
             "trace_id": "={{$json.ctx.trace_id}}",
             "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "reference_alignment_score": "={{$json.reference_alignment_score}}",
+            "critic_overall_score": "={{$json.critic_overall_score}}",
             "asset_family_id": "={{$json.asset_family_id}}",
             "variant_key": "color",
             "render_mode": "primary",
@@ -272,12 +279,16 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "reply_index_id": "={{'tvpx_ridx_' + $json.ctx.trace_id + '_' + $json.concept_id + '_color'}}",
+            "reply_index_id": "={{\"tvpx_ridx_\" + $json.asset_id}}",
             "chat_id": "={{$json.ctx.telegram_chat_id}}",
             "message_id": "={{$json.telegram.color_message_id}}",
-            "asset_id": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_color'}}",
+            "asset_id": "={{$json.asset_id}}",
             "asset_family_id": "={{$json.asset_family_id}}",
             "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
             "message_role": "primary_color",
             "reply_mode": "reply_actions",
             "is_active": true,
@@ -443,15 +454,16 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "child_concept_id",
-              "keyValue": "={{$json.concept_id}}"
+              "keyName": "child_scene_seed_id",
+              "keyValue": "={{$json.scene_seed_id || $json.concept_id}}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "child_asset_id": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_color'}}"
+            "child_asset_id": "={{$json.asset_id}}",
+            "child_render_candidate_id": "={{$json.render_candidate_id}}"
           },
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
@@ -1171,7 +1183,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "8448d67a-ae77-4893-84bb-0c2c074c0b1a",
+  "versionId": "2d991147-8e0b-473f-a584-f1f4b7d4d1f5",
   "activeVersionId": null,
   "versionCounter": 16,
   "triggerCount": 0,

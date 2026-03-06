@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-03-05T20:14:12.296Z",
-  "createdAt": "2026-03-05T16:20:57.513Z",
-  "id": "EKpVMmrlNf2ESBSO",
-  "name": "TVPX__50__Series From Telegram Reply",
+  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "createdAt": "2026-03-06T19:52:04.092Z",
+  "id": "sYmAtmmBITCgC6Ks",
+  "name": "TVPX__50__Series Mutation From Telegram Reply",
   "description": null,
   "active": false,
   "isArchived": false,
@@ -126,23 +126,23 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "gVpNusMuiqbDU3pK",
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
           "mode": "list",
-          "cachedResultName": "tvpx_concept_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "concept_id",
-              "keyValue": "={{$json.reply_index.concept_id}}"
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.reply_index.scene_seed_id || $json.reply_index.concept_id || $json.reply_index.asset_id}}"
             }
           ]
         }
       },
       "id": "37e0b615-0352-4275-a9e2-2555ab456a95",
-      "name": "Get Parent Concept",
+      "name": "Get Parent Scene Seed",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "alwaysOutputData": true,
@@ -153,31 +153,65 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_scene_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "scene_blueprint_id",
+              "keyValue": "={{$json.scene_blueprint_id || $items('Get Parent Asset')[0]?.json?.scene_blueprint_id || $items('Reattach After Reply Lookup')[0]?.json?.reply_index?.scene_blueprint_id}}"
+            }
+          ]
+        },
+        "limit": 1
       },
-      "id": "ae38f51a-67cb-47e4-84c9-b8733147af38",
-      "name": "Merge Parent Asset And Concept",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
+      "id": "98779114-6367-4e30-a308-61cc7d26b19f",
+      "name": "Get Parent Scene Blueprint",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
       "position": [
         -672,
         352
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Assemble Parent Packet\n * Ensures we have parent asset + parent concept; builds a compact packet.\n */\n\nconst base = $items('Reattach After Reply Lookup')[0].json;\nconst ctx = base.ctx;\n\nconst parentAsset = $items('Get Parent Asset')[0]?.json;\nconst parentConcept = $items('Get Parent Concept')[0]?.json;\n\nif (!parentAsset || !String(parentAsset.asset_id || '').trim()) throw new Error('TVPX__50: Parent asset not found.');\nif (!parentConcept || !String(parentConcept.concept_id || '').trim()) throw new Error('TVPX__50: Parent concept not found.');\n\nconst dna = (() => {\n  try { return JSON.parse(parentConcept.series_dna_json || '{}'); } catch { return {}; }\n})();\n\nreturn [{\n  json: {\n    ctx,\n    tg: base.tg,\n    reply_action: base.reply_action,\n    series_request: base.series_request,\n    bw_request: base.bw_request,\n    video_request: base.video_request,\n    reply_index: base.reply_index,\n    parent: {\n      asset: parentAsset,\n      concept: parentConcept,\n      series_dna: dna\n    }\n  }\n}];"
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY",
+          "mode": "list",
+          "cachedResultName": "tvpx_ref_archetype_registry",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "archetype_id",
+              "keyValue": "={{$json.archetype_id || $items('Get Parent Scene Seed')[0]?.json?.archetype_id || $items('Get Parent Asset')[0]?.json?.archetype_id}}"
+            }
+          ]
+        },
+        "limit": 1
       },
       "id": "121b1c1e-5cd0-490d-be39-c289d8889a4f",
-      "name": "Assemble Parent Packet",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "name": "Get Parent Archetype",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
       "position": [
         -448,
         352
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -209,17 +243,17 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Series_Variation_Designer for The Velvet Paradox.\n\nYour job is to produce a coherent variation plan inside the same visual universe.\n\nRules:\n- Preserve identity, concept thesis, symbolic logic, emotional temperature, photographic realism, and abstraction band.\n- Vary only controlled axes: atmosphere, distance, framing, light behavior, material emphasis, accent placement, ritual density.\n- Keep every variation stageable as a real photographed scene with believable anatomy, skin, optics, and material behavior.\n- Do not introduce random new objects.\n- Return valid JSON only.\n- Output exactly the requested number of variations.\n\nReturn exactly:\n{\n  \"series_group_id\": \"...\",\n  \"continuity_rules\": {\n    \"must_preserve\": [\"...\"],\n    \"must_avoid\": [\"...\"],\n    \"composition_dna\": \"...\",\n    \"abstraction_band\": [5.8, 6.8]\n  },\n  \"variations\": [\n    {\n      \"variation_index\": 1,\n      \"variation_instruction\": \"...\",\n      \"prompt_delta\": \"...\",\n      \"palette_shift\": \"...\",\n      \"atmosphere_shift\": \"...\",\n      \"intensity_change\": \"...\"\n    }\n  ]\n}"
+              "message": "=You are TVPX__LLM__Series_Mutation_Designer for The Velvet Paradox.\n\nYour job is to create controlled variations of a winning image.\n\nYou must preserve:\n- archetype family\n- emotional weather\n- material logic\n- surreal restraint\n- negative space behavior\n\nYou may vary only one major axis at a time:\n- camera distance\n- subject spacing\n- environment density\n- ritual intensity\n- wardrobe emphasis\n- obstruction strength\n- landscape scale\n- weather thickness\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"variations\": [\n    {\n      \"mutation_axis\": \"...\",\n      \"mutation_instruction\": \"...\",\n      \"child_scene_kernel\": \"...\",\n      \"child_spatial_directive\": \"...\",\n      \"child_palette_directive\": \"...\",\n      \"child_texture_directive\": \"...\"\n    }\n  ]\n}"
             }
           ]
         },
         "promptType": "define",
         "needsFallback": true,
         "batching": {},
-        "text": "=Requested count: {{ $json.series_request.count }}\nUser instruction: {{ $json.series_request.instruction }}\n\nParent asset:\n{{ JSON.stringify($json.parent.asset, null, 2) }}\n\nParent concept:\n{{ JSON.stringify($json.parent.concept, null, 2) }}\n\nParent series DNA:\n{{ JSON.stringify($json.parent.series_dna, null, 2) }}\n\nPreserve family resemblance and keep the future images feeling like real-life photographs rather than synthetic AI variations."
+        "text": "=Parent asset:\n{{ JSON.stringify($json.parent_asset, null, 2) }}\n\nParent scene seed:\n{{ JSON.stringify($json.parent_scene_seed, null, 2) }}\n\nParent scene blueprint:\n{{ JSON.stringify($json.parent_scene_blueprint, null, 2) }}\n\nArchetype:\n{{ JSON.stringify($json.parent_archetype, null, 2) }}\n\nUser reply:\n{{ $json.series_command }}\n\nCreate controlled series mutations only."
       },
       "id": "87bc97cb-7f53-41c4-86f0-69d9d9529ca9",
-      "name": "LLM Series Variation Designer",
+      "name": "LLM Series Mutation Designer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
@@ -229,10 +263,10 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('Parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim()\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    try {\n      return JSON.parse(slice);\n    } catch (err) {\n      throw new Error(`Parser: invalid salvaged JSON. ${err.message}`);\n    }\n  }\n\n  throw new Error('Parser: could not find a valid JSON object.');\n}\n\nconst BASE_NODE = 'Assemble Parent Packet';\nconst OUT_KEY = 'series_plan';\n\nconst base = $items(BASE_NODE)[0]?.json;\nif (!base) {\n  throw new Error(`Parser: base node \"${BASE_NODE}\" returned no data.`);\n}\n\nconst parsed = parseStrictJson($json);\n\n// Per-output hardening\nif (OUT_KEY === 'critic') {\n  parsed.approve = Boolean(parsed.approve);\n  for (const key of ['score', 'brand_fit', 'novelty', 'visual_viability']) {\n    parsed[key] = Number(parsed[key] || 0);\n  }\n}\n\nif (OUT_KEY === 'abstraction') {\n  let a = Number(parsed.abstraction_target || 6.2);\n  const min = Number(base.ctx?.target_abstraction_min || 5.8);\n  const max = Number(base.ctx?.target_abstraction_max || 6.8);\n  if (!Number.isFinite(a)) a = 6.2;\n  a = Math.max(min, Math.min(max, a));\n  parsed.abstraction_target = Math.round(a * 10) / 10;\n}\n\nif (OUT_KEY === 'render_spec') {\n  parsed.image_size = String(parsed.image_size || base.ctx?.image_size || '1024x1280');\n  parsed.provider_controls = (parsed.provider_controls && typeof parsed.provider_controls === 'object')\n    ? parsed.provider_controls\n    : {};\n  parsed.provider_controls.quality = String(parsed.provider_controls.quality || base.ctx?.quality || 'high');\n  parsed.provider_controls.background = String(parsed.provider_controls.background || base.ctx?.background || 'opaque');\n  parsed.provider_controls.output_format = String(parsed.provider_controls.output_format || base.ctx?.output_format || 'png');\n}\n\nif (OUT_KEY === 'caption_pack') {\n  parsed.hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\n  parsed.keywords = Array.isArray(parsed.keywords) ? parsed.keywords : [];\n}\n\nif (OUT_KEY === 'series_plan') {\n  parsed.variations = Array.isArray(parsed.variations) ? parsed.variations : [];\n}\n\nreturn [{\n  json: {\n    ...base,\n    [OUT_KEY]: parsed\n  }\n}];"
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Assemble Parent Image DNA Packet')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Assemble Parent Image DNA Packet\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    series_mutation_plan: parsed,\n  },\n}];"
       },
       "id": "906f50a6-f05f-43a2-8f16-bd5c4d188ace",
-      "name": "Parse Series Plan",
+      "name": "Parse Series Mutation JSON",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -242,10 +276,10 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst ctx = j.ctx || {};\nconst parentConcept = j.parent?.concept || {};\nconst parentAsset = j.parent?.asset || {};\nconst replyIndex = j.reply_index || {};\nconst plan = j.series_plan || {};\n\nconst rootId = String(parentConcept.root_concept_id || parentConcept.concept_id || '').trim();\nconst parentId = String(parentConcept.concept_id || '').trim();\nconst rootAssetId = String(parentAsset.root_asset_id || parentAsset.asset_id || '').trim();\nconst parentAssetId = String(parentAsset.asset_id || '').trim();\nconst familyId = String(parentAsset.asset_family_id || replyIndex.asset_family_id || ctx.asset_family_id || '').trim();\n\nif (!parentId) throw new Error('TVPX__50: missing parent concept_id.');\nif (!parentAssetId) throw new Error('TVPX__50: missing parent asset_id.');\n\nconst now = new Date().toISOString();\nconst variations = Array.isArray(plan.variations) ? plan.variations : [];\n\nreturn variations.map((v) => {\n  const delta = String(v.prompt_delta || v.variation_instruction || '').trim();\n  const seed = `${ctx.trace_id}::${parentId}::${v.variation_index}::${delta}`;\n  const childId = `tvpx_cp_${fnv1a(seed)}`;\n\n  let seriesDNA = {};\n  try {\n    seriesDNA = JSON.parse(String(parentConcept.series_dna_json || '{}'));\n  } catch {\n    seriesDNA = {};\n  }\n\n  const seriesGroupId = String(\n    plan.series_group_id ||\n    seriesDNA.series_group_id ||\n    `tvpx_series_${fnv1a(parentId + '::' + now)}`\n  ).trim();\n\n  const childSeriesDNA = {\n    ...seriesDNA,\n    series_group_id: seriesGroupId,\n    variation_index: Number(v.variation_index || 0),\n    prompt_delta: delta,\n    palette_shift: String(v.palette_shift || '').trim(),\n    atmosphere_shift: String(v.atmosphere_shift || '').trim(),\n    intensity_change: String(v.intensity_change || '').trim()\n  };\n\n  const thesis = String(parentConcept.concept_thesis || '').trim();\n  const variationInstruction = String(v.variation_instruction || '').trim();\n  const childThesis = variationInstruction\n    ? `${thesis} | Variation: ${variationInstruction}`\n    : thesis;\n\n  const childCtx = {\n    ...ctx,\n    ...(familyId ? { asset_family_id: familyId } : {})\n  };\n\n  return {\n    json: {\n      ctx: childCtx,\n      child: {\n        concept_id: childId,\n        trace_id: ctx.trace_id,\n        origin_type: 'telegram_series',\n        source_id: String(parentConcept.source_id || '').trim(),\n        parent_concept_id: parentId,\n        root_concept_id: rootId,\n        seed_fragment_ids_json: String(parentConcept.seed_fragment_ids_json || '[]'),\n        concept_thesis: childThesis,\n        symbolic_tension: String(parentConcept.symbolic_tension || '').trim(),\n        material_anchor: String(parentConcept.material_anchor || '').trim(),\n        spatial_directive: String(parentConcept.spatial_directive || '').trim(),\n        palette_directive: String(parentConcept.palette_directive || '{}'),\n        texture_directive: String(parentConcept.texture_directive || '{}'),\n        abstraction_target: Number(parentConcept.abstraction_target || 6.2),\n        series_dna_json: JSON.stringify(childSeriesDNA),\n        prompt_guardrails_json: String(parentConcept.prompt_guardrails_json || '{}'),\n        quality_score: Number(parentConcept.quality_score || 0),\n        state: 'ready',\n        lock_owner: '',\n        lock_expires_at: null,\n        used_count: 0,\n        last_used_at: null,\n        created_at: now,\n        updated_at: now\n      },\n      lineage: {\n        lineage_id: `tvpx_lin_${fnv1a(childId + '::' + parentId)}`,\n        series_group_id: seriesGroupId,\n        root_asset_id: rootAssetId,\n        parent_asset_id: parentAssetId,\n        child_asset_id: null,\n        parent_concept_id: parentId,\n        child_concept_id: childId,\n        variation_index: Number(v.variation_index || 0),\n        variation_instruction: variationInstruction,\n        continuity_rules_json: JSON.stringify(plan.continuity_rules || {}),\n        created_at: now\n      }\n    }\n  };\n});"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst ctx = j.ctx || {};\nconst parentAsset = j.parent_asset || {};\nconst parentSceneSeed = j.parent_scene_seed || {};\nconst parentSceneBlueprint = j.parent_scene_blueprint || {};\nconst plan = j.series_mutation_plan || {};\nconst variations = Array.isArray(plan.variations) ? plan.variations : [];\nconst now = new Date().toISOString();\n\nif (!parentSceneSeed.scene_seed_id) throw new Error('TVPX__50: missing parent scene_seed_id.');\n\nreturn variations.map((variation, idx) => {\n  const childSeedId = \\`tvpx_ss_\\${fnv1a([\n    ctx.trace_id,\n    parentSceneSeed.scene_seed_id,\n    variation.mutation_axis,\n    variation.mutation_instruction,\n    idx + 1,\n  ].join('::'))}\\`;\n\n  const mutationId = \\`tvpx_mut_\\${fnv1a(childSeedId + '::mutation')}\\`;\n  const lineageId = \\`tvpx_lin_\\${fnv1a(childSeedId + '::lineage')}\\`;\n\n  const childSceneSeed = {\n    scene_seed_id: childSeedId,\n    trace_id: String(ctx.trace_id || '').trim(),\n    crawl_run_id: String(parentSceneSeed.crawl_run_id || '').trim(),\n    origin_type: 'telegram_series',\n    source_id: String(parentSceneSeed.source_id || '').trim(),\n    parent_scene_seed_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n    root_scene_seed_id: String(parentSceneSeed.root_scene_seed_id || parentSceneSeed.scene_seed_id || '').trim(),\n    seed_fragment_ids_json: String(parentSceneSeed.seed_fragment_ids_json || '[]'),\n    archetype_id: String(parentSceneSeed.archetype_id || '').trim(),\n    subject_mode: String(parentSceneSeed.subject_mode || '').trim(),\n    scene_kernel: String(variation.child_scene_kernel || parentSceneSeed.scene_kernel || '').trim(),\n    concept_thesis: String(parentSceneSeed.concept_thesis || '').trim(),\n    symbolic_tension: String(parentSceneSeed.symbolic_tension || '').trim(),\n    material_anchor: String(parentSceneSeed.material_anchor || '').trim(),\n    spatial_directive: String(variation.child_spatial_directive || parentSceneSeed.spatial_directive || '').trim(),\n    palette_directive: String(variation.child_palette_directive || parentSceneSeed.palette_directive || '').trim(),\n    texture_directive: String(variation.child_texture_directive || parentSceneSeed.texture_directive || '').trim(),\n    dominant_subject: String(parentSceneSeed.dominant_subject || '').trim(),\n    setting_family: String(parentSceneSeed.setting_family || '').trim(),\n    ceremonial_logic: String(parentSceneSeed.ceremonial_logic || '').trim(),\n    surreal_pressure: String(parentSceneSeed.surreal_pressure || '').trim(),\n    negative_space_note: String(parentSceneSeed.negative_space_note || '').trim(),\n    omission_notes: String(parentSceneSeed.omission_notes || '').trim(),\n    forbidden_excess_json: String(parentSceneSeed.forbidden_excess_json || '[]'),\n    render_budget_json: String(parentSceneSeed.render_budget_json || '{}'),\n    quality_score: Number(parentSceneSeed.quality_score || 0),\n    brand_fit_score: Number(parentSceneSeed.brand_fit_score || 0),\n    reference_alignment_score: Number(parentSceneSeed.reference_alignment_score || 0),\n    state: 'ready',\n    lock_owner: '',\n    lock_expires_at: null,\n    used_count: 0,\n    last_used_at: null,\n    rejection_reason: '',\n    created_at: now,\n    updated_at: now,\n  };\n\n  return {\n    json: {\n      ctx: {\n        ...ctx,\n        asset_family_id: String(parentAsset.asset_family_id || ctx.asset_family_id || '').trim() || null,\n      },\n      tg: j.tg,\n      child_scene_seed: childSceneSeed,\n      mutation: {\n        mutation_id: mutationId,\n        parent_asset_id: String(parentAsset.asset_id || '').trim(),\n        parent_render_candidate_id: String(parentAsset.render_candidate_id || '').trim(),\n        parent_scene_seed_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n        parent_scene_blueprint_id: String(parentSceneBlueprint.scene_blueprint_id || '').trim(),\n        child_scene_seed_id: childSeedId,\n        mutation_axis: String(variation.mutation_axis || '').trim(),\n        mutation_instruction: String(variation.mutation_instruction || '').trim(),\n        status: 'planned',\n        created_at: now,\n        updated_at: now,\n      },\n      lineage: {\n        lineage_id: lineageId,\n        series_group_id: \\`tvpx_series_\\${fnv1a(parentSceneSeed.scene_seed_id + '::series')}\\`,\n        root_asset_id: String(parentAsset.root_asset_id || parentAsset.asset_id || '').trim(),\n        parent_asset_id: String(parentAsset.asset_id || '').trim(),\n        child_asset_id: null,\n        parent_concept_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n        child_concept_id: childSeedId,\n        parent_scene_seed_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n        child_scene_seed_id: childSeedId,\n        parent_render_candidate_id: String(parentAsset.render_candidate_id || '').trim(),\n        child_render_candidate_id: null,\n        variation_index: idx + 1,\n        variation_instruction: String(variation.mutation_instruction || '').trim(),\n        continuity_rules_json: JSON.stringify({\n          preserve_archetype: true,\n          preserve_blueprint_family: true,\n        }),\n        created_at: now,\n      },\n    },\n  };\n});"
       },
       "id": "e56a974f-746a-4819-950d-0ca4ee570ccc",
-      "name": "Build Child Concepts",
+      "name": "Build Child Scene Seeds",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -258,47 +292,59 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "gVpNusMuiqbDU3pK",
+          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
           "mode": "list",
-          "cachedResultName": "tvpx_concept_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/gVpNusMuiqbDU3pK"
+          "cachedResultName": "tvpx_scene_seed_pool",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
         },
         "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "concept_id",
-              "keyValue": "={{$json.child.concept_id}}"
+              "keyName": "scene_seed_id",
+              "keyValue": "={{$json.child_scene_seed.scene_seed_id}}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "concept_id": "={{$json.child.concept_id}}",
-            "trace_id": "={{$json.child.trace_id}}",
-            "origin_type": "={{$json.child.origin_type}}",
-            "source_id": "={{$json.child.source_id}}",
-            "parent_concept_id": "={{$json.child.parent_concept_id}}",
-            "root_concept_id": "={{$json.child.root_concept_id}}",
-            "seed_fragment_ids_json": "={{$json.child.seed_fragment_ids_json}}",
-            "concept_thesis": "={{$json.child.concept_thesis}}",
-            "symbolic_tension": "={{$json.child.symbolic_tension}}",
-            "material_anchor": "={{$json.child.material_anchor}}",
-            "spatial_directive": "={{$json.child.spatial_directive}}",
-            "palette_directive": "={{$json.child.palette_directive}}",
-            "texture_directive": "={{$json.child.texture_directive}}",
-            "abstraction_target": "={{$json.child.abstraction_target}}",
-            "series_dna_json": "={{$json.child.series_dna_json}}",
-            "prompt_guardrails_json": "={{$json.child.prompt_guardrails_json}}",
-            "quality_score": "={{$json.child.quality_score}}",
-            "state": "={{$json.child.state}}",
-            "lock_owner": "={{$json.child.lock_owner}}",
-            "lock_expires_at": "={{$json.child.lock_expires_at}}",
-            "used_count": "={{$json.child.used_count}}",
-            "last_used_at": "={{$json.child.last_used_at}}",
-            "created_at": "={{$json.child.created_at}}",
-            "updated_at": "={{$json.child.updated_at}}"
+            "scene_seed_id": "={{$json.child_scene_seed.scene_seed_id}}",
+            "trace_id": "={{$json.child_scene_seed.trace_id}}",
+            "crawl_run_id": "={{$json.child_scene_seed.crawl_run_id}}",
+            "origin_type": "={{$json.child_scene_seed.origin_type}}",
+            "source_id": "={{$json.child_scene_seed.source_id}}",
+            "parent_scene_seed_id": "={{$json.child_scene_seed.parent_scene_seed_id}}",
+            "root_scene_seed_id": "={{$json.child_scene_seed.root_scene_seed_id}}",
+            "seed_fragment_ids_json": "={{$json.child_scene_seed.seed_fragment_ids_json}}",
+            "archetype_id": "={{$json.child_scene_seed.archetype_id}}",
+            "subject_mode": "={{$json.child_scene_seed.subject_mode}}",
+            "scene_kernel": "={{$json.child_scene_seed.scene_kernel}}",
+            "concept_thesis": "={{$json.child_scene_seed.concept_thesis}}",
+            "symbolic_tension": "={{$json.child_scene_seed.symbolic_tension}}",
+            "material_anchor": "={{$json.child_scene_seed.material_anchor}}",
+            "spatial_directive": "={{$json.child_scene_seed.spatial_directive}}",
+            "palette_directive": "={{$json.child_scene_seed.palette_directive}}",
+            "texture_directive": "={{$json.child_scene_seed.texture_directive}}",
+            "dominant_subject": "={{$json.child_scene_seed.dominant_subject}}",
+            "setting_family": "={{$json.child_scene_seed.setting_family}}",
+            "ceremonial_logic": "={{$json.child_scene_seed.ceremonial_logic}}",
+            "surreal_pressure": "={{$json.child_scene_seed.surreal_pressure}}",
+            "negative_space_note": "={{$json.child_scene_seed.negative_space_note}}",
+            "omission_notes": "={{$json.child_scene_seed.omission_notes}}",
+            "forbidden_excess_json": "={{$json.child_scene_seed.forbidden_excess_json}}",
+            "render_budget_json": "={{$json.child_scene_seed.render_budget_json}}",
+            "quality_score": "={{$json.child_scene_seed.quality_score}}",
+            "brand_fit_score": "={{$json.child_scene_seed.brand_fit_score}}",
+            "reference_alignment_score": "={{$json.child_scene_seed.reference_alignment_score}}",
+            "state": "={{$json.child_scene_seed.state}}",
+            "lock_owner": "={{$json.child_scene_seed.lock_owner}}",
+            "lock_expires_at": "={{$json.child_scene_seed.lock_expires_at}}",
+            "used_count": "={{$json.child_scene_seed.used_count}}",
+            "last_used_at": "={{$json.child_scene_seed.last_used_at}}",
+            "rejection_reason": "={{$json.child_scene_seed.rejection_reason}}",
+            "created_at": "={{$json.child_scene_seed.created_at}}",
+            "updated_at": "={{$json.child_scene_seed.updated_at}}"
           },
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
@@ -306,7 +352,7 @@
         "options": {}
       },
       "id": "4d4d1841-a0c9-4c37-9045-ab5103c57416",
-      "name": "Upsert Child Concepts",
+      "name": "Upsert Child Scene Seeds",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
@@ -331,10 +377,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "8KjucHiZTtdGzCrh",
+          "value": "XtyvRQfTLySqT16o",
           "mode": "list",
-          "cachedResultName": "TVPX__30__Image Generation Dual Mode",
-          "cachedResultUrl": "/workflow/8KjucHiZTtdGzCrh"
+          "cachedResultName": "TVPX__30__Scene Blueprint Batch Render",
+          "cachedResultUrl": "/workflow/XtyvRQfTLySqT16o"
         },
         "options": {
           "waitForSubWorkflow": false
@@ -419,6 +465,10 @@
             "child_asset_id": "={{$json.lineage.child_asset_id}}",
             "parent_concept_id": "={{$json.lineage.parent_concept_id}}",
             "child_concept_id": "={{$json.lineage.child_concept_id}}",
+            "parent_scene_seed_id": "={{$json.lineage.parent_scene_seed_id}}",
+            "child_scene_seed_id": "={{$json.lineage.child_scene_seed_id}}",
+            "parent_render_candidate_id": "={{$json.lineage.parent_render_candidate_id}}",
+            "child_render_candidate_id": "={{$json.lineage.child_render_candidate_id}}",
             "variation_index": "={{$json.lineage.variation_index}}",
             "variation_instruction": "={{$json.lineage.variation_instruction}}",
             "continuity_rules_json": "={{$json.lineage.continuity_rules_json}}",
@@ -732,7 +782,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const base = $items('Reattach B W Lookup')[0]?.json || {};\nconst existing = base.existing_bw_asset || {};\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('TVPX__50: no binary downloaded for existing B&W asset.');\nconst firstKey = binKeys[0];\n\nfunction previewName(assetId) {\n  const baseName = String(assetId || 'tvpx_bw_preview').replace(/\\.[^.]+$/, '');\n  return baseName + '_telegram_preview.jpg';\n}\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(existing.concept_id || base.parent?.concept?.concept_id || '').trim(),\n    asset_id: String(existing.asset_id || '').trim(),\n    asset_family_id: String(existing.asset_family_id || base.parent?.asset?.asset_family_id || '').trim() || null,\n    assets: {\n      bw: {\n        drive_view_url: String(existing.drive_view_url || '').trim(),\n        drive_download_url: String(existing.drive_download_url || '').trim(),\n        provider_image_url: String(existing.provider_image_url || '').trim()\n      }\n    },\n    preview_filename: previewName(existing.asset_id)\n  },\n  binary: {\n    image: $binary[firstKey]\n  }\n}];"
+        "jsCode": "const base = $items('Reattach B W Lookup')[0]?.json || {};\nconst existing = base.existing_bw_asset || {};\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('TVPX__50: no binary downloaded for existing B&W asset.');\nconst firstKey = binKeys[0];\n\nfunction previewName(assetId) {\n  const baseName = String(assetId || 'tvpx_bw_preview').replace(/\\.[^.]+$/, '');\n  return baseName + '_telegram_preview.jpg';\n}\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(existing.concept_id || base.parent_scene_seed?.scene_seed_id || '').trim(),\n    scene_seed_id: String(existing.scene_seed_id || base.parent_scene_seed?.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(existing.scene_blueprint_id || base.parent_scene_blueprint?.scene_blueprint_id || '').trim(),\n    archetype_id: String(existing.archetype_id || base.parent_archetype?.archetype_id || '').trim(),\n    render_candidate_id: String(existing.render_candidate_id || '').trim(),\n    blueprint_label: String(existing.blueprint_label || base.parent_scene_blueprint?.blueprint_label || '').trim(),\n    asset_id: String(existing.asset_id || '').trim(),\n    asset_family_id: String(existing.asset_family_id || base.parent_asset?.asset_family_id || '').trim() || null,\n    assets: {\n      bw: {\n        drive_view_url: String(existing.drive_view_url || '').trim(),\n        drive_download_url: String(existing.drive_download_url || '').trim(),\n        provider_image_url: String(existing.provider_image_url || '').trim(),\n      },\n    },\n    preview_filename: previewName(existing.asset_id),\n  },\n  binary: {\n    image: $binary[firstKey],\n  },\n}];"
       },
       "id": "6dd6d967-c909-45c7-8489-7d25caec9d3a",
       "name": "Prepare Existing B W Telegram Packet",
@@ -840,12 +890,16 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "reply_index_id": "={{'tvpx_ridx_' + $json.asset_id}}",
+            "reply_index_id": "={{\"tvpx_ridx_\" + $json.asset_id}}",
             "chat_id": "={{$json.ctx.telegram_chat_id}}",
             "message_id": "={{$json.telegram.bw_message_id}}",
             "asset_id": "={{$json.asset_id}}",
             "asset_family_id": "={{$json.asset_family_id}}",
             "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
             "message_role": "reply_bw",
             "reply_mode": "reply_actions",
             "is_active": true,
@@ -868,7 +922,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst parentAsset = j.parent?.asset || {};\nconst parentConcept = j.parent?.concept || {};\nconst bwInstruction = String(j.bw_request?.instruction || '').trim();\nconst fallbackAssetId = `tvpx_as_${fnv1a(String(parentAsset.asset_id || parentConcept.concept_id || j.ctx?.trace_id || '') + '::bw')}`;\nconst assetId = String(parentAsset.asset_id || '').trim().replace(/_(color|bw)$/i, '_bw') || fallbackAssetId;\n\nconst prompt = [\n  'Photoreal black and white fine-art photograph, real-life camera image, not CGI or illustration.',\n  `Scene thesis: ${String(parentConcept.concept_thesis || '').trim()}.`,\n  `Symbolic tension: ${String(parentConcept.symbolic_tension || '').trim()}.`,\n  `Material anchor: ${String(parentConcept.material_anchor || '').trim()}.`,\n  `Spatial directive: ${String(parentConcept.spatial_directive || '').trim()}.`,\n  'Preserve staged inevitability, negative space as pressure, tactile material truth, and believable lens behavior.',\n  'If a person is present, keep natural skin texture, realistic eyes, hands, posture, wardrobe, age detail, and unretouched human asymmetry.',\n  'Use rich tonal separation, filmic shadow rolloff, real grain logic, and physically plausible monochrome light.',\n  bwInstruction\n].filter(Boolean).join(' ');\n\nconst negative = 'cgi, 3d render, illustration, painterly brushstrokes, cartoon stylization, plastic skin, waxy skin, smooth skin, airbrushed skin, beauty retouching, uncanny eyes, bad hands, extra fingers, duplicate limbs, deformed anatomy, fake grain, glossy synthetic surfaces, text, watermark, logo';\n\nreturn [{\n  json: {\n    ctx: j.ctx,\n    concept_id: String(parentConcept.concept_id || '').trim(),\n    asset_id: assetId,\n    asset_family_id: String(parentAsset.asset_family_id || j.reply_index?.asset_family_id || '').trim() || null,\n    concept_row: parentConcept,\n    render_variant: 'bw',\n    prompt,\n    negative_prompt: negative,\n    provider_controls: {\n      image_size: '1024x1280',\n      background: 'opaque',\n      quality: 'high',\n      output_format: 'png'\n    }\n  }\n}];"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst parentAsset = j.parent_asset || {};\nconst parentSceneSeed = j.parent_scene_seed || {};\nconst parentSceneBlueprint = j.parent_scene_blueprint || {};\nconst parentArchetype = j.parent_archetype || {};\nconst bwInstruction = String(j.bw_request?.instruction || '').trim();\nconst fallbackAssetId = \\`tvpx_as_\\${fnv1a(String(parentAsset.asset_id || parentSceneSeed.scene_seed_id || j.ctx?.trace_id || '') + '::bw')}\\`;\nconst assetId = String(parentAsset.asset_id || '').trim().replace(/_(color|bw)$/i, '_bw') || fallbackAssetId;\n\nconst prompt = [\n  'Photoreal black and white fine-art photograph, real-life camera image, not CGI or illustration.',\n  'Archetype family: ' + String(parentArchetype.archetype_name || parentArchetype.archetype_id || '').trim() + '.',\n  'Scene kernel: ' + String(parentSceneSeed.scene_kernel || '').trim() + '.',\n  'Blueprint emphasis: ' + String(parentSceneBlueprint.candidate_prompt_core || parentSceneBlueprint.blueprint_label || '').trim() + '.',\n  'Preserve staged inevitability, negative space as pressure, tactile material truth, and believable lens behavior.',\n  'If a person is present, keep natural skin texture, realistic eyes, hands, posture, wardrobe, age detail, and unretouched human asymmetry.',\n  'Use rich tonal separation, filmic shadow rolloff, real grain logic, and physically plausible monochrome light.',\n  bwInstruction,\n].filter(Boolean).join(' ');\n\nconst negative = 'cgi, 3d render, illustration, painterly brushstrokes, cartoon stylization, plastic skin, waxy skin, smooth skin, airbrushed skin, beauty retouching, uncanny eyes, bad hands, extra fingers, duplicate limbs, deformed anatomy, fake grain, glossy synthetic surfaces, text, watermark, logo';\n\nreturn [{\n  json: {\n    ctx: j.ctx,\n    concept_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n    scene_seed_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(parentSceneBlueprint.scene_blueprint_id || '').trim(),\n    archetype_id: String(parentArchetype.archetype_id || parentSceneSeed.archetype_id || '').trim(),\n    blueprint_label: String(parentSceneBlueprint.blueprint_label || '').trim(),\n    asset_id: assetId,\n    asset_family_id: String(parentAsset.asset_family_id || j.reply_index?.asset_family_id || '').trim() || null,\n    render_variant: 'bw',\n    prompt,\n    negative_prompt: negative,\n    provider_controls: {\n      image_size: '1024x1536',\n      background: 'opaque',\n      quality: 'high',\n      output_format: 'png',\n      num_images: 1,\n    },\n  },\n}];"
       },
       "id": "74fb8a75-48c3-4d0b-8fb5-eb3d829f0b16",
       "name": "Build B W Render Request",
@@ -890,7 +944,7 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.ctx.fal_api_key ? 'true' : 'false'}}",
+              "leftValue": "={{$json.prompt ? \"true\" : \"false\"}}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
@@ -937,10 +991,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "ra2mY4yUOOtS4PHv",
+          "value": "2uSefQgL3Y5q90Vc",
           "mode": "list",
-          "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
-          "cachedResultUrl": "/workflow/ra2mY4yUOOtS4PHv"
+          "cachedResultName": "TVPX__30A__Fal Batch Render Submit And Poll",
+          "cachedResultUrl": "/workflow/2uSefQgL3Y5q90Vc"
         },
         "options": {
           "waitForSubWorkflow": true
@@ -1020,7 +1074,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const render = $json || {};\nconst base = $items('Build B W Render Request')[0]?.json || {};\nconst imageUrl = String(render.image_url || '').trim();\nif (!imageUrl) {\n  throw new Error('TVPX__50: B&W render returned no image_url.');\n}\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(render.concept_id || base.concept_id || '').trim(),\n    asset_id: String(base.asset_id || '').trim(),\n    asset_family_id: String(base.asset_family_id || '').trim() || null,\n    family: {\n      bw: {\n        image_url: imageUrl,\n        provider_image_url: imageUrl,\n        output_format: String(render.output_format || base.provider_controls?.output_format || 'png')\n      }\n    }\n  }\n}];"
+        "jsCode": "const render = $json || {};\nconst base = $items('Build B W Render Request')[0]?.json || {};\nconst imageUrl = String(render.image_url || '').trim();\nif (!imageUrl) throw new Error('TVPX__50: B&W render returned no image_url.');\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    concept_id: String(base.scene_seed_id || base.concept_id || '').trim(),\n    scene_seed_id: String(base.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(base.scene_blueprint_id || '').trim(),\n    archetype_id: String(base.archetype_id || '').trim(),\n    render_candidate_id: String(render.render_candidate_id || '').trim(),\n    blueprint_label: String(base.blueprint_label || '').trim(),\n    asset_id: String(base.asset_id || '').trim(),\n    asset_family_id: String(base.asset_family_id || '').trim() || null,\n    family: {\n      bw: {\n        image_url: imageUrl,\n        provider_image_url: imageUrl,\n        output_format: String(render.output_format || base.provider_controls?.output_format || 'png'),\n        render_candidate_id: String(render.render_candidate_id || '').trim(),\n      },\n    },\n  },\n}];"
       },
       "id": "86d94bf0-3e12-4252-b35e-4f6e7b5d8cab",
       "name": "Build B W Finalizer Payload",
@@ -1093,7 +1147,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $items('Assemble Parent Packet')[0]?.json || {};\nconst parentAsset = base.parent?.asset || {};\nconst parentConcept = base.parent?.concept || {};\nconst rows = $input.all().map(i => i.json).filter(r => r && Object.keys(r).length && String(r.asset_id || '').trim());\nconst priority = { prepared: 5, queued: 4, processing: 3, failed: 2, timed_out: 1, cancelled: 0 };\nrows.sort((a, b) => (priority[String(b.state || '').trim().toLowerCase()] || -1) - (priority[String(a.state || '').trim().toLowerCase()] || -1));\nconst existing = rows[0] || null;\nconst state = String(existing?.state || '').trim().toLowerCase();\nconst shouldUpsert = !existing || ['failed', 'timed_out', 'cancelled'].includes(state);\nconst shouldPrepare = !existing || state === 'queued' || ['failed', 'timed_out', 'cancelled'].includes(state);\nconst stillUrl = String(parentAsset.drive_view_url || parentAsset.drive_download_url || parentAsset.provider_image_url || '').trim();\nif (!stillUrl) {\n  throw new Error('TVPX__50: parent asset has no still image URL for motion prep.');\n}\nconst videoSeedId = String(existing?.video_seed_id || `tvpx_vid_${fnv1a(String(parentAsset.asset_id || parentConcept.concept_id || base.ctx?.trace_id || ''))}`);\nlet ackText = 'The Velvet Paradox — motion prep queued for this image.';\nif (state === 'prepared') ackText = 'The Velvet Paradox — motion prep already exists for this image.';\nelse if (state === 'processing') ackText = 'The Velvet Paradox — motion prep is already in progress for this image.';\nelse if (state === 'queued') ackText = 'The Velvet Paradox — motion prep was already queued; refreshing the prep run now.';\nelse if (['failed', 'timed_out', 'cancelled'].includes(state)) ackText = 'The Velvet Paradox — motion prep was stale, so it has been re-queued.';\nreturn [{\n  json: {\n    ...base,\n    existing_video_seed: existing,\n    video_plan: {\n      state,\n      should_upsert: shouldUpsert,\n      should_prepare: shouldPrepare,\n      ack_text: ackText,\n      video_seed: {\n        video_seed_id: videoSeedId,\n        asset_id: String(parentAsset.asset_id || '').trim(),\n        concept_id: String(parentConcept.concept_id || '').trim(),\n        provider_target: 'fal_video',\n        still_image_drive_url: stillUrl,\n        motion_prompt: String(base.video_request?.instruction || '').trim(),\n        camera_motion_profile: '',\n        duration_hint: '5-7s',\n        aspect_ratio: '4:5',\n        state: 'queued',\n        created_at: new Date().toISOString()\n      }\n    }\n  }\n}];"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $items('Assemble Parent Image DNA Packet')[0]?.json || {};\nconst parentAsset = base.parent_asset || {};\nconst parentSceneSeed = base.parent_scene_seed || {};\nconst parentSceneBlueprint = base.parent_scene_blueprint || {};\nconst parentArchetype = base.parent_archetype || {};\nconst rows = $input.all().map((i) => i.json).filter((row) => row && Object.keys(row).length && String(row.asset_id || '').trim());\nconst priority = { prepared: 5, queued: 4, processing: 3, failed: 2, timed_out: 1, cancelled: 0 };\nrows.sort((a, b) => (priority[String(b.state || '').trim().toLowerCase()] || -1) - (priority[String(a.state || '').trim().toLowerCase()] || -1));\nconst existing = rows[0] || null;\nconst state = String(existing?.state || '').trim().toLowerCase();\nconst shouldUpsert = !existing || ['failed', 'timed_out', 'cancelled'].includes(state);\nconst shouldPrepare = !existing || state === 'queued' || ['failed', 'timed_out', 'cancelled'].includes(state);\nconst stillUrl = String(parentAsset.drive_view_url || parentAsset.drive_download_url || parentAsset.provider_image_url || '').trim();\nif (!stillUrl) throw new Error('TVPX__50: parent asset has no still image URL for motion prep.');\n\nconst videoSeedId = String(existing?.video_seed_id || \\`tvpx_vid_\\${fnv1a(String(parentAsset.asset_id || parentSceneSeed.scene_seed_id || base.ctx?.trace_id || ''))}\\`);\nlet ackText = 'The Velvet Paradox — motion prep queued for this image.';\nif (state === 'prepared') ackText = 'The Velvet Paradox — motion prep already exists for this image.';\nelse if (state === 'processing') ackText = 'The Velvet Paradox — motion prep is already in progress for this image.';\nelse if (state === 'queued') ackText = 'The Velvet Paradox — motion prep was already queued; refreshing the prep run now.';\nelse if (['failed', 'timed_out', 'cancelled'].includes(state)) ackText = 'The Velvet Paradox — motion prep was stale, so it has been re-queued.';\n\nreturn [{\n  json: {\n    ...base,\n    existing_video_seed: existing,\n    video_plan: {\n      state,\n      should_upsert: shouldUpsert,\n      should_prepare: shouldPrepare,\n      ack_text: ackText,\n      video_seed: {\n        video_seed_id: videoSeedId,\n        asset_id: String(parentAsset.asset_id || '').trim(),\n        concept_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n        scene_seed_id: String(parentSceneSeed.scene_seed_id || '').trim(),\n        scene_blueprint_id: String(parentSceneBlueprint.scene_blueprint_id || '').trim(),\n        archetype_id: String(parentArchetype.archetype_id || parentSceneSeed.archetype_id || '').trim(),\n        provider_target: 'fal_video',\n        still_image_drive_url: stillUrl,\n        motion_prompt: String(base.video_request?.instruction || '').trim(),\n        camera_motion_profile: '',\n        duration_hint: '5-7s',\n        aspect_ratio: '4:5',\n        state: 'queued',\n        created_at: new Date().toISOString(),\n      },\n    },\n  },\n}];"
       },
       "id": "1b7974cc-e520-486d-9b1c-9d7f0f0e5c86",
       "name": "Plan Video Request",
@@ -1161,6 +1215,9 @@
             "video_seed_id": "={{$json.video_plan.video_seed.video_seed_id}}",
             "asset_id": "={{$json.video_plan.video_seed.asset_id}}",
             "concept_id": "={{$json.video_plan.video_seed.concept_id}}",
+            "scene_seed_id": "={{$json.video_plan.video_seed.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.video_plan.video_seed.scene_blueprint_id}}",
+            "archetype_id": "={{$json.video_plan.video_seed.archetype_id}}",
             "provider_target": "={{$json.video_plan.video_seed.provider_target}}",
             "still_image_drive_url": "={{$json.video_plan.video_seed.still_image_drive_url}}",
             "motion_prompt": "={{$json.video_plan.video_seed.motion_prompt}}",
@@ -1282,7 +1339,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const j = $json || {};\nconst child = (j.child && typeof j.child === 'object') ? j.child : {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? { ...j.ctx } : {};\nconst conceptId = String(child.concept_id || j.concept_id || '').trim();\nif (!conceptId) {\n  throw new Error('TVPX__50: series child concept_id missing before image generation dispatch.');\n}\nreturn [{\n  json: {\n    ...j,\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: String(ctx.asset_family_id || j.asset_family_id || '').trim() || null\n  }\n}];"
+        "jsCode": "const j = $json || {};\nconst child = j.child_scene_seed || {};\nconst ctx = j.ctx || {};\nconst sceneSeedId = String(child.scene_seed_id || j.scene_seed_id || '').trim();\nif (!sceneSeedId) throw new Error('TVPX__50: child scene_seed_id missing before image generation dispatch.');\n\nreturn [{\n  json: {\n    ...j,\n    ctx,\n    concept_id: sceneSeedId,\n    scene_seed_id: sceneSeedId,\n    asset_family_id: String(ctx.asset_family_id || j.asset_family_id || '').trim() || null,\n  },\n}];"
       },
       "id": "0fad9496-55da-4c8c-9057-d4ffcd756759",
       "name": "Build Image Generation Payload",
@@ -1314,6 +1371,80 @@
       "position": [
         1120,
         416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Reattach After Reply Lookup')[0]?.json || {};\nconst parentAsset = $items('Get Parent Asset')[0]?.json || {};\nconst parentSceneSeed = $items('Get Parent Scene Seed')[0]?.json || {};\nconst parentSceneBlueprint = $items('Get Parent Scene Blueprint')[0]?.json || {};\nconst parentArchetype = $items('Get Parent Archetype')[0]?.json || {};\n\nif (!parentAsset.asset_id) throw new Error('TVPX__50: parent asset not found.');\nif (!parentSceneSeed.scene_seed_id) throw new Error('TVPX__50: parent scene seed not found.');\nif (!parentSceneBlueprint.scene_blueprint_id) throw new Error('TVPX__50: parent scene blueprint not found.');\nif (!parentArchetype.archetype_id) throw new Error('TVPX__50: parent archetype not found.');\n\nreturn [{\n  json: {\n    ctx: base.ctx,\n    tg: base.tg,\n    reply_action: base.reply_action,\n    series_request: base.series_request,\n    bw_request: base.bw_request,\n    video_request: base.video_request,\n    series_command: base.series_request?.instruction || base.tg?.text || '',\n    reply_index: base.reply_index,\n    parent_asset: parentAsset,\n    parent_scene_seed: parentSceneSeed,\n    parent_scene_blueprint: parentSceneBlueprint,\n    parent_archetype: parentArchetype,\n  },\n}];"
+      },
+      "id": "8146fc45-3b85-490d-a31d-516e13c21c94",
+      "name": "Assemble Parent Image DNA Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MANUAL_DT__TVPX_SERIES_MUTATION_BANK",
+          "mode": "list",
+          "cachedResultName": "tvpx_series_mutation_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SERIES_MUTATION_BANK"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "mutation_id",
+              "keyValue": "={{$json.mutation.mutation_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mutation_id": "={{$json.mutation.mutation_id}}",
+            "parent_asset_id": "={{$json.mutation.parent_asset_id}}",
+            "parent_render_candidate_id": "={{$json.mutation.parent_render_candidate_id}}",
+            "parent_scene_seed_id": "={{$json.mutation.parent_scene_seed_id}}",
+            "parent_scene_blueprint_id": "={{$json.mutation.parent_scene_blueprint_id}}",
+            "child_scene_seed_id": "={{$json.mutation.child_scene_seed_id}}",
+            "mutation_axis": "={{$json.mutation.mutation_axis}}",
+            "mutation_instruction": "={{$json.mutation.mutation_instruction}}",
+            "status": "={{$json.mutation.status}}",
+            "created_at": "={{$json.mutation.created_at}}",
+            "updated_at": "={{$json.mutation.updated_at}}"
+          },
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "bc51a956-fd16-4b7f-a190-d5e1158c3be2",
+      "name": "Upsert Series Mutation Bank",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        800,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Build Child Scene Seeds', 0, 0)[$itemIndex]?.json || $items('Build Child Scene Seeds')[$itemIndex]?.json || null;\nif (!base) throw new Error('TVPX__50: missing child scene seed packet.');\nreturn [{ json: base }];"
+      },
+      "id": "34f6a1d9-8f57-49be-a393-161dcf493796",
+      "name": "Pass Child Scene Seed Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        352
       ]
     }
   ],
@@ -1369,11 +1500,6 @@
             "node": "Get Parent Asset",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Get Parent Concept",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -1382,36 +1508,47 @@
       "main": [
         [
           {
-            "node": "Merge Parent Asset And Concept",
+            "node": "Get Parent Scene Seed",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get Parent Concept": {
+    "Get Parent Scene Seed": {
       "main": [
         [
           {
-            "node": "Merge Parent Asset And Concept",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge Parent Asset And Concept": {
-      "main": [
-        [
-          {
-            "node": "Assemble Parent Packet",
+            "node": "Get Parent Scene Blueprint",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Assemble Parent Packet": {
+    "Get Parent Scene Blueprint": {
+      "main": [
+        [
+          {
+            "node": "Get Parent Archetype",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Parent Archetype": {
+      "main": [
+        [
+          {
+            "node": "Assemble Parent Image DNA Packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Parent Image DNA Packet": {
       "main": [
         [
           {
@@ -1426,7 +1563,7 @@
       "main": [
         [
           {
-            "node": "LLM Series Variation Designer",
+            "node": "LLM Series Mutation Designer",
             "type": "main",
             "index": 0
           }
@@ -1458,42 +1595,58 @@
         ]
       ]
     },
-    "LLM Series Variation Designer": {
+    "LLM Series Mutation Designer": {
       "main": [
         [
           {
-            "node": "Parse Series Plan",
+            "node": "Parse Series Mutation JSON",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse Series Plan": {
+    "Parse Series Mutation JSON": {
       "main": [
         [
           {
-            "node": "Build Child Concepts",
+            "node": "Build Child Scene Seeds",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Build Child Concepts": {
+    "Build Child Scene Seeds": {
       "main": [
         [
           {
-            "node": "Upsert Child Concepts",
+            "node": "Upsert Child Scene Seeds",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Upsert Child Concepts": {
+    "Upsert Child Scene Seeds": {
       "main": [
         [
+          {
+            "node": "Pass Child Scene Seed Packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass Child Scene Seed Packet": {
+      "main": [
+        [
+          {
+            "node": "Upsert Series Mutation Bank",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "Loop Variations",
             "type": "main",
@@ -1520,22 +1673,11 @@
         ]
       ]
     },
-    "OpenAI Series Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "LLM Series Variation Designer",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Next Variation": {
+    "Build Image Generation Payload": {
       "main": [
         [
           {
-            "node": "Loop Variations",
+            "node": "Upsert Series Lineage",
             "type": "main",
             "index": 0
           }
@@ -1558,13 +1700,13 @@
         ]
       ]
     },
-    "Series Model xAI Fallback Model": {
-      "ai_languageModel": [
+    "Next Variation": {
+      "main": [
         [
           {
-            "node": "LLM Series Variation Designer",
-            "type": "ai_languageModel",
-            "index": 1
+            "node": "Loop Variations",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1631,6 +1773,17 @@
         ]
       ]
     },
+    "Compress Existing B W Telegram Preview": {
+      "main": [
+        [
+          {
+            "node": "Send Existing B W To Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Send Existing B W To Telegram": {
       "main": [
         [
@@ -1661,8 +1814,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Build B W Render Request": {
@@ -1825,24 +1977,24 @@
         ]
       ]
     },
-    "Build Image Generation Payload": {
-      "main": [
+    "OpenAI Series Model": {
+      "ai_languageModel": [
         [
           {
-            "node": "Upsert Series Lineage",
-            "type": "main",
+            "node": "LLM Series Mutation Designer",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "Compress Existing B W Telegram Preview": {
-      "main": [
+    "Series Model xAI Fallback Model": {
+      "ai_languageModel": [
         [
           {
-            "node": "Send Existing B W To Telegram",
-            "type": "main",
-            "index": 0
+            "node": "LLM Series Mutation Designer",
+            "type": "ai_languageModel",
+            "index": 1
           }
         ]
       ]
@@ -1856,17 +2008,17 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "0aa20183-b672-461d-9e23-6c7b5ca9fb2e",
+  "versionId": "fc1f931a-a82d-469c-a42f-db44e67229fc",
   "activeVersionId": null,
-  "versionCounter": 19,
+  "versionCounter": 1,
   "triggerCount": 0,
   "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-03-05T16:20:57.513Z",
-      "createdAt": "2026-03-05T16:20:57.513Z",
+      "updatedAt": "2026-03-06T19:52:04.092Z",
+      "createdAt": "2026-03-06T19:52:04.092Z",
       "role": "workflow:owner",
-      "workflowId": "EKpVMmrlNf2ESBSO",
+      "workflowId": "sYmAtmmBITCgC6Ks",
       "projectId": "NK3VX1YKPgfTJeSY",
       "project": {
         "updatedAt": "2025-12-08T15:00:57.909Z",
