@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T23:17:14.109Z",
+  "updatedAt": "2026-03-06T23:48:40.502Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "XtyvRQfTLySqT16o",
   "name": "TVPX__30__Scene Blueprint Batch Render",
@@ -17,8 +17,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        320,
-        448
+        312,
+        424
       ],
       "credentials": {
         "openAiApi": {
@@ -37,8 +37,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        448,
-        448
+        440,
+        424
       ],
       "credentials": {
         "xAiApi": {
@@ -57,7 +57,7 @@
       "typeVersion": 2,
       "position": [
         -1936,
-        224
+        200
       ]
     },
     {
@@ -90,7 +90,7 @@
       "typeVersion": 2,
       "position": [
         -1712,
-        224
+        200
       ]
     },
     {
@@ -119,7 +119,7 @@
       "typeVersion": 1,
       "position": [
         -1488,
-        224
+        128
       ]
     },
     {
@@ -148,7 +148,7 @@
       "typeVersion": 1,
       "position": [
         -1488,
-        416
+        320
       ]
     },
     {
@@ -161,7 +161,7 @@
       "typeVersion": 2,
       "position": [
         -1264,
-        416
+        320
       ]
     },
     {
@@ -174,7 +174,7 @@
       "typeVersion": 2,
       "position": [
         -1264,
-        224
+        128
       ]
     },
     {
@@ -187,7 +187,7 @@
       "typeVersion": 2,
       "position": [
         -1040,
-        224
+        200
       ]
     },
     {
@@ -231,7 +231,7 @@
       "typeVersion": 1,
       "position": [
         -816,
-        224
+        200
       ]
     },
     {
@@ -260,7 +260,7 @@
       "typeVersion": 1,
       "position": [
         -592,
-        224
+        200
       ]
     },
     {
@@ -273,7 +273,7 @@
       "typeVersion": 2,
       "position": [
         -368,
-        224
+        200
       ]
     },
     {
@@ -303,7 +303,7 @@
       "typeVersion": 1,
       "position": [
         -144,
-        224
+        200
       ],
       "alwaysOutputData": true
     },
@@ -317,7 +317,7 @@
       "typeVersion": 2,
       "position": [
         80,
-        224
+        200
       ]
     },
     {
@@ -340,7 +340,7 @@
       "typeVersion": 1.9,
       "position": [
         304,
-        224
+        200
       ]
     },
     {
@@ -353,7 +353,7 @@
       "typeVersion": 2,
       "position": [
         656,
-        224
+        200
       ]
     },
     {
@@ -366,7 +366,7 @@
       "typeVersion": 2,
       "position": [
         880,
-        224
+        200
       ]
     },
     {
@@ -702,19 +702,19 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1168,
-        160
+        1104,
+        128
       ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nBlueprint:\n{{ JSON.stringify($json.blueprint, null, 2) }}\n\nWrite a production-grade GPT Image 1.5 prompt that belongs to this archetype and avoids editorial illustration.",
+        "text": "=Prompt-smith packet:\n{{ JSON.stringify($json.prompt_smith_packet, null, 2) }}\n\nWrite one production-grade GPT Image prompt that stays fully faithful to this locked packet.",
         "needsFallback": true,
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V2 for The Velvet Paradox.\n\nWrite one image-native production prompt from one scene blueprint.\n\nRules:\n- 90 to 135 words preferred\n- 150 words hard ceiling\n- write as one coherent shot, not an inventory list\n- lead with frame, subject, gesture, and atmosphere\n- include only the few material details that will visibly matter\n- preserve negative space and ceremonial restraint\n- one surreal lift only, rendered as plausible physical reality\n- no symbolism language\n- no article language\n- no concept explanation\n- no thesis language\n- no “representing,” “evoking,” “suggesting,” or “symbolizing”\n- no extra props beyond what the blueprint requires\n- avoid checklist rhythm; write like a premium still-image brief\n\nPrefer one complete flowing paragraph with sentence rhythm, not stacked noun phrases.\n\nThe output must feel like a premium still-image production brief.\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 2\n  }\n}"
+              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V3 for The Velvet Paradox.\n\nYour job is to convert one locked prompt-smith packet into one render-ready still-image brief.\n\nYou are not inventing a new scene.\nYou are preserving the locked blueprint and expressing it in image-native language.\n\nNon-negotiable fidelity rules:\n- preserve the same shot family\n- preserve the same subject count\n- preserve the same primary gesture\n- preserve the same main props\n- preserve the same surreal mechanism\n- preserve the same negative-space logic\n- do not upgrade the scene into a different composition\n- do not swap the camera angle for a more dramatic one\n- do not replace the blueprint’s material world with a prettier one\n- do not add props that are not already required\n- do not let archetype DNA override the visible scene; it should only tune it\n\nWriting rules:\n- 90 to 120 words preferred\n- 130 words hard ceiling\n- one coherent paragraph only\n- write as one shot, not an inventory\n- begin with frame, subject, gesture, and atmosphere\n- use the locked blueprint candidate_prompt_core as the backbone\n- densify only with visibly decisive details from visible_scene and reference_family\n- preserve restraint\n- keep the surreal lift slight, plausible, and materially grounded\n- the surreal lift must read like a slightly strange fact inside the scene, not a narrated event\n- do not give equal descriptive weight to every prop\n- one or two props may carry the image; the rest remain subordinate\n- avoid checklist rhythm\n- avoid “beautiful”, “haunting”, “evocative”, “symbolic”, “allegorical”, “ominous”\n- no symbolism language\n- no article language\n- no concept explanation\n- no thesis language\n- no “representing,” “evoking,” “suggesting,” or “symbolizing”\n\nAvoid these words and phrases:\nunnaturally, improbably, surgical precision, mirror-flat, exact ceremony, ghostly, ominous, symbolic, allegorical\n\nPrefer:\nslightly, subtly, faintly, barely, almost imperceptibly\n\nKeep the negative prompt short and project-specific.\nPrefer one compact exclusion list, not exhaustive safety laundry lists.\n\nDefault negative prompt style:\ntext, logos, memorial markers, religious iconography, glowing effects, fantasy elements, studio lighting, strong chiaroscuro, crowds, vehicles, animals, fences, urban clutter, oversaturated color, glossy retouching, prop clutter\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 2\n  }\n}"
             }
           ]
         },
@@ -725,34 +725,34 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        1104,
-        448
+        1328,
+        464
       ]
     },
     {
       "parameters": {
-        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction trimToSentenceBoundary(v, maxWords = 150) {\n  const text = cleanText(v);\n  const words = text.split(/\\s+/);\n  if (words.length <= maxWords) return text;\n\n  const clipped = words.slice(0, maxWords).join(' ');\n  const lastSentenceEnd = Math.max(\n    clipped.lastIndexOf('.'),\n    clipped.lastIndexOf('!'),\n    clipped.lastIndexOf('?')\n  );\n\n  if (lastSentenceEnd > 40) {\n    return clipped.slice(0, lastSentenceEnd + 1).trim();\n  }\n\n  const lastComma = clipped.lastIndexOf(',');\n  if (lastComma > 40) {\n    return clipped.slice(0, lastComma).trim() + '.';\n  }\n\n  return clipped.trim() + '.';\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'text',\n    'logos',\n    'memorial markers',\n    'religious symbols',\n    'candles',\n    'framed photos',\n    'glossy retouching',\n    'editorial illustration',\n    'infographic feel',\n    'concept-art styling',\n    'fantasy effects',\n    'glowing aura',\n    'dramatic beams',\n    'theatrical shadows',\n    'extra figures',\n    'vehicles',\n    'animals',\n    'fences',\n    'urban clutter',\n    'wide-angle distortion',\n    'fisheye',\n    'oversaturated color',\n    'cgi sheen',\n    'prop clutter'\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst base = $items('Explode Blueprint Pack')[0]?.json || $json;\nconst raw = $json.text || $json.output || $json.result || $json;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = trimToSentenceBoundary(masterPrompt, 150);\n\nif (wordCount(masterPrompt) < 55) {\n  throw new Error('TVPX__30: master_prompt too short.');\n}\n\nif (!/[.!?]$/.test(masterPrompt)) {\n  throw new Error('TVPX__30: master_prompt appears truncated.');\n}\n\nconst badEndingPatterns = [\n  /\\bechoing\\.?$/i,\n  /\\bsuggesting\\.?$/i,\n  /\\bshowing\\.?$/i,\n  /\\bwith\\.?$/i,\n  /\\band\\.?$/i,\n  /\\bof\\.?$/i,\n  /\\ba\\.?$/i,\n];\n\nfor (const rx of badEndingPatterns) {\n  if (rx.test(masterPrompt)) {\n    throw new Error('TVPX__30: master_prompt appears clipped at the end.');\n  }\n}\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n  'symbolizing',\n  'representing',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nconst providerControls = parsed.provider_controls || {};\n\nreturn [{\n  json: {\n    ...$items('Explode Blueprint Pack')[0].json,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n      image_size: String(parsed.image_size || base.ctx?.image_size || '1024x1536'),\n      provider_controls: {\n        quality: String(providerControls.quality || base.ctx?.quality || 'high'),\n        background: String(providerControls.background || base.ctx?.background || 'opaque'),\n        output_format: String(providerControls.output_format || base.ctx?.output_format || 'png'),\n        num_images: Number(providerControls.num_images || 2),\n      },\n    },\n  },\n}];"
+        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction trimToSentenceBoundary(v, maxWords = 130) {\n  const text = cleanText(v);\n  const words = text.split(/\\s+/);\n  if (words.length <= maxWords) return text;\n\n  const clipped = words.slice(0, maxWords).join(' ');\n  const lastSentenceEnd = Math.max(\n    clipped.lastIndexOf('.'),\n    clipped.lastIndexOf('!'),\n    clipped.lastIndexOf('?')\n  );\n\n  if (lastSentenceEnd > 40) {\n    return clipped.slice(0, lastSentenceEnd + 1).trim();\n  }\n\n  const lastComma = clipped.lastIndexOf(',');\n  if (lastComma > 40) {\n    return clipped.slice(0, lastComma).trim() + '.';\n  }\n\n  return clipped.trim() + '.';\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'text',\n    'logos',\n    'memorial markers',\n    'religious iconography',\n    'glowing effects',\n    'fantasy elements',\n    'studio lighting',\n    'strong chiaroscuro',\n    'crowds',\n    'vehicles',\n    'animals',\n    'fences',\n    'urban clutter',\n    'oversaturated color',\n    'glossy retouching',\n    'prop clutter',\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst STOP = new Set([\n  'with','from','into','onto','over','under','near','just','than','then','that','this','those','these',\n  'their','there','where','while','which','along','across','toward','towards','around','through',\n  'holds','holding','frame','camera','shot','cinematic','filmic','realism','realistic','image','native',\n  'static','slight','slightly','subtle','subtly','faint','faintly','barely','almost','imperceptibly',\n  'late','thirties','woman','figure','field','scene','subject'\n]);\n\nfunction tokenArray(v) {\n  return cleanText(v)\n    .toLowerCase()\n    .replace(/[^a-z0-9\\s-]/g, ' ')\n    .split(/\\s+/)\n    .map((t) => t.trim())\n    .filter((t) => t.length >= 4 && !STOP.has(t));\n}\n\nfunction tokenSet(v) {\n  return new Set(tokenArray(v));\n}\n\nfunction buildAnchorTokens(base) {\n  const packet = base.prompt_smith_packet || {};\n  const source = [\n    packet.locked_blueprint?.candidate_prompt_core,\n    packet.locked_blueprint?.environment,\n    packet.locked_blueprint?.subject_arrangement,\n    packet.locked_blueprint?.one_surreal_lift,\n    packet.visible_scene?.material_anchor,\n    packet.visible_scene?.dominant_subject,\n    packet.visible_scene?.setting_family,\n    packet.visible_scene?.spatial_directive,\n    base.blueprint?.candidate_prompt_core,\n    base.scene_seed_row?.material_anchor,\n    base.scene_seed_row?.dominant_subject,\n    base.scene_seed_row?.setting_family,\n  ]\n    .filter(Boolean)\n    .join(' ');\n\n  const freq = {};\n  for (const token of tokenArray(source)) {\n    freq[token] = (freq[token] || 0) + 1;\n  }\n\n  return Object.entries(freq)\n    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)\n    .map(([token]) => token)\n    .slice(0, 14);\n}\n\nfunction ensureShotFamily(prompt, base) {\n  const blueprintText = [\n    base.blueprint?.shot_type,\n    base.blueprint?.camera_height,\n    base.blueprint?.camera_distance,\n    base.prompt_smith_packet?.locked_blueprint?.shot_type,\n    base.prompt_smith_packet?.locked_blueprint?.camera_height,\n    base.prompt_smith_packet?.locked_blueprint?.camera_distance,\n  ].join(' ').toLowerCase();\n\n  const p = prompt.toLowerCase();\n\n  const rules = [\n    { source: /medium-wide|medium wide/, prompt: /\\bmedium\\b|\\bwide\\b/ },\n    { source: /wide/, prompt: /\\bwide\\b/ },\n    { source: /close-up|close up|medium close-up|medium close up/, prompt: /\\bclose\\b/ },\n    { source: /overhead/, prompt: /\\boverhead\\b|\\bhigh\\b/ },\n    { source: /profile/, prompt: /\\bprofile\\b/ },\n    { source: /static/, prompt: /\\bstatic\\b/ },\n    { source: /low|ground-level|ground level/, prompt: /\\blow\\b|\\bground\\b/ },\n    { source: /high/, prompt: /\\bhigh\\b|\\boverhead\\b/ },\n  ];\n\n  for (const rule of rules) {\n    if (rule.source.test(blueprintText) && !rule.prompt.test(p)) {\n      return false;\n    }\n  }\n\n  return true;\n}\n\nfunction ensureRequiredMaterialPresence(prompt, base) {\n  const source = [\n    base.prompt_smith_packet?.visible_scene?.material_anchor,\n    base.prompt_smith_packet?.locked_blueprint?.candidate_prompt_core,\n    base.scene_seed_row?.material_anchor,\n    base.blueprint?.candidate_prompt_core,\n  ].join(' ').toLowerCase();\n\n  const p = prompt.toLowerCase();\n\n  const groups = [\n    { detect: /\\bbowl\\b|\\bceramic\\b/, require: /\\bbowl\\b|\\bceramic\\b/ },\n    { detect: /\\bglass\\b|\\bwater\\b|\\bpour\\b|\\bstream\\b/, require: /\\bglass\\b|\\bwater\\b|\\bpour\\b|\\bstream\\b/ },\n    { detect: /\\bblanket\\b|\\bcloth\\b|\\bfrayed\\b/, require: /\\bblanket\\b|\\bcloth\\b|\\bfrayed\\b/ },\n  ];\n\n  for (const group of groups) {\n    if (group.detect.test(source) && !group.require.test(p)) {\n      return false;\n    }\n  }\n\n  return true;\n}\n\nconst base = $json || {};\nconst raw = base.text || base.output || base.result || base;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = trimToSentenceBoundary(masterPrompt, 130);\n\nif (wordCount(masterPrompt) < 55) {\n  throw new Error('TVPX__30: master_prompt too short.');\n}\n\nif (!/[.!?]$/.test(masterPrompt)) {\n  throw new Error('TVPX__30: master_prompt appears truncated.');\n}\n\nconst badEndingPatterns = [\n  /\\bechoing\\.?$/i,\n  /\\bsuggesting\\.?$/i,\n  /\\bshowing\\.?$/i,\n  /\\bwith\\.?$/i,\n  /\\band\\.?$/i,\n  /\\bof\\.?$/i,\n  /\\ba\\.?$/i,\n];\n\nfor (const rx of badEndingPatterns) {\n  if (rx.test(masterPrompt)) {\n    throw new Error('TVPX__30: master_prompt appears clipped at the end.');\n  }\n}\n\nconst overExplicitSurreal = [\n  'unnaturally',\n  'improbably',\n  'surgical precision',\n  'mirror-flat',\n  'no splash',\n  'ghostly',\n  'ominous',\n  'allegorical',\n  'symbolic',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of overExplicitSurreal) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: surreal lift phrased too explicitly: ${phrase}`);\n  }\n}\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n  'symbolizing',\n  'representing',\n  'evoking',\n  'suggesting',\n];\n\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nif (!ensureShotFamily(masterPrompt, base)) {\n  throw new Error('TVPX__30: prompt drifted away from blueprint shot family.');\n}\n\nif (!ensureRequiredMaterialPresence(masterPrompt, base)) {\n  throw new Error('TVPX__30: prompt dropped a required material anchor.');\n}\n\nconst anchors = buildAnchorTokens(base);\nconst promptTokens = tokenSet(masterPrompt);\nconst overlap = anchors.filter((token) => promptTokens.has(token));\nconst minOverlap = anchors.length ? Math.max(5, Math.ceil(Math.min(anchors.length, 12) * 0.45)) : 0;\n\nif (anchors.length && overlap.length < minOverlap) {\n  throw new Error(\n    `TVPX__30: prompt fidelity too low. Anchor overlap ${overlap.length}/${anchors.length}. Missing anchors: ${anchors.filter((t) => !promptTokens.has(t)).slice(0, 8).join(', ')}`\n  );\n}\n\nconst providerControls = parsed.provider_controls || {};\n\nreturn [\n  {\n    json: {\n      ...base,\n      prompt_spec: {\n        master_prompt: masterPrompt,\n        negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n        image_size: String(parsed.image_size || base.ctx?.image_size || '1024x1536'),\n        provider_controls: {\n          quality: String(providerControls.quality || base.ctx?.quality || 'high'),\n          background: String(providerControls.background || base.ctx?.background || 'opaque'),\n          output_format: String(providerControls.output_format || base.ctx?.output_format || 'png'),\n          num_images: Number(providerControls.num_images || 2),\n        },\n      },\n    },\n  },\n];"
       },
       "id": "33b1f7b3-73ca-4a00-ab27-1de19b98ebee",
       "name": "Parse Prompt Spec V2",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1680,
-        304
+        1904,
+        320
       ]
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const promptSpec = (entry.prompt_spec && typeof entry.prompt_spec === 'object') ? entry.prompt_spec : {};\n  const controls = (promptSpec.provider_controls && typeof promptSpec.provider_controls === 'object') ? promptSpec.provider_controls : {};\n  const imageSize = String(controls.image_size || promptSpec.image_size || entry.ctx?.image_size || '1024x1536');\n  const outputFormat = String(controls.output_format || entry.ctx?.output_format || 'png');\n  const background = String(controls.background || entry.ctx?.background || 'opaque');\n  const quality = String(controls.quality || entry.ctx?.quality || 'high');\n  const numImages = Number(controls.num_images || 2);\n\n  const packetId = `tvpx_rp_${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    promptSpec.master_prompt,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: imageSize,\n        output_format: outputFormat,\n        background,\n        quality,\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || `bp_${idx + 1}`).trim(),\n      blueprint: entry.blueprint,\n      prompt: String(promptSpec.master_prompt || '').trim(),\n      negative_prompt: String(promptSpec.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n  image_size: String(entry.prompt_spec?.image_size || entry.ctx?.image_size || '1024x1536'),\n  background: String(entry.prompt_spec?.provider_controls?.background || entry.ctx?.background || 'opaque'),\n  quality: String(entry.prompt_spec?.provider_controls?.quality || entry.ctx?.quality || 'high'),\n  output_format: String(entry.prompt_spec?.provider_controls?.output_format || entry.ctx?.output_format || 'png'),\n  num_images: Number(entry.prompt_spec?.provider_controls?.num_images || 2),\n},\n    },\n  };\n});"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const promptSpec = (entry.prompt_spec && typeof entry.prompt_spec === 'object') ? entry.prompt_spec : {};\n  const controls = (promptSpec.provider_controls && typeof promptSpec.provider_controls === 'object')\n    ? promptSpec.provider_controls\n    : {};\n\n  const imageSize = String(promptSpec.image_size || controls.image_size || entry.ctx?.image_size || '1024x1536').trim();\n  const outputFormat = String(controls.output_format || entry.ctx?.output_format || 'png').trim();\n  const background = String(controls.background || entry.ctx?.background || 'opaque').trim();\n  const quality = String(controls.quality || entry.ctx?.quality || 'high').trim();\n  const numImages = Number(controls.num_images || 2);\n\n  const masterPrompt = String(promptSpec.master_prompt || '').trim();\n  if (!masterPrompt) throw new Error('TVPX__30: missing master_prompt in Build Color Render Packets.');\n\n  const packetId = `tvpx_rp_${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    masterPrompt,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: imageSize,\n        output_format: outputFormat,\n        background,\n        quality,\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || `bp_${idx + 1}`).trim(),\n      blueprint: entry.blueprint,\n      prompt_smith_packet: entry.prompt_smith_packet || null,\n      prompt: masterPrompt,\n      negative_prompt: String(promptSpec.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n        image_size: imageSize,\n        background,\n        quality,\n        output_format: outputFormat,\n        num_images: numImages,\n      },\n    },\n  };\n});"
       },
       "id": "90e5bab3-8e0c-4f13-a158-82f6db46e115",
       "name": "Build Color Render Packets",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1904,
-        304
+        2128,
+        320
       ]
     },
     {
@@ -796,8 +796,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2128,
-        304
+        2352,
+        320
       ]
     },
     {
@@ -1044,7 +1044,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2352,
+        2576,
         128
       ]
     },
@@ -1381,7 +1381,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2352,
+        2576,
         320
       ]
     },
@@ -1404,7 +1404,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2352,
+        2576,
         608
       ],
       "retryOnFail": true,
@@ -1412,8 +1412,8 @@
       "waitBetweenTries": 3000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "VijtmjxOSOWVCI5m",
-          "name": "falTextToImage"
+          "id": "9hbcIyr3JmvWgxPb",
+          "name": "OpenAI bearer"
         }
       }
     },
@@ -1428,8 +1428,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2576,
-        544
+        2800,
+        536
       ]
     },
     {
@@ -1441,8 +1441,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2800,
-        544
+        3024,
+        536
       ]
     },
     {
@@ -1707,8 +1707,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3024,
-        256
+        3248,
+        248
       ]
     },
     {
@@ -1955,8 +1955,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3024,
-        448
+        3248,
+        440
       ]
     },
     {
@@ -1968,8 +1968,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3024,
-        640
+        3248,
+        632
       ]
     },
     {
@@ -2014,8 +2014,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3248,
-        544
+        3472,
+        536
       ]
     },
     {
@@ -2027,8 +2027,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3248,
-        736
+        3472,
+        728
       ]
     },
     {
@@ -2070,8 +2070,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3472,
-        736
+        3696,
+        728
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -2086,8 +2086,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3696,
-        736
+        3920,
+        728
       ]
     },
     {
@@ -2127,8 +2127,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3920,
-        736
+        4144,
+        728
       ]
     },
     {
@@ -2140,8 +2140,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4144,
-        736
+        4368,
+        728
       ]
     },
     {
@@ -2181,8 +2181,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4368,
-        736
+        4592,
+        728
       ]
     },
     {
@@ -2194,8 +2194,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4592,
-        736
+        4816,
+        728
       ]
     },
     {
@@ -2245,8 +2245,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        4816,
-        736
+        5040,
+        728
       ]
     },
     {
@@ -2255,7 +2255,7 @@
       "typeVersion": 1,
       "position": [
         -2160,
-        224
+        200
       ],
       "id": "165a5aac-076d-4a65-9b98-0cf734c515d3",
       "name": "When clicking ‘Execute workflow’"
@@ -2269,11 +2269,24 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1456,
-        304
+        1680,
+        320
       ],
       "id": "f5656b41-e034-44a6-b2a6-93d5cf650b06",
       "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseJsonMaybe(value, fallback) {\n  if (Array.isArray(value) || (value && typeof value === 'object')) return value;\n  const text = String(value || '').trim();\n  if (!text) return fallback;\n  try {\n    return JSON.parse(text);\n  } catch {\n    return fallback;\n  }\n}\n\nfunction clean(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nconst seed = $json.scene_seed_row || {};\nconst arch = $json.archetype_row || {};\nconst bp = $json.blueprint || {};\n\nconst renderBudget = parseJsonMaybe(seed.render_budget_json, {});\nconst forbiddenExcess = parseJsonMaybe(seed.forbidden_excess_json, []);\nconst materialDNA = parseJsonMaybe(arch.material_dna_json, []);\nconst surrealLiftRules = parseJsonMaybe(arch.surreal_lift_rules_json, []);\nconst forbiddenTells = parseJsonMaybe(arch.forbidden_tells_json, []);\n\nreturn [\n  {\n    json: {\n      ...$json,\n      prompt_smith_packet: {\n        reference_family: {\n          archetype_id: clean(arch.archetype_id),\n          archetype_name: clean(arch.archetype_name),\n          camera_dna: clean(arch.camera_dna),\n          palette_dna: clean(arch.palette_dna),\n          material_dna: materialDNA.map(clean).filter(Boolean),\n          negative_space_dna: clean(arch.negative_space_dna),\n          surreal_lift_rules: surrealLiftRules.map(clean).filter(Boolean),\n          forbidden_tells: forbiddenTells.map(clean).filter(Boolean),\n          notes: clean(arch.notes),\n        },\n        visible_scene: {\n          dominant_subject: clean(seed.dominant_subject),\n          material_anchor: clean(seed.material_anchor),\n          setting_family: clean(seed.setting_family),\n          spatial_directive: clean(seed.spatial_directive),\n          palette_directive: clean(seed.palette_directive),\n          texture_directive: clean(seed.texture_directive),\n          negative_space_note: clean(seed.negative_space_note),\n          omission_notes: clean(seed.omission_notes),\n        },\n        locked_blueprint: {\n          blueprint_label: clean(bp.blueprint_label),\n          shot_type: clean(bp.shot_type),\n          camera_height: clean(bp.camera_height),\n          camera_distance: clean(bp.camera_distance),\n          subject_arrangement: clean(bp.subject_arrangement),\n          environment: clean(bp.environment),\n          light_weather: clean(bp.light_weather),\n          wardrobe_surface_logic: clean(bp.wardrobe_surface_logic),\n          palette_weather: clean(bp.palette_weather),\n          one_surreal_lift: clean(bp.one_surreal_lift),\n          what_is_not_shown: clean(bp.what_is_not_shown),\n          candidate_prompt_core: clean(bp.candidate_prompt_core),\n        },\n        render_limits: {\n          max_named_props: Number(renderBudget.max_named_props || 0),\n          max_background_motifs: Number(renderBudget.max_background_motifs || 0),\n          max_prompt_words: Number(renderBudget.max_prompt_words || 0),\n          forbidden_excess: forbiddenExcess.map(clean).filter(Boolean),\n        },\n      },\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        320
+      ],
+      "id": "79c8e867-1f9c-4b56-8380-3c43efabb1c4",
+      "name": "Build Prompt Smith Packet"
     }
   ],
   "connections": {
@@ -2447,12 +2460,7 @@
             "index": 0
           },
           {
-            "node": "LLM Final Prompt Smith V2",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
+            "node": "Build Prompt Smith Packet",
             "type": "main",
             "index": 0
           }
@@ -2707,6 +2715,22 @@
           }
         ]
       ]
+    },
+    "Build Prompt Smith Packet": {
+      "main": [
+        [
+          {
+            "node": "LLM Final Prompt Smith V2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2719,9 +2743,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "0a89a9f3-552e-4491-a69a-48c41d36018c",
+  "versionId": "cfeb3dd2-651c-47cb-b5f9-7f0e0bc24f6b",
   "activeVersionId": null,
-  "versionCounter": 75,
+  "versionCounter": 122,
   "triggerCount": 0,
   "tags": [],
   "shared": [
