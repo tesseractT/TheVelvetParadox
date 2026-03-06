@@ -696,60 +696,6 @@
       ]
     },
     {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "number_1",
-              "leftValue": "={{$json.crawl_run_final.fragment_count}}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "larger"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "1e5f6f2d-4e48-4928-a6b8-268e2bcfead3",
-      "name": "Should Call Concept Forge",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        3024,
-        176
-      ]
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "of3xeq4C34JVxykf",
-          "mode": "list",
-          "cachedResultName": "TVPX__20__Concept Forge And Brief Pool",
-          "cachedResultUrl": "/workflow/of3xeq4C34JVxykf"
-        },
-        "options": {
-          "waitForSubWorkflow": false
-        }
-      },
-      "id": "af7cdc5d-78f0-445b-b536-3c3960afde11",
-      "name": "Call Concept Forge",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        3024,
-        176
-      ]
-    },
-    {
       "parameters": {},
       "id": "e24d190a-d45d-48c8-ad7c-2d07de732304",
       "name": "Next Source",
@@ -996,35 +942,6 @@
       ]
     },
     "Update Crawl Ledger Final": {
-      "main": [
-        [
-          {
-            "node": "Should Call Concept Forge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Should Call Concept Forge": {
-      "main": [
-        [
-          {
-            "node": "Call Concept Forge",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Next Source",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Concept Forge": {
       "main": [
         [
           {

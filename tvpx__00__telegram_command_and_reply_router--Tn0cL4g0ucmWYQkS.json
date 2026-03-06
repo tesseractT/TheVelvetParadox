@@ -32,7 +32,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function safeString(v) {\n  if (v === null || v === undefined) return '';\n  return typeof v === 'string' ? v : String(v);\n}\n\nfunction nowIso() {\n  return new Date().toISOString();\n}\n\nfunction quickId(prefix) {\n  const t = Date.now().toString(36);\n  const r = Math.random().toString(36).slice(2, 10);\n  return `${prefix}_${t}_${r}`;\n}\n\nconst u = $json || {};\nconst msg = (u.message && typeof u.message === 'object') ? u.message : {};\n\nconst chatId = msg?.chat?.id ?? null;\nconst messageId = msg?.message_id ?? null;\nconst replyToId = msg?.reply_to_message?.message_id ?? null;\n\nconst hasPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;\nconst photo = hasPhoto ? msg.photo[msg.photo.length - 1] : null;\n\nconst text = safeString(msg.text || msg.caption).trim();\n\nconst existingCtx = (u.ctx && typeof u.ctx === 'object') ? u.ctx : {};\nconst traceId = safeString(existingCtx.trace_id) || quickId('tvpx');\n\nconst commandMatch = text.match(/^\\/(\\w+)\\s*(.*)$/);\nconst cmd = commandMatch ? commandMatch[1].toLowerCase() : '';\nconst cmdArgs = commandMatch ? safeString(commandMatch[2]).trim() : '';\n\nlet routeMode = 'help';\n\nif (replyToId) {\n  routeMode = 'reply_action';\n} else if (/^\\/(crawl|refresh|reseed)\\b/i.test(text)) {\n  routeMode = 'crawl';\n} else if (text.length > 0 || hasPhoto) {\n  routeMode = 'direct_generate';\n}\n\nreturn [{\n  json: {\n    ctx: {\n      project_ns: 'TVPX',\n      brand_name: 'The Velvet Paradox',\n      trace_id: traceId,\n      triggered_at: nowIso(),\n      trigger_mode: 'telegram',\n      route_mode: routeMode,\n      command: cmd,\n      command_args: cmdArgs\n    },\n    tg: {\n      chat_id: chatId,\n      message_id: messageId,\n      reply_to_message_id: replyToId,\n      text,\n      has_photo: hasPhoto,\n      photo: photo ? {\n        file_id: photo.file_id,\n        file_unique_id: photo.file_unique_id,\n        width: photo.width,\n        height: photo.height\n      } : null\n    },\n    input: {\n      raw_update: u\n    },\n    carry: {\n      aesthetic_goal: {\n        theatrical_centrality_bias: true,\n        semantic_destabilization_bias: true,\n        tactile_surface_priority: true,\n        muted_cinematic_base_palette: true,\n        saturation_spike_allowed: true,\n        abstraction_target_default: 6.2\n      }\n    }\n  }\n}];"
+        "jsCode": "function safeString(v) {\n  if (v === null || v === undefined) return '';\n  return typeof v === 'string' ? v : String(v);\n}\n\nfunction nowIso() {\n  return new Date().toISOString();\n}\n\nfunction quickId(prefix) {\n  const t = Date.now().toString(36);\n  const r = Math.random().toString(36).slice(2, 10);\n  return `${prefix}_${t}_${r}`;\n}\n\nconst u = $json || {};\nconst msg = (u.message && typeof u.message === 'object') ? u.message : {};\n\nconst chatId = msg?.chat?.id ?? null;\nconst messageId = msg?.message_id ?? null;\nconst replyToId = msg?.reply_to_message?.message_id ?? null;\n\nconst hasPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;\nconst photo = hasPhoto ? msg.photo[msg.photo.length - 1] : null;\nconst text = safeString(msg.text || msg.caption).trim();\n\nconst existingCtx = (u.ctx && typeof u.ctx === 'object') ? u.ctx : {};\nconst traceId = safeString(existingCtx.trace_id) || quickId('tvpx');\n\nconst commandMatch = text.match(/^\\/(\\w+)\\s*(.*)$/);\nconst cmd = commandMatch ? commandMatch[1].toLowerCase() : '';\nconst cmdArgs = commandMatch ? safeString(commandMatch[2]).trim() : '';\n\nconst isReplyAction = Boolean(replyToId) && ['series', 'bw', 'video'].includes(cmd);\nconst isCrawl = ['crawl', 'refresh', 'reseed'].includes(cmd);\nconst isGenerate = !replyToId && ['generate', 'direct_generate'].includes(cmd);\n\nlet routeMode = 'help';\nif (isReplyAction) {\n  routeMode = 'reply_action';\n} else if (isCrawl) {\n  routeMode = 'crawl';\n} else if (isGenerate) {\n  routeMode = 'generate';\n}\n\nreturn [{\n  json: {\n    ctx: {\n      project_ns: 'TVPX',\n      brand_name: 'The Velvet Paradox',\n      trace_id: traceId,\n      triggered_at: nowIso(),\n      trigger_mode: 'telegram',\n      route_mode: routeMode,\n      command: cmd,\n      command_args: cmdArgs\n    },\n    tg: {\n      chat_id: chatId,\n      message_id: messageId,\n      reply_to_message_id: replyToId,\n      text,\n      has_photo: hasPhoto,\n      photo: photo ? {\n        file_id: photo.file_id,\n        file_unique_id: photo.file_unique_id,\n        width: photo.width,\n        height: photo.height\n      } : null\n    },\n    input: {\n      raw_update: u\n    },\n    carry: {\n      aesthetic_goal: {\n        theatrical_centrality_bias: true,\n        semantic_destabilization_bias: true,\n        tactile_surface_priority: true,\n        muted_cinematic_base_palette: true,\n        saturation_spike_allowed: true,\n        abstraction_target_default: 6.2\n      }\n    }\n  }\n}];"
       },
       "id": "4715cdc6-1fc1-4f45-aa18-5948faef01a7",
       "name": "Normalize Inbound Update",
@@ -58,31 +58,112 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
+        "rules": {
+          "values": [
             {
-              "id": "string_1",
-              "leftValue": "={{$json.ctx.route_mode}}",
-              "rightValue": "reply_action",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "reply_action_route",
+                    "leftValue": "={{$json.ctx.route_mode}}",
+                    "rightValue": "reply_action",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "reply_action"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "crawl_route",
+                    "leftValue": "={{$json.ctx.route_mode}}",
+                    "rightValue": "crawl",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "crawl"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "generate_route",
+                    "leftValue": "={{$json.ctx.route_mode}}",
+                    "rightValue": "generate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "generate"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "help_route",
+                    "leftValue": "={{$json.ctx.route_mode}}",
+                    "rightValue": "help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "help"
             }
-          ],
-          "combinator": "and"
+          ]
         },
         "options": {}
       },
       "id": "de0d1d6a-1acd-4333-94ca-e0d4985e0187",
-      "name": "If Reply Series",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
+      "name": "Route Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
       "position": [
         -368,
         960
@@ -112,38 +193,6 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "string_1",
-              "leftValue": "={{$json.ctx.route_mode}}",
-              "rightValue": "crawl",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "66cb1ae3-3478-4874-8059-27a01f907f25",
-      "name": "If Crawl",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -144,
-        1056
-      ]
-    },
-    {
-      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "Q5NWVXP1AWnlw95F",
@@ -162,38 +211,6 @@
       "position": [
         -1040,
         640
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "string_1",
-              "leftValue": "={{$json.ctx.route_mode}}",
-              "rightValue": "direct_generate",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "aa26b239-5356-4057-b97f-5bed0de8321d",
-      "name": "If Direct Generate",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        80,
-        1152
       ]
     },
     {
@@ -221,7 +238,7 @@
     {
       "parameters": {
         "chatId": "={{$json.tg.chat_id}}",
-        "text": "={{(() => {\n  const brand = $json?.ctx?.brand_name || 'The Velvet Paradox';\n  const trace = $json?.ctx?.trace_id || '';\n  return [\n    `${brand} — Router ready.`,\n    '',\n    'Commands:',\n    '• /crawl — refresh sources',\n    '• /refresh — alias of /crawl',\n    '• /reseed — alias of /crawl',\n    '',\n    'Generate:',\n    '• Send text (or a photo + caption) to generate one primary color image from the concept pool.',\n    '',\n    'Reply Actions:',\n    '• /series 4',\n    '• /bw',\n    '• /video',\n    '',\n    `Trace: ${trace}`\n  ].join('\\n');\n})()}}",
+        "text": "={{(() => {\n  const brand = $json?.ctx?.brand_name || 'The Velvet Paradox';\n  const trace = $json?.ctx?.trace_id || '';\n  return [\n    `${brand} — Router ready.`,\n    '',\n    'Commands:',\n    '• /crawl — refresh sources only',\n    '• /refresh — alias of /crawl',\n    '• /reseed — alias of /crawl',\n    '• /generate — pick the best ready concept from the pool and render one color image',\n    '',\n    'Reply to a generated Telegram image with:',\n    '• /series 4',\n    '• /bw',\n    '• /video',\n    '',\n    'Notes:',\n    '• Plain text does not auto-generate.',\n    '• Photo uploads do not auto-generate.',\n    `Trace: ${trace}`\n  ].join('\\n');\n})()}}",
         "additionalFields": {}
       },
       "id": "3ea33eb4-1613-4eac-8bc6-2035a4ba8dfa",
@@ -268,14 +285,14 @@
       "main": [
         [
           {
-            "node": "If Reply Series",
+            "node": "Route Command",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If Reply Series": {
+    "Route Command": {
       "main": [
         [
           {
@@ -286,33 +303,11 @@
         ],
         [
           {
-            "node": "If Crawl",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Crawl": {
-      "main": [
-        [
-          {
             "node": "To Source Crawl",
             "type": "main",
             "index": 0
           }
         ],
-        [
-          {
-            "node": "If Direct Generate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If Direct Generate": {
-      "main": [
         [
           {
             "node": "To Primary Generation",

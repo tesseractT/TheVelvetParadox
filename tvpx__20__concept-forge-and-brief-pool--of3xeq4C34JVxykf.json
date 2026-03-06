@@ -856,28 +856,6 @@
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "8KjucHiZTtdGzCrh",
-          "mode": "list",
-          "cachedResultName": "TVPX__30__Image Generation Dual Mode",
-          "cachedResultUrl": "/workflow/8KjucHiZTtdGzCrh"
-        },
-        "options": {
-          "waitForSubWorkflow": false
-        }
-      },
-      "id": "502c38d6-703e-4cfb-8332-1418712491f4",
-      "name": "Call Image Generation",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        3968,
-        208
-      ]
-    },
-    {
-      "parameters": {
         "jsCode": "/** Build Reject Row From Critic */\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date().toISOString();\nreturn [{\n  json: {\n    ctx,\n    reject: {\n      reject_id: `tvpx_rej_${ctx.trace_id}_${now.replace(/[:.]/g,'')}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'quality_critic',\n      rejection_reason: String(j.critic.rejection_reason || 'Rejected by critic gate.').trim(),\n      raw_output_json: JSON.stringify({ critic: j.critic, concept_thesis: j.symbolic_tension?.concept_thesis, mechanisms: j.abstraction?.abstraction_mechanisms, abstraction_target: j.abstraction?.abstraction_target }),\n      created_at: now\n    }\n  }\n}];"
       },
       "id": "2f2165df-2ad1-4c81-a824-6eb0523cdbb4",
@@ -1265,17 +1243,6 @@
         [
           {
             "node": "Upsert Concept Pool",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upsert Concept Pool": {
-      "main": [
-        [
-          {
-            "node": "Call Image Generation",
             "type": "main",
             "index": 0
           }
