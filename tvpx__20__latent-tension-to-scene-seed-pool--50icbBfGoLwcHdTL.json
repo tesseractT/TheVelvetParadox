@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T20:28:44.062Z",
+  "updatedAt": "2026-03-06T20:54:36.681Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "50icbBfGoLwcHdTL",
   "name": "TVPX__20__Latent Tension To Scene Seed Pool",
@@ -381,12 +381,7 @@
     },
     {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-5.2",
-          "mode": "list",
-          "cachedResultName": "gpt-5.2"
-        },
+        "model": "gpt-5.1",
         "options": {}
       },
       "id": "a07bb513-dc85-4880-8c86-c07d3ddc9bda",
@@ -394,7 +389,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        1000,
+        1008,
         448
       ],
       "credentials": {
@@ -406,12 +401,7 @@
     },
     {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "mode": "list",
-          "value": "grok-4-1-fast-reasoning",
-          "cachedResultName": "grok-4-1-fast-reasoning"
-        },
+        "model": "grok-4-1-fast-reasoning",
         "options": {}
       },
       "id": "2879c324-5a2f-468f-9999-7d43e5d9d0ef",
@@ -419,19 +409,25 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        1128,
+        1136,
         448
-      ]
+      ],
+      "credentials": {
+        "xAiApi": {
+          "id": "Bs1Wj3VI1HQ71xYB",
+          "name": "xAi account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY",
+          "value": "6qzFRPL8pogDMctF",
           "mode": "list",
           "cachedResultName": "tvpx_ref_archetype_registry",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/6qzFRPL8pogDMctF"
         },
         "matchType": "allConditions",
         "filters": {
@@ -521,10 +517,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_LATENT_TENSION_POOL",
+          "value": "iHTvx9LnNdQL2ZV7",
           "mode": "list",
           "cachedResultName": "tvpx_latent_tension_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_LATENT_TENSION_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/iHTvx9LnNdQL2ZV7"
         },
         "matchType": "allConditions",
         "filters": {
@@ -552,6 +548,139 @@
             "created_at": "={{$json.latent_tension_row.created_at}}",
             "updated_at": "={{$json.latent_tension_row.updated_at}}"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tension_id",
+              "displayName": "tension_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "crawl_run_id",
+              "displayName": "crawl_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fragment_ids_json",
+              "displayName": "fragment_ids_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "latent_tensions_json",
+              "displayName": "latent_tensions_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "relational_modes_json",
+              "displayName": "relational_modes_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ritual_forms_json",
+              "displayName": "ritual_forms_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "environmental_pressures_json",
+              "displayName": "environmental_pressures_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "forbidden_literal_carryovers_json",
+              "displayName": "forbidden_literal_carryovers_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -809,10 +938,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "value": "ZquAVdSdqKEpnZQx",
           "mode": "list",
           "cachedResultName": "tvpx_scene_seed_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/ZquAVdSdqKEpnZQx"
         },
         "matchType": "allConditions",
         "filters": {
@@ -863,6 +992,369 @@
             "created_at": "={{$json.scene_seed_row.created_at}}",
             "updated_at": "={{$json.scene_seed_row.updated_at}}"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "crawl_run_id",
+              "displayName": "crawl_run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "origin_type",
+              "displayName": "origin_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parent_scene_seed_id",
+              "displayName": "parent_scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "root_scene_seed_id",
+              "displayName": "root_scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "seed_fragment_ids_json",
+              "displayName": "seed_fragment_ids_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "subject_mode",
+              "displayName": "subject_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_kernel",
+              "displayName": "scene_kernel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "concept_thesis",
+              "displayName": "concept_thesis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "symbolic_tension",
+              "displayName": "symbolic_tension",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "material_anchor",
+              "displayName": "material_anchor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "spatial_directive",
+              "displayName": "spatial_directive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "palette_directive",
+              "displayName": "palette_directive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "texture_directive",
+              "displayName": "texture_directive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "dominant_subject",
+              "displayName": "dominant_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "setting_family",
+              "displayName": "setting_family",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ceremonial_logic",
+              "displayName": "ceremonial_logic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "surreal_pressure",
+              "displayName": "surreal_pressure",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "negative_space_note",
+              "displayName": "negative_space_note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "omission_notes",
+              "displayName": "omission_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "forbidden_excess_json",
+              "displayName": "forbidden_excess_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "render_budget_json",
+              "displayName": "render_budget_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "quality_score",
+              "displayName": "quality_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "brand_fit_score",
+              "displayName": "brand_fit_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reference_alignment_score",
+              "displayName": "reference_alignment_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lock_owner",
+              "displayName": "lock_owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lock_expires_at",
+              "displayName": "lock_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "used_count",
+              "displayName": "used_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_used_at",
+              "displayName": "last_used_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rejection_reason",
+              "displayName": "rejection_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -1458,9 +1950,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "e738326b-1caa-4759-949c-a29320c6fc78",
+  "versionId": "d6dd686b-bbeb-4226-add6-7bb4332843a0",
   "activeVersionId": null,
-  "versionCounter": 3,
+  "versionCounter": 15,
   "triggerCount": 0,
   "tags": [],
   "shared": [
