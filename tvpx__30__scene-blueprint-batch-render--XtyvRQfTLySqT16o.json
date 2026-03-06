@@ -49,7 +49,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = String(baseCtx.trace_id || '').trim() || \\`tvpx_\\${fnv1a(traceSeed)}\\`;\nconst familyId = String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim() || \\`tvpxfam_\\${fnv1a(traceId + '::family')}\\`;\nconst sceneSeedId = String(incoming.scene_seed_id || incoming.concept_id || baseCtx.scene_seed_id || baseCtx.concept_id || '').trim();\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'scene_blueprint_batch_render',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || incoming.chat_id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1536'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 15),\n};\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    scene_seed_id: sceneSeedId || null,\n    concept_id: sceneSeedId || null,\n  },\n}];"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst traceSeed = JSON.stringify(incoming).slice(0, 5000) + '::' + now;\nconst traceId = String(baseCtx.trace_id || '').trim() || \\`tvpx_\\${fnv1a(traceSeed)}\\`;\nconst familyId = String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim() || \\`tvpxfam_\\${fnv1a(traceId + '::family')}\\`;\nconst sceneSeedId = String(incoming.scene_seed_id || incoming.concept_id || baseCtx.scene_seed_id || baseCtx.concept_id || '').trim();\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: familyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'scene_blueprint_batch_render',\n  received_at: now,\n  telegram_chat_id: String(baseCtx.telegram_chat_id || incoming.telegram_chat_id || incoming?.tg?.chat_id || incoming?.tg?.chat?.id || incoming.chat_id || '').trim() || null,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n  image_size: String(baseCtx.image_size || incoming.image_size || '1024x1536'),\n  output_format: String(baseCtx.output_format || incoming.output_format || 'png'),\n  background: String(baseCtx.background || incoming.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  lock_ttl_minutes: Number(baseCtx.lock_ttl_minutes || incoming.lock_ttl_minutes || 45),\n};\n\nreturn [{\n  json: {\n    ctx,\n    input: incoming.input || incoming,\n    carry: incoming.carry || {},\n    scene_seed_id: sceneSeedId || null,\n    concept_id: sceneSeedId || null,\n  },\n}];"
       },
       "id": "8d23db01-0b6a-462f-ad2b-e4cc1526822c",
       "name": "Initialize Envelope",
@@ -152,7 +152,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const base = $items('Initialize Envelope')[0]?.json || {};\nconst ctx = base.ctx || {};\n\nconst rows = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no ready scene seeds found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nfunction text(row) {\n  return [\n    row.scene_kernel,\n    row.concept_thesis,\n    row.symbolic_tension,\n    row.material_anchor,\n    row.spatial_directive,\n    row.dominant_subject,\n  ].map((v) => String(v || '')).join(' ').toLowerCase();\n}\n\nconst banned = ['mri', 'brain scan', 'graph', 'chart', 'diagram', 'lease', 'contract', 'form', 'dashboard', 'monitor', 'paperwork'];\n\nconst scored = rows.map((row) => {\n  const quality = n(row.quality_score, 0);\n  const brandFit = n(row.brand_fit_score, 0);\n  const align = n(row.reference_alignment_score, 0);\n  const used = n(row.used_count, 0);\n  const mode = String(row.subject_mode || '').trim();\n\n  let modeBonus = -1.5;\n  if (mode === 'pair') modeBonus = 0.8;\n  else if (mode === 'single_figure') modeBonus = 0.6;\n  else if (mode === 'small_group') modeBonus = 0.7;\n  else if (mode === 'implied_absence') modeBonus = 0.25;\n\n  const blob = text(row);\n  const bannedHits = banned.filter((term) => blob.includes(term)).length;\n  const articlePenalty = bannedHits * 0.8;\n  const reusePenalty = Math.min(used * 0.45, 2.0);\n  const selectorScore = (quality * 0.42) + (brandFit * 0.23) + (align * 0.35) + modeBonus - articlePenalty - reusePenalty;\n\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst picked = scored[0]?.row;\nif (!picked) throw new Error('TVPX__30: failed to select scene seed.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(picked.scene_seed_id || '').trim(),\n    concept_id: String(picked.scene_seed_id || '').trim(),\n    scene_seed_row: picked,\n    selector_audit: scored.slice(0, 8).map((entry) => ({\n      scene_seed_id: entry.row.scene_seed_id,\n      selector_score: entry.selectorScore,\n      quality_score: entry.row.quality_score,\n      brand_fit_score: entry.row.brand_fit_score,\n      reference_alignment_score: entry.row.reference_alignment_score,\n      subject_mode: entry.row.subject_mode,\n    })),\n  },\n}];"
+        "jsCode": "const base = $items('Initialize Envelope')[0]?.json || {};\nconst ctx = base.ctx || {};\n\nconst rows = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no ready scene seeds found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nfunction text(row) {\n  return [\n    row.scene_kernel,\n    row.concept_thesis,\n    row.symbolic_tension,\n    row.material_anchor,\n    row.spatial_directive,\n    row.dominant_subject,\n  ].map((v) => String(v || '')).join(' ');\n}\n\nfunction normalizeTokens(value) {\n  return String(value || '')\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, ' ')\n    .trim();\n}\n\nfunction hasWholeTerm(blob, term) {\n  const hay = ` ${normalizeTokens(blob)} `;\n  const needle = ` ${normalizeTokens(term)} `;\n  return Boolean(needle.trim()) && hay.includes(needle);\n}\n\nconst banned = ['mri', 'brain scan', 'graph', 'chart', 'diagram', 'lease', 'contract', 'form', 'dashboard', 'monitor', 'paperwork'];\n\nconst scored = rows.map((row) => {\n  const quality = n(row.quality_score, 0);\n  const brandFit = n(row.brand_fit_score, 0);\n  const align = n(row.reference_alignment_score, 0);\n  const used = n(row.used_count, 0);\n  const mode = String(row.subject_mode || '').trim();\n\n  let modeBonus = -1.5;\n  if (mode === 'pair') modeBonus = 0.8;\n  else if (mode === 'single_figure') modeBonus = 0.6;\n  else if (mode === 'small_group') modeBonus = 0.7;\n  else if (mode === 'implied_absence') modeBonus = 0.25;\n\n  const blob = text(row);\n  const bannedHits = banned.filter((term) => hasWholeTerm(blob, term)).length;\n  const articlePenalty = bannedHits * 0.8;\n  const reusePenalty = Math.min(used * 0.45, 2.0);\n  const selectorScore = (quality * 0.42) + (brandFit * 0.23) + (align * 0.35) + modeBonus - articlePenalty - reusePenalty;\n\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst picked = scored[0]?.row;\nif (!picked) throw new Error('TVPX__30: failed to select scene seed.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(picked.scene_seed_id || '').trim(),\n    concept_id: String(picked.scene_seed_id || '').trim(),\n    scene_seed_row: picked,\n    selector_audit: scored.slice(0, 8).map((entry) => ({\n      scene_seed_id: entry.row.scene_seed_id,\n      selector_score: entry.selectorScore,\n      quality_score: entry.row.quality_score,\n      brand_fit_score: entry.row.brand_fit_score,\n      reference_alignment_score: entry.row.reference_alignment_score,\n      subject_mode: entry.row.subject_mode,\n    })),\n  },\n}];"
       },
       "id": "5ad7b2e3-afb8-45b3-a7c2-afac2fa0ea20",
       "name": "Select Best Scene Seed",
@@ -178,7 +178,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const j = $json || {};\nconst ctx = j.ctx || {};\nconst now = new Date();\nconst expires = new Date(now.getTime() + (Number(ctx.lock_ttl_minutes || 15) * 60_000));\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(j.scene_seed_id || '').trim(),\n    concept_id: String(j.scene_seed_id || '').trim(),\n    scene_seed_row: j.scene_seed_row || null,\n    selector_audit: j.selector_audit || null,\n    lock: {\n      lock_owner: String(ctx.trace_id || '').trim(),\n      lock_expires_at: expires.toISOString(),\n      locked_at: now.toISOString(),\n    },\n  },\n}];"
+        "jsCode": "const j = $json || {};\nconst ctx = j.ctx || {};\nconst now = new Date();\nconst expires = new Date(now.getTime() + (Number(ctx.lock_ttl_minutes || 45) * 60_000));\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(j.scene_seed_id || '').trim(),\n    concept_id: String(j.scene_seed_id || '').trim(),\n    scene_seed_row: j.scene_seed_row || null,\n    selector_audit: j.selector_audit || null,\n    lock: {\n      lock_owner: String(ctx.trace_id || '').trim(),\n      lock_expires_at: expires.toISOString(),\n      locked_at: now.toISOString(),\n    },\n  },\n}];"
       },
       "id": "e8837124-20a6-456d-a965-daab2b60ff84",
       "name": "Build Lock Payload",
@@ -451,7 +451,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction clipWords(v, max) {\n  const text = cleanText(v);\n  const parts = text.split(/\\s+/);\n  return parts.length <= max ? text : parts.slice(0, max).join(' ');\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'cgi',\n    '3d render',\n    'illustration',\n    'cartoon',\n    'plastic skin',\n    'waxy skin',\n    'beauty retouching',\n    'bad hands',\n    'extra fingers',\n    'duplicate limbs',\n    'deformed anatomy',\n    'watermark',\n    'logo',\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst base = $items('Explode Blueprint Pack')[0]?.json || $json;\nconst raw = $json.text || $json.output || $json.result || $json;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = clipWords(masterPrompt, 150);\nif (wordCount(masterPrompt) < 55) throw new Error('TVPX__30: master_prompt too short.');\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(\\`TVPX__30: banned phrase leaked into prompt: \\${phrase}\\`);\n  }\n}\n\nreturn [{\n  json: {\n    ...$items('Explode Blueprint Pack')[0].json,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n      image_size: '1024x1536',\n      provider_controls: {\n        quality: 'high',\n        background: 'opaque',\n        output_format: 'png',\n        num_images: 2,\n      },\n    },\n  },\n}];"
+        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[“”]/g, '\"')\n      .replace(/[‘’]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction clipWords(v, max) {\n  const text = cleanText(v);\n  const parts = text.split(/\\s+/);\n  return parts.length <= max ? text : parts.slice(0, max).join(' ');\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'cgi',\n    '3d render',\n    'illustration',\n    'cartoon',\n    'plastic skin',\n    'waxy skin',\n    'beauty retouching',\n    'bad hands',\n    'extra fingers',\n    'duplicate limbs',\n    'deformed anatomy',\n    'watermark',\n    'logo',\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst base = $json || {};\nconst ctx = base.ctx || {};\nconst raw = $json.text || $json.output || $json.result || $json;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = clipWords(masterPrompt, 150);\nif (wordCount(masterPrompt) < 55) throw new Error('TVPX__30: master_prompt too short.');\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nconst parsedControls = (parsed.provider_controls && typeof parsed.provider_controls === 'object') ? parsed.provider_controls : {};\n\nreturn [{\n  json: {\n    ...base,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n      image_size: String(ctx.image_size || parsed.image_size || '1024x1536'),\n      provider_controls: {\n        image_size: String(ctx.image_size || parsed.image_size || '1024x1536'),\n        quality: String(ctx.quality || parsedControls.quality || 'high'),\n        background: String(ctx.background || parsedControls.background || 'opaque'),\n        output_format: String(ctx.output_format || parsedControls.output_format || 'png'),\n        num_images: Number(parsedControls.num_images || 2),\n      },\n    },\n  },\n}];"
       },
       "id": "33b1f7b3-73ca-4a00-ab27-1de19b98ebee",
       "name": "Parse Prompt Spec V2",
@@ -464,7 +464,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const packetId = \\`tvpx_rp_\\${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    entry.prompt_spec?.master_prompt,\n  ].join('::'))}\\`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: '1024x1536',\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || \\`bp_\\${idx + 1}\\`).trim(),\n      blueprint: entry.blueprint,\n      prompt: String(entry.prompt_spec?.master_prompt || '').trim(),\n      negative_prompt: String(entry.prompt_spec?.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n        image_size: '1024x1536',\n        background: 'opaque',\n        quality: 'high',\n        output_format: 'png',\n        num_images: 2,\n      },\n    },\n  };\n});"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst items = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!items.length) throw new Error('TVPX__30: no prompt-spec items to render.');\n\nreturn items.map((entry, idx) => {\n  const promptSpec = (entry.prompt_spec && typeof entry.prompt_spec === 'object') ? entry.prompt_spec : {};\n  const controls = (promptSpec.provider_controls && typeof promptSpec.provider_controls === 'object') ? promptSpec.provider_controls : {};\n  const imageSize = String(controls.image_size || promptSpec.image_size || entry.ctx?.image_size || '1024x1536');\n  const outputFormat = String(controls.output_format || entry.ctx?.output_format || 'png');\n  const background = String(controls.background || entry.ctx?.background || 'opaque');\n  const quality = String(controls.quality || entry.ctx?.quality || 'high');\n  const numImages = Number(controls.num_images || 2);\n\n  const packetId = `tvpx_rp_${fnv1a([\n    entry.ctx?.trace_id,\n    entry.scene_seed_id,\n    entry.scene_blueprint_id,\n    entry.blueprint?.blueprint_label,\n    promptSpec.master_prompt,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx: {\n        ...entry.ctx,\n        image_size: imageSize,\n        output_format: outputFormat,\n        background,\n        quality,\n      },\n      packet_id: packetId,\n      scene_seed_id: entry.scene_seed_id,\n      concept_id: entry.scene_seed_id,\n      scene_seed_row: entry.scene_seed_row,\n      scene_blueprint_id: entry.scene_blueprint_id,\n      archetype_id: String(entry.archetype_row?.archetype_id || '').trim(),\n      archetype_row: entry.archetype_row,\n      blueprint_label: String(entry.blueprint?.blueprint_label || `bp_${idx + 1}`).trim(),\n      blueprint: entry.blueprint,\n      prompt: String(promptSpec.master_prompt || '').trim(),\n      negative_prompt: String(promptSpec.negative_prompt || '').trim(),\n      render_variant: 'color',\n      provider_controls: {\n        image_size: imageSize,\n        background,\n        quality,\n        output_format: outputFormat,\n        num_images: numImages,\n      },\n    },\n  };\n});"
       },
       "id": "90e5bab3-8e0c-4f13-a158-82f6db46e115",
       "name": "Build Color Render Packets",
@@ -486,11 +486,26 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "ctx": "={{$json.ctx}}",
+            "packet_id": "={{$json.packet_id}}",
+            "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_seed_row": "={{$json.scene_seed_row}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "archetype_row": "={{$json.archetype_row}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "blueprint": "={{$json.blueprint}}",
+            "prompt": "={{$json.prompt}}",
+            "negative_prompt": "={{$json.negative_prompt}}",
+            "render_variant": "={{$json.render_variant}}",
+            "provider_controls": "={{$json.provider_controls}}"
+          },
           "matchingColumns": [],
           "schema": [],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          "convertFieldsToString": false
         },
         "options": {
           "waitForSubWorkflow": true
@@ -775,7 +790,32 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
             "trace_id": "={{$json.ctx.trace_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "blueprint_rank": "={{(() => { const label = String($json.blueprint_label || \"\").toLowerCase(); if (label.includes(\"grounded\")) return \"1\"; if (label.includes(\"hero\")) return \"2\"; if (label.includes(\"wildcard\")) return \"3\"; return \"\"; })()}}",
+            "blueprint_mode": "={{$json.blueprint_label || \"\"}}",
+            "reference_family": "={{$json.archetype_row?.archetype_name || $json.archetype_id || \"\"}}",
+            "person_count": "={{(() => { const mode = String($json.scene_seed_row?.subject_mode || \"\").trim(); if (mode === \"single_figure\") return \"1\"; if (mode === \"pair\") return \"2\"; if (mode === \"small_group\") return \"3+\"; if (mode === \"implied_absence\") return \"0\"; return \"\"; })()}}",
+            "subject_grouping": "={{$json.blueprint?.subject_arrangement || $json.scene_seed_row?.subject_mode || \"\"}}",
+            "environment_type": "={{$json.blueprint?.environment || \"\"}}",
+            "composition_formula": "={{[$json.blueprint?.shot_type, $json.blueprint?.subject_arrangement].filter(Boolean).join(\" | \")}}",
+            "camera_formula": "={{[$json.blueprint?.camera_height, $json.blueprint?.camera_distance].filter(Boolean).join(\" | \")}}",
+            "lens_formula": "={{$json.blueprint?.shot_type || \"\"}}",
+            "lighting_formula": "={{$json.blueprint?.light_weather || \"\"}}",
+            "palette_formula": "={{$json.blueprint?.palette_weather || \"\"}}",
+            "texture_formula": "={{$json.blueprint?.wardrobe_surface_logic || \"\"}}",
+            "negative_space_formula": "={{$json.blueprint?.what_is_not_shown || \"\"}}",
+            "symbolic_pressure_formula": "={{$json.blueprint?.one_surreal_lift || \"\"}}",
+            "realism_guardrails_json": "={{JSON.stringify({ render_variant: $json.render_variant, image_size: $json.image_size, background: $json.background, quality: $json.quality, output_format: $json.output_format })}}",
+            "prop_budget": "={{(() => { try { const budget = JSON.parse($json.scene_seed_row?.render_budget_json || \"{}\"); return budget.max_named_props ?? \"\"; } catch { return \"\"; } })()}}",
+            "background_motif_budget": "={{(() => { try { const budget = JSON.parse($json.scene_seed_row?.render_budget_json || \"{}\"); return budget.max_background_motifs ?? \"\"; } catch { return \"\"; } })()}}",
+            "blueprint_prompt_core": "={{$json.blueprint?.candidate_prompt_core || \"\"}}",
+            "blueprint_notes": "={{$json.prompt_final || $json.blueprint?.what_is_not_shown || \"\"}}",
+            "state": "rendered",
+            "created_at": "={{$json.blueprint?.created_at || $now}}",
             "updated_at": "={{$now}}"
           },
           "matchingColumns": [],
@@ -1722,11 +1762,24 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "ctx": "={{$json.ctx}}",
+            "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "reference_alignment_score": "={{$json.reference_alignment_score}}",
+            "critic_overall_score": "={{$json.critic_overall_score}}",
+            "asset_id": "={{$json.asset_id}}",
+            "asset_family_id": "={{$json.asset_family_id}}",
+            "family": "={{$json.family}}"
+          },
           "matchingColumns": [],
           "schema": [],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          "convertFieldsToString": false
         },
         "options": {
           "waitForSubWorkflow": true
@@ -1768,11 +1821,22 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "ctx": "={{$json.ctx}}",
+            "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "prompt": "={{$json.prompt}}",
+            "negative_prompt": "={{$json.negative_prompt}}",
+            "render_variant": "={{$json.render_variant}}",
+            "provider_controls": "={{$json.provider_controls}}"
+          },
           "matchingColumns": [],
           "schema": [],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          "convertFieldsToString": false
         },
         "options": {
           "waitForSubWorkflow": true
@@ -1811,11 +1875,22 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "ctx": "={{$json.ctx}}",
+            "concept_id": "={{$json.concept_id}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
+            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
+            "archetype_id": "={{$json.archetype_id}}",
+            "render_candidate_id": "={{$json.render_candidate_id}}",
+            "blueprint_label": "={{$json.blueprint_label}}",
+            "asset_id": "={{$json.asset_id}}",
+            "asset_family_id": "={{$json.asset_family_id}}",
+            "family": "={{$json.family}}"
+          },
           "matchingColumns": [],
           "schema": [],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          "convertFieldsToString": false
         },
         "options": {
           "waitForSubWorkflow": true
@@ -1828,6 +1903,19 @@
       "position": [
         4368,
         728
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const locked = $items('Verify Lock Ownership')[0]?.json || {};\nconst winner = $items('Select Winning Candidate')[0]?.json || {};\n\nconst ctx = locked.ctx || winner.ctx || {};\nconst sceneSeedId = String(locked.scene_seed_id || winner.scene_seed_id || '').trim();\nconst usedCount = Number(locked.scene_seed_row?.used_count || winner.scene_seed_row?.used_count || 0);\n\nif (!sceneSeedId) throw new Error('TVPX__30: missing scene_seed_id for final scene-seed release.');\nif (!String(ctx.trace_id || '').trim()) throw new Error('TVPX__30: missing trace_id for final scene-seed release.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: sceneSeedId,\n    used_count_next: usedCount + 1,\n  },\n}];"
+      },
+      "id": "d8f0b47a-5f53-4b24-a347-0e2208d7464d",
+      "name": "Build Final Scene Seed Release",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4592,
+        608
       ]
     },
     {
@@ -1863,7 +1951,7 @@
             "state": "rendered",
             "updated_at": "={{$now}}",
             "last_used_at": "={{$now}}",
-            "used_count": "={{Number($json.scene_seed_row.used_count || 0) + 1}}",
+            "used_count": "={{$json.used_count_next}}",
             "lock_owner": "={{null}}",
             "lock_expires_at": "={{null}}"
           },
@@ -1877,7 +1965,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        4592,
+        4816,
         728
       ]
     },
@@ -2268,7 +2356,7 @@
       "main": [
         [
           {
-            "node": "Mark Scene Seed Rendered",
+            "node": "Build Final Scene Seed Release",
             "type": "main",
             "index": 0
           }
@@ -2323,6 +2411,17 @@
         [
           {
             "node": "Parse Prompt Spec V2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Scene Seed Release": {
+      "main": [
+        [
+          {
+            "node": "Mark Scene Seed Rendered",
             "type": "main",
             "index": 0
           }
