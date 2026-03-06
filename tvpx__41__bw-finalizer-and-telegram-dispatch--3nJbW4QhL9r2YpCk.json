@@ -198,9 +198,9 @@
         "operation": "sendPhoto",
         "chatId": "={{$json.ctx.telegram_chat_id}}",
         "binaryData": true,
-        "binaryPropertyName": "image",
+        "binaryPropertyName": "telegram_preview",
         "additionalFields": {
-          "caption": "={{'The Velvet Paradox — B&W\\nConcept: ' + $json.concept_id + '\\nReply to THIS image with /series 4 for variations or /video for motion prep.'}}"
+          "caption": "={{'The Velvet Paradox — B&W preview\\nConcept: ' + $json.concept_id + '\\nFull HD: ' + ($json.assets.bw.drive_view_url || $json.assets.bw.drive_download_url || 'unavailable') + '\\nReply to THIS image with /series 4 for variations or /video for motion prep.'}}"
         }
       },
       "id": "da0f3156-d9dc-4c0a-97a5-e79daa839467",
@@ -481,6 +481,42 @@
         -640,
         352
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build B W Telegram Preview Packet\n * Reattaches the original uploaded binary plus Drive URLs for preview dispatch.\n */\nfunction previewName(name) {\n  const base = String(name || 'tvpx_preview').replace(/\\.[^.]+$/, '');\n  return base + '_telegram_preview.jpg';\n}\n\nconst base = $items('Normalize Drive Result B W')[0]?.json || {};\nconst source = $items('Make Safe Filename B W')[0] || {};\nconst image = source.binary?.image;\nif (!image) {\n  throw new Error('TVPX__41: original B&W binary missing for Telegram preview.');\n}\n\nreturn [{\n  json: {\n    ...base,\n    preview_filename: previewName(base.assets?.bw?.filename || source.json?.filename)\n  },\n  binary: {\n    image\n  }\n}];"
+      },
+      "id": "d1b266d6-1157-4622-b25e-8b83642f1307",
+      "name": "Build B W Telegram Preview Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "image",
+        "width": 720,
+        "height": 900,
+        "resizeOption": "maximumArea",
+        "options": {
+          "destinationKey": "telegram_preview",
+          "fileName": "={{$json.preview_filename}}",
+          "format": "jpeg",
+          "quality": 35
+        }
+      },
+      "id": "b955757f-36dc-4b41-9512-88a8aabc1676",
+      "name": "Compress B W Telegram Preview",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -96
+      ]
     }
   ],
   "connections": {
@@ -576,7 +612,7 @@
       "main": [
         [
           {
-            "node": "Send B W To Telegram",
+            "node": "Build B W Telegram Preview Packet",
             "type": "main",
             "index": 0
           }
@@ -709,6 +745,28 @@
         [
           {
             "node": "Download B W Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build B W Telegram Preview Packet": {
+      "main": [
+        [
+          {
+            "node": "Compress B W Telegram Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compress B W Telegram Preview": {
+      "main": [
+        [
+          {
+            "node": "Send B W To Telegram",
             "type": "main",
             "index": 0
           }
