@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T22:47:18.196Z",
+  "updatedAt": "2026-03-06T22:58:57.085Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "XtyvRQfTLySqT16o",
   "name": "TVPX__30__Scene Blueprint Batch Render",
@@ -64,9 +64,10 @@
       "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": false,
+            "caseSensitive": true,
+            "leftValue": "",
             "typeValidation": "strict",
-            "version": 3
+            "version": 1
           },
           "conditions": [
             {
@@ -97,10 +98,10 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "value": "ZquAVdSdqKEpnZQx",
           "mode": "list",
           "cachedResultName": "tvpx_scene_seed_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/ZquAVdSdqKEpnZQx"
         },
         "matchType": "allConditions",
         "filters": {
@@ -126,10 +127,10 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "value": "ZquAVdSdqKEpnZQx",
           "mode": "list",
           "cachedResultName": "tvpx_scene_seed_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/ZquAVdSdqKEpnZQx"
         },
         "matchType": "allConditions",
         "filters": {
@@ -194,10 +195,10 @@
         "operation": "update",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "value": "ZquAVdSdqKEpnZQx",
           "mode": "list",
           "cachedResultName": "tvpx_scene_seed_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/ZquAVdSdqKEpnZQx"
         },
         "matchType": "allConditions",
         "filters": {
@@ -238,10 +239,10 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_SEED_POOL",
+          "value": "ZquAVdSdqKEpnZQx",
           "mode": "list",
           "cachedResultName": "tvpx_scene_seed_pool",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_SEED_POOL"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/ZquAVdSdqKEpnZQx"
         },
         "matchType": "allConditions",
         "filters": {
@@ -280,10 +281,10 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY",
+          "value": "6qzFRPL8pogDMctF",
           "mode": "list",
           "cachedResultName": "tvpx_ref_archetype_registry",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_REF_ARCHETYPE_REGISTRY"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/6qzFRPL8pogDMctF"
         },
         "matchType": "allConditions",
         "filters": {
@@ -373,10 +374,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK",
+          "value": "tb5enwr7N1RFgRsg",
           "mode": "list",
           "cachedResultName": "tvpx_scene_blueprint_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/MANUAL_DT__TVPX_SCENE_BLUEPRINT_BANK"
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/tb5enwr7N1RFgRsg"
         },
         "matchType": "allConditions",
         "filters": {
@@ -389,29 +390,280 @@
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {
-            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
-            "scene_seed_id": "={{$json.scene_seed_id}}",
-            "trace_id": "={{$json.ctx.trace_id}}",
-            "asset_family_id": "={{$json.ctx.asset_family_id}}",
-            "archetype_id": "={{$json.archetype_row.archetype_id}}",
-            "blueprint_label": "={{$json.blueprint.blueprint_label}}",
-            "shot_type": "={{$json.blueprint.shot_type}}",
-            "camera_height": "={{$json.blueprint.camera_height}}",
-            "camera_distance": "={{$json.blueprint.camera_distance}}",
-            "subject_arrangement": "={{$json.blueprint.subject_arrangement}}",
-            "environment": "={{$json.blueprint.environment}}",
-            "light_weather": "={{$json.blueprint.light_weather}}",
-            "wardrobe_surface_logic": "={{$json.blueprint.wardrobe_surface_logic}}",
-            "palette_weather": "={{$json.blueprint.palette_weather}}",
-            "one_surreal_lift": "={{$json.blueprint.one_surreal_lift}}",
-            "what_is_not_shown": "={{$json.blueprint.what_is_not_shown}}",
-            "candidate_prompt_core": "={{$json.blueprint.candidate_prompt_core}}",
-            "blueprint_score": 0,
-            "state": "pending",
-            "created_at": "={{$json.blueprint.created_at}}",
-            "updated_at": "={{$json.blueprint.updated_at}}"
-          },
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "scene_blueprint_id",
+              "displayName": "scene_blueprint_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_label",
+              "displayName": "blueprint_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_rank",
+              "displayName": "blueprint_rank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_mode",
+              "displayName": "blueprint_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reference_family",
+              "displayName": "reference_family",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "person_count",
+              "displayName": "person_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "subject_grouping",
+              "displayName": "subject_grouping",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "environment_type",
+              "displayName": "environment_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "composition_formula",
+              "displayName": "composition_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "camera_formula",
+              "displayName": "camera_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lens_formula",
+              "displayName": "lens_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lighting_formula",
+              "displayName": "lighting_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "palette_formula",
+              "displayName": "palette_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "texture_formula",
+              "displayName": "texture_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "negative_space_formula",
+              "displayName": "negative_space_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "symbolic_pressure_formula",
+              "displayName": "symbolic_pressure_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "realism_guardrails_json",
+              "displayName": "realism_guardrails_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prop_budget",
+              "displayName": "prop_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "background_motif_budget",
+              "displayName": "background_motif_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_prompt_core",
+              "displayName": "blueprint_prompt_core",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_notes",
+              "displayName": "blueprint_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -2439,9 +2691,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "d5edc188-2529-492f-9590-2f58242d0fb3",
+  "versionId": "5d470b2d-2512-4faa-8309-9f779278343a",
   "activeVersionId": null,
-  "versionCounter": 57,
+  "versionCounter": 65,
   "triggerCount": 0,
   "tags": [],
   "shared": [
