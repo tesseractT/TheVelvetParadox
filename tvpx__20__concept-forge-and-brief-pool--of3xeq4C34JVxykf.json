@@ -36,17 +36,18 @@
         "conditions": {
           "options": {
             "caseSensitive": true,
+            "leftValue": "",
             "typeValidation": "strict",
-            "version": 3
+            "version": 1
           },
           "conditions": [
             {
-              "id": "cond_crawl_run",
-              "leftValue": "={{($json.ctx.crawl_run_id || '').length}}",
-              "rightValue": 0,
+              "id": "string_1",
+              "leftValue": "={{$json.ctx?.crawl_run_id ? 'true' : 'false'}}",
+              "rightValue": "true",
               "operator": {
-                "type": "number",
-                "operation": "larger"
+                "type": "string",
+                "operation": "equals"
               }
             }
           ],
@@ -140,18 +141,19 @@
       "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": false,
+            "caseSensitive": true,
+            "leftValue": "",
             "typeValidation": "strict",
-            "version": 3
+            "version": 1
           },
           "conditions": [
             {
-              "id": "number_1",
-              "leftValue": "={{Array.isArray($json.fragments) ? $json.fragments.length : 0}}",
-              "rightValue": 0,
+              "id": "string_1",
+              "leftValue": "={{Array.isArray($json.fragments) && $json.fragments.length > 0 ? 'true' : 'false'}}",
+              "rightValue": "true",
               "operator": {
-                "type": "number",
-                "operation": "larger"
+                "type": "string",
+                "operation": "equals"
               }
             }
           ],
@@ -555,36 +557,19 @@
       "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": false,
+            "caseSensitive": true,
+            "leftValue": "",
             "typeValidation": "strict",
-            "version": 3
+            "version": 1
           },
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.critic.approve ? 'true' : 'false'}}",
+              "leftValue": "={{($json.critic?.approve === true && Number($json.critic?.score || 0) >= 7.2 && Number($json.critic?.brand_fit || 0) >= 7) ? 'true' : 'false'}}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
                 "operation": "equals"
-              }
-            },
-            {
-              "id": "number_1",
-              "leftValue": "={{$json.critic.score}}",
-              "rightValue": 7.2,
-              "operator": {
-                "type": "number",
-                "operation": "largerEqual"
-              }
-            },
-            {
-              "id": "number_2",
-              "leftValue": "={{$json.critic.brand_fit}}",
-              "rightValue": 7,
-              "operator": {
-                "type": "number",
-                "operation": "largerEqual"
               }
             }
           ],
