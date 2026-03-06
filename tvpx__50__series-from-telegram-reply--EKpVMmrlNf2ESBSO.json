@@ -242,7 +242,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst ctx = j.ctx || {};\nconst parentConcept = j.parent?.concept || {};\nconst parentAsset = j.parent?.asset || {};\nconst plan = j.series_plan || {};\n\nconst rootId = String(parentConcept.root_concept_id || parentConcept.concept_id || '').trim();\nconst parentId = String(parentConcept.concept_id || '').trim();\nconst rootAssetId = String(parentAsset.root_asset_id || parentAsset.asset_id || '').trim();\nconst parentAssetId = String(parentAsset.asset_id || '').trim();\n\nif (!parentId) throw new Error('TVPX__50: missing parent concept_id.');\nif (!parentAssetId) throw new Error('TVPX__50: missing parent asset_id.');\n\nconst now = new Date().toISOString();\nconst variations = Array.isArray(plan.variations) ? plan.variations : [];\n\nreturn variations.map((v) => {\n  const delta = String(v.prompt_delta || v.variation_instruction || '').trim();\n  const seed = `${ctx.trace_id}::${parentId}::${v.variation_index}::${delta}`;\n  const childId = `tvpx_cp_${fnv1a(seed)}`;\n\n  let seriesDNA = {};\n  try {\n    seriesDNA = JSON.parse(String(parentConcept.series_dna_json || '{}'));\n  } catch {\n    seriesDNA = {};\n  }\n\n  const seriesGroupId = String(\n    plan.series_group_id ||\n    seriesDNA.series_group_id ||\n    `tvpx_series_${fnv1a(parentId + '::' + now)}`\n  ).trim();\n\n  const childSeriesDNA = {\n    ...seriesDNA,\n    series_group_id: seriesGroupId,\n    variation_index: Number(v.variation_index || 0),\n    prompt_delta: delta,\n    palette_shift: String(v.palette_shift || '').trim(),\n    atmosphere_shift: String(v.atmosphere_shift || '').trim(),\n    intensity_change: String(v.intensity_change || '').trim()\n  };\n\n  const thesis = String(parentConcept.concept_thesis || '').trim();\n  const variationInstruction = String(v.variation_instruction || '').trim();\n  const childThesis = variationInstruction\n    ? `${thesis} | Variation: ${variationInstruction}`\n    : thesis;\n\n  return {\n    json: {\n      ctx,\n      child: {\n        concept_id: childId,\n        trace_id: ctx.trace_id,\n        origin_type: 'telegram_series',\n        source_id: String(parentConcept.source_id || '').trim(),\n        parent_concept_id: parentId,\n        root_concept_id: rootId,\n        seed_fragment_ids_json: String(parentConcept.seed_fragment_ids_json || '[]'),\n        concept_thesis: childThesis,\n        symbolic_tension: String(parentConcept.symbolic_tension || '').trim(),\n        material_anchor: String(parentConcept.material_anchor || '').trim(),\n        spatial_directive: String(parentConcept.spatial_directive || '').trim(),\n        palette_directive: String(parentConcept.palette_directive || '{}'),\n        texture_directive: String(parentConcept.texture_directive || '{}'),\n        abstraction_target: Number(parentConcept.abstraction_target || 6.2),\n        series_dna_json: JSON.stringify(childSeriesDNA),\n        prompt_guardrails_json: String(parentConcept.prompt_guardrails_json || '{}'),\n        quality_score: Number(parentConcept.quality_score || 0),\n        state: 'ready',\n        lock_owner: '',\n        lock_expires_at: null,\n        used_count: 0,\n        last_used_at: null,\n        created_at: now,\n        updated_at: now\n      },\n      lineage: {\n        lineage_id: `tvpx_lin_${fnv1a(childId + '::' + parentId)}`,\n        series_group_id: seriesGroupId,\n        root_asset_id: rootAssetId,\n        parent_asset_id: parentAssetId,\n        child_asset_id: null,\n        parent_concept_id: parentId,\n        child_concept_id: childId,\n        variation_index: Number(v.variation_index || 0),\n        variation_instruction: variationInstruction,\n        continuity_rules_json: JSON.stringify(plan.continuity_rules || {}),\n        created_at: now\n      }\n    }\n  };\n});"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst j = $json || {};\nconst ctx = j.ctx || {};\nconst parentConcept = j.parent?.concept || {};\nconst parentAsset = j.parent?.asset || {};\nconst replyIndex = j.reply_index || {};\nconst plan = j.series_plan || {};\n\nconst rootId = String(parentConcept.root_concept_id || parentConcept.concept_id || '').trim();\nconst parentId = String(parentConcept.concept_id || '').trim();\nconst rootAssetId = String(parentAsset.root_asset_id || parentAsset.asset_id || '').trim();\nconst parentAssetId = String(parentAsset.asset_id || '').trim();\nconst familyId = String(parentAsset.asset_family_id || replyIndex.asset_family_id || ctx.asset_family_id || '').trim();\n\nif (!parentId) throw new Error('TVPX__50: missing parent concept_id.');\nif (!parentAssetId) throw new Error('TVPX__50: missing parent asset_id.');\n\nconst now = new Date().toISOString();\nconst variations = Array.isArray(plan.variations) ? plan.variations : [];\n\nreturn variations.map((v) => {\n  const delta = String(v.prompt_delta || v.variation_instruction || '').trim();\n  const seed = `${ctx.trace_id}::${parentId}::${v.variation_index}::${delta}`;\n  const childId = `tvpx_cp_${fnv1a(seed)}`;\n\n  let seriesDNA = {};\n  try {\n    seriesDNA = JSON.parse(String(parentConcept.series_dna_json || '{}'));\n  } catch {\n    seriesDNA = {};\n  }\n\n  const seriesGroupId = String(\n    plan.series_group_id ||\n    seriesDNA.series_group_id ||\n    `tvpx_series_${fnv1a(parentId + '::' + now)}`\n  ).trim();\n\n  const childSeriesDNA = {\n    ...seriesDNA,\n    series_group_id: seriesGroupId,\n    variation_index: Number(v.variation_index || 0),\n    prompt_delta: delta,\n    palette_shift: String(v.palette_shift || '').trim(),\n    atmosphere_shift: String(v.atmosphere_shift || '').trim(),\n    intensity_change: String(v.intensity_change || '').trim()\n  };\n\n  const thesis = String(parentConcept.concept_thesis || '').trim();\n  const variationInstruction = String(v.variation_instruction || '').trim();\n  const childThesis = variationInstruction\n    ? `${thesis} | Variation: ${variationInstruction}`\n    : thesis;\n\n  const childCtx = {\n    ...ctx,\n    ...(familyId ? { asset_family_id: familyId } : {})\n  };\n\n  return {\n    json: {\n      ctx: childCtx,\n      child: {\n        concept_id: childId,\n        trace_id: ctx.trace_id,\n        origin_type: 'telegram_series',\n        source_id: String(parentConcept.source_id || '').trim(),\n        parent_concept_id: parentId,\n        root_concept_id: rootId,\n        seed_fragment_ids_json: String(parentConcept.seed_fragment_ids_json || '[]'),\n        concept_thesis: childThesis,\n        symbolic_tension: String(parentConcept.symbolic_tension || '').trim(),\n        material_anchor: String(parentConcept.material_anchor || '').trim(),\n        spatial_directive: String(parentConcept.spatial_directive || '').trim(),\n        palette_directive: String(parentConcept.palette_directive || '{}'),\n        texture_directive: String(parentConcept.texture_directive || '{}'),\n        abstraction_target: Number(parentConcept.abstraction_target || 6.2),\n        series_dna_json: JSON.stringify(childSeriesDNA),\n        prompt_guardrails_json: String(parentConcept.prompt_guardrails_json || '{}'),\n        quality_score: Number(parentConcept.quality_score || 0),\n        state: 'ready',\n        lock_owner: '',\n        lock_expires_at: null,\n        used_count: 0,\n        last_used_at: null,\n        created_at: now,\n        updated_at: now\n      },\n      lineage: {\n        lineage_id: `tvpx_lin_${fnv1a(childId + '::' + parentId)}`,\n        series_group_id: seriesGroupId,\n        root_asset_id: rootAssetId,\n        parent_asset_id: parentAssetId,\n        child_asset_id: null,\n        parent_concept_id: parentId,\n        child_concept_id: childId,\n        variation_index: Number(v.variation_index || 0),\n        variation_instruction: variationInstruction,\n        continuity_rules_json: JSON.stringify(plan.continuity_rules || {}),\n        created_at: now\n      }\n    }\n  };\n});"
       },
       "id": "e56a974f-746a-4819-950d-0ca4ee570ccc",
       "name": "Build Child Concepts",
@@ -1247,6 +1247,19 @@
           "name": "videoGenForSocialBot"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json || {};\nconst child = (j.child && typeof j.child === 'object') ? j.child : {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? { ...j.ctx } : {};\nconst conceptId = String(child.concept_id || j.concept_id || '').trim();\nif (!conceptId) {\n  throw new Error('TVPX__50: series child concept_id missing before image generation dispatch.');\n}\nreturn [{\n  json: {\n    ...j,\n    ctx,\n    concept_id: conceptId,\n    asset_family_id: String(ctx.asset_family_id || j.asset_family_id || '').trim() || null\n  }\n}];"
+      },
+      "id": "0fad9496-55da-4c8c-9057-d4ffcd756759",
+      "name": "Build Image Generation Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        352
+      ]
     }
   ],
   "connections": {
@@ -1438,7 +1451,7 @@
       "main": [
         [
           {
-            "node": "Call Image Generation",
+            "node": "Build Image Generation Payload",
             "type": "main",
             "index": 0
           }
@@ -1446,17 +1459,6 @@
         [
           {
             "node": "Send Series Queued Ack",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call Image Generation": {
-      "main": [
-        [
-          {
-            "node": "Upsert Series Lineage",
             "type": "main",
             "index": 0
           }
@@ -1488,6 +1490,11 @@
     "Upsert Series Lineage": {
       "main": [
         [
+          {
+            "node": "Call Image Generation",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "Next Variation",
             "type": "main",
@@ -1757,6 +1764,17 @@
         [
           {
             "node": "Send Video Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Generation Payload": {
+      "main": [
+        [
+          {
+            "node": "Upsert Series Lineage",
             "type": "main",
             "index": 0
           }

@@ -121,9 +121,14 @@
     },
     {
       "parameters": {
+        "authentication": "oAuth2",
+        "binaryData": true,
+        "binaryPropertyName": "image",
         "name": "={{$json.filename}}",
-        "options": {},
-        "authentication": "oAuth2"
+        "parents": [
+          "={{$json.ctx.drive_folder_id}}"
+        ],
+        "options": {}
       },
       "id": "7dcec58b-23ba-4c41-b1c3-36c0034fdfca",
       "name": "Upload Color To Google Drive",
@@ -295,223 +300,6 @@
     },
     {
       "parameters": {
-        "url": "={{$json.family.bw.image_url}}",
-        "options": {
-          "response": {},
-          "timeout": 180000
-        }
-      },
-      "id": "faae3e52-802b-47c4-bb15-a09d7116f01a",
-      "name": "Download B W Image",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        32,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/** Ensure Binary For B W (binary property 'image') */\nconst base = $items('Capture Telegram Message Id Color')[0].json;\nconst ctx = base.ctx;\nconst binKeys = $binary ? Object.keys($binary) : [];\nif (!binKeys.length) throw new Error('No binary found from Download B W Image.');\nconst firstKey = binKeys[0];\nconst b = $binary[firstKey];\n\nreturn [{ json: { ...base, variant: 'bw' }, binary: { image: b } }];"
-      },
-      "id": "8ee7edcb-3476-49a9-9c18-1e693fa71d46",
-      "name": "Ensure Binary For B W",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        256,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/** Make Safe Filename B W */\nfunction safe(s){\n  return String(s||'').toLowerCase()\n    .replace(/[^a-z0-9\\-_.]+/g,'-')\n    .replace(/-+/g,'-')\n    .replace(/^-|-$/g,'')\n    .slice(0,80);\n}\nconst j = $json;\nconst ctx = j.ctx;\nconst ext = (j.family?.bw?.output_format || ctx.output_format || 'png').toLowerCase();\nconst baseName = safe(`tvpx_${ctx.trace_id}_${j.concept_id}_bw`);\nconst filename = `${baseName}.${ext === 'jpg' ? 'jpg' : ext === 'jpeg' ? 'jpg' : ext}`;\nreturn [{ json: { ...j, filename }, binary: $binary }];"
-      },
-      "id": "e86e776f-783d-4918-9cfd-889e93abdd59",
-      "name": "Make Safe Filename B W",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        480,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "authentication": "oAuth2",
-        "name": "={{$json.filename}}",
-        "options": {}
-      },
-      "id": "cc3461bc-8ead-48db-b663-5f7ba710d736",
-      "name": "Upload B W To Google Drive",
-      "type": "n8n-nodes-base.googleDrive",
-      "typeVersion": 1,
-      "position": [
-        704,
-        0
-      ],
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "Qf75UASR5hw79O6L",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "/** Normalize Drive Result (B W) + merge into assets */\nconst base = $items('Normalize Drive Result Color')[0].json;\nconst ctx = base.ctx;\n\nconst r = $json || {};\nconst fileId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!fileId) throw new Error('Google Drive upload (B W) returned no file id.');\n\nconst viewUrl = String(r.webViewLink || r.webViewUrl || r.alternateLink || '').trim();\nconst dlUrl = String(r.webContentLink || r.downloadUrl || '').trim();\n\nreturn [{\n  json: {\n    ...base,\n    assets: {\n      ...base.assets,\n      bw: {\n        filename: $items('Make Safe Filename B W')[0].json.filename,\n        drive_file_id: fileId,\n        drive_view_url: viewUrl,\n        drive_download_url: dlUrl,\n        provider_image_url: String(base.family.bw.image_url || '').trim()\n      }\n    }\n  }\n}];"
-      },
-      "id": "92f589ef-c438-4a80-b509-8e16165287bd",
-      "name": "Normalize Drive Result B W",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        928,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "upsert",
-        "dataTableId": {
-          "__rl": true,
-          "value": "EMrgSDBhBwr8SiT9",
-          "mode": "list",
-          "cachedResultName": "tvpx_asset_registry",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/EMrgSDBhBwr8SiT9"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "asset_id",
-              "keyValue": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_bw'}}"
-            }
-          ]
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "asset_id": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_bw'}}",
-            "trace_id": "={{$json.ctx.trace_id}}",
-            "concept_id": "={{$json.concept_id}}",
-            "asset_family_id": "={{$json.asset_family_id}}",
-            "variant_key": "bw",
-            "render_mode": "primary",
-            "provider_image_url": "={{$json.assets.bw.provider_image_url}}",
-            "drive_file_id": "={{$json.assets.bw.drive_file_id}}",
-            "drive_view_url": "={{$json.assets.bw.drive_view_url}}",
-            "drive_download_url": "={{$json.assets.bw.drive_download_url}}",
-            "created_at": "={{$now}}"
-          },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "714c6f56-cea9-462d-8123-d828ea6c6a4f",
-      "name": "Upsert Asset Registry B W",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        1152,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "sendPhoto",
-        "chatId": "={{$json.ctx.telegram_chat_id}}",
-        "binaryData": true,
-        "binaryPropertyName": "image",
-        "additionalFields": {
-          "caption": "={{'The Velvet Paradox — B&W (primary)\\nConcept: ' + $json.concept_id + '\\nReply to THIS image with /series 4 (or /series 3 harsher contrast) to spawn variations.'}}"
-        }
-      },
-      "id": "ce7a47c5-b716-4331-8b5d-ba750d8ff580",
-      "name": "Send B W To Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [
-        1376,
-        0
-      ],
-      "webhookId": "be31dd81-7325-4220-bbbd-7f98cb0c2604",
-      "credentials": {
-        "telegramApi": {
-          "id": "nXE4YlrFVa15bP8Q",
-          "name": "videoGenForSocialBot"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "jsCode": "/** Capture Telegram Message Id (B W) */\nconst base = $items('Normalize Drive Result B W')[0].json;\nconst ctx = base.ctx;\n\nif (ctx.telegram_disabled) {\n  return [{ json: { ...base, telegram: { ...(base.telegram||{}), bw_message_id: null } } }];\n}\n\nconst resp = $json || {};\nconst msgId = resp.message_id || resp.result?.message_id || resp.data?.message_id;\n\nif (!msgId) {\n  return [{\n    json: {\n      ...base,\n      telegram: {\n        ...(base.telegram || {}),\n        bw_message_id: null\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...base,\n    telegram: {\n      ...(base.telegram || {}),\n      bw_message_id: Number(msgId)\n    }\n  }\n}];"
-      },
-      "id": "ca5c2728-b8b1-439c-871b-c2d2154bc3ab",
-      "name": "Capture Telegram Message Id B W",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1600,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "upsert",
-        "dataTableId": {
-          "__rl": true,
-          "value": "19rCaZx3furKQz5y",
-          "mode": "list",
-          "cachedResultName": "tvpx_telegram_reply_index",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/19rCaZx3furKQz5y"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "chat_id",
-              "keyValue": "={{$json.ctx.telegram_chat_id}}"
-            },
-            {
-              "keyName": "message_id",
-              "keyValue": "={{$json.telegram.bw_message_id}}"
-            }
-          ]
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "reply_index_id": "={{'tvpx_ridx_' + $json.ctx.trace_id + '_' + $json.concept_id + '_bw'}}",
-            "chat_id": "={{$json.ctx.telegram_chat_id}}",
-            "message_id": "={{$json.telegram.bw_message_id}}",
-            "asset_id": "={{'tvpx_as_' + $json.ctx.trace_id + '_' + $json.concept_id + '_bw'}}",
-            "asset_family_id": "={{$json.asset_family_id}}",
-            "concept_id": "={{$json.concept_id}}",
-            "message_role": "primary_bw",
-            "reply_mode": "series_spawn",
-            "is_active": true,
-            "created_at": "={{$now}}"
-          },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "2084a47b-160f-4fb4-a2cd-84655ce510b6",
-      "name": "Register Reply Index B W",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        1824,
-        0
-      ],
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
         "model": {
           "__rl": true,
           "value": "gpt-5.2",
@@ -615,67 +403,6 @@
       "typeVersion": 1,
       "position": [
         2624,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/**\n * Build Video Seed Row (future proof)\n * Only queues COLOR asset.\n */\nconst j = $json;\nconst ctx = j.ctx;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    video_seed: {\n      video_seed_id: `tvpx_vid_${ctx.trace_id}_${j.concept_id}`,\n      asset_id: `tvpx_as_${ctx.trace_id}_${j.concept_id}_color`,\n      concept_id: j.concept_id,\n      provider_target: 'fal_video',\n      still_image_drive_url: j.assets.color.drive_view_url,\n      motion_prompt: '',\n      camera_motion_profile: '',\n      duration_hint: '5-7s',\n      aspect_ratio: '4:5',\n      state: 'queued',\n      created_at: now\n    }\n  }\n}];"
-      },
-      "id": "58f4f940-f44c-423b-b010-2fa6ba862618",
-      "name": "Build Video Seed Row",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2848,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "upsert",
-        "dataTableId": {
-          "__rl": true,
-          "value": "IQPfZFZ9krMbQRcA",
-          "mode": "list",
-          "cachedResultName": "tvpx_video_seed_queue",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/IQPfZFZ9krMbQRcA"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "video_seed_id",
-              "keyValue": "={{$json.video_seed.video_seed_id}}"
-            }
-          ]
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "video_seed_id": "={{$json.video_seed.video_seed_id}}",
-            "asset_id": "={{$json.video_seed.asset_id}}",
-            "concept_id": "={{$json.video_seed.concept_id}}",
-            "provider_target": "={{$json.video_seed.provider_target}}",
-            "still_image_drive_url": "={{$json.video_seed.still_image_drive_url}}",
-            "motion_prompt": "={{$json.video_seed.motion_prompt}}",
-            "camera_motion_profile": "={{$json.video_seed.camera_motion_profile}}",
-            "duration_hint": "={{$json.video_seed.duration_hint}}",
-            "aspect_ratio": "={{$json.video_seed.aspect_ratio}}",
-            "state": "={{$json.video_seed.state}}",
-            "created_at": "={{$json.video_seed.created_at}}"
-          },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "e588f0df-e09e-411c-b742-8f0ba629a4df",
-      "name": "Upsert Video Seed Queue",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        3072,
         0
       ]
     },
@@ -827,92 +554,6 @@
         },
         "options": {}
       },
-      "id": "1d0b5302-c6aa-41ca-92fd-8df1e67d6928",
-      "name": "Should Send B W To Telegram",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        1376,
-        -224
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "string_1",
-              "leftValue": "={{$json.telegram.bw_message_id ? 'true' : 'false'}}",
-              "rightValue": "true",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "ef283e8c-c903-4d18-b7cf-447c07ff2496",
-      "name": "Has B W Message Id",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        1824,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "1ik7wsmxCMqRD01E",
-          "mode": "list",
-          "cachedResultName": "TVPX__60__Video Seed Preparer",
-          "cachedResultUrl": "/workflow/1ik7wsmxCMqRD01E"
-        },
-        "options": {
-          "waitForSubWorkflow": false
-        }
-      },
-      "id": "99dbd047-9f77-4b85-bb25-ad2fa886193b",
-      "name": "Call Video Seed Preparer",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        3296,
-        -224
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "string_1",
-              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
-              "rightValue": "true",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
       "id": "0932c315-47f8-4338-8fe8-858c6f0f97d4",
       "name": "Should Send Caption Draft",
       "type": "n8n-nodes-base.if",
@@ -940,6 +581,171 @@
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Family Drive Folder Plan (TVPX__40)\n * - Uses the asset family as the deterministic Drive folder identity\n * - If a folder id already exists upstream, reuse it\n */\nfunction safe(s) {\n  return String(s || '')\n    .replace(/[^a-zA-Z0-9_-]+/g, '_')\n    .replace(/_+/g, '_')\n    .replace(/^_|_$/g, '')\n    .slice(0, 100);\n}\n\nconst j = $json || {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? { ...j.ctx } : {};\nconst assetFamilyId = String(j.asset_family_id || ctx.asset_family_id || '').trim();\nif (!assetFamilyId) {\n  throw new Error('TVPX__40: asset_family_id is required for Drive folder planning.');\n}\nctx.asset_family_id = assetFamilyId;\nctx.drive_folder_name = String(ctx.drive_folder_name || '').trim() || safe(`TVPX__${assetFamilyId}`);\nreturn [{ json: { ...j, ctx, asset_family_id: assetFamilyId } }];"
+      },
+      "id": "f2a722f9-5f1d-4c36-8e28-47bc6358df40",
+      "name": "Build Family Drive Folder Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1984,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.drive_folder_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c23fa29c-937a-4937-96c0-ccff70e77940",
+      "name": "Has Existing Family Drive Folder",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{$json.ctx.drive_folder_name}}",
+        "filter": {
+          "whatToSearch": "folders",
+          "folderId": "root"
+        },
+        "options": {}
+      },
+      "id": "d68e85fb-ff3e-4f72-8354-10a83d0ff440",
+      "name": "Search Family Drive Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1536,
+        256
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qf75UASR5hw79O6L",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Build Family Drive Folder Plan')[0]?.json || {};\nconst folderName = String(base.ctx?.drive_folder_name || '').trim();\nconst hits = $input.all().map(i => i.json || {}).filter(row => String(row.id || row.fileId || row.data?.id || '').trim());\nconst exact = hits.find(row => String(row.name || row.title || '').trim() === folderName) || hits[0] || null;\nconst folderId = String(exact?.id || exact?.fileId || exact?.data?.id || '').trim();\nreturn [{\n  json: {\n    ...base,\n    ctx: {\n      ...(base.ctx || {}),\n      drive_folder_id: folderId || null\n    }\n  }\n}];"
+      },
+      "id": "684a742d-2dc8-4b17-a683-bf1c323b2440",
+      "name": "Attach Searched Family Drive Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.drive_folder_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c6d4a285-cdf9-4b14-9379-8a7a3cc7b940",
+      "name": "Has Resolved Family Drive Folder",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "folder",
+        "name": "={{$json.ctx.drive_folder_name}}",
+        "driveId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list",
+          "cachedResultName": "root"
+        },
+        "options": {}
+      },
+      "id": "1b3a0977-0af1-4aa5-aab5-4d02216eb140",
+      "name": "Create Family Drive Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -864,
+        352
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qf75UASR5hw79O6L",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Build Family Drive Folder Plan')[0]?.json || {};\nconst r = $json || {};\nconst folderId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!folderId) {\n  throw new Error('TVPX__40: Google Drive folder create returned no folder id.');\n}\nreturn [{\n  json: {\n    ...base,\n    ctx: {\n      ...(base.ctx || {}),\n      drive_folder_id: folderId\n    }\n  }\n}];"
+      },
+      "id": "4eff653a-6976-4831-bece-153dad111340",
+      "name": "Attach Created Family Drive Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        352
+      ]
     }
   ],
   "connections": {
@@ -969,7 +775,7 @@
       "main": [
         [
           {
-            "node": "Download Color Image",
+            "node": "Build Family Drive Folder Plan",
             "type": "main",
             "index": 0
           }
@@ -987,7 +793,7 @@
       "main": [
         [
           {
-            "node": "Download Color Image",
+            "node": "Build Family Drive Folder Plan",
             "type": "main",
             "index": 0
           }
@@ -1140,141 +946,6 @@
         ]
       ]
     },
-    "Download B W Image": {
-      "main": [
-        [
-          {
-            "node": "Ensure Binary For B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ensure Binary For B W": {
-      "main": [
-        [
-          {
-            "node": "Make Safe Filename B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Make Safe Filename B W": {
-      "main": [
-        [
-          {
-            "node": "Upload B W To Google Drive",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upload B W To Google Drive": {
-      "main": [
-        [
-          {
-            "node": "Normalize Drive Result B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Drive Result B W": {
-      "main": [
-        [
-          {
-            "node": "Upsert Asset Registry B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upsert Asset Registry B W": {
-      "main": [
-        [
-          {
-            "node": "Should Send B W To Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Should Send B W To Telegram": {
-      "main": [
-        [
-          {
-            "node": "Send B W To Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Capture Telegram Message Id B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send B W To Telegram": {
-      "main": [
-        [
-          {
-            "node": "Capture Telegram Message Id B W",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Capture Telegram Message Id B W": {
-      "main": [
-        [
-          {
-            "node": "Has B W Message Id",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Has B W Message Id": {
-      "main": [
-        [
-          {
-            "node": "Register Reply Index B W",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "LLM Caption Alchemist",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Register Reply Index B W": {
-      "main": [
-        [
-          {
-            "node": "LLM Caption Alchemist",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "LLM Caption Alchemist": {
       "main": [
         [
@@ -1338,6 +1009,97 @@
             "node": "LLM Caption Alchemist",
             "type": "ai_languageModel",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "Build Family Drive Folder Plan": {
+      "main": [
+        [
+          {
+            "node": "Has Existing Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Existing Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Download Color Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Attach Searched Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Searched Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Has Resolved Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Resolved Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Download Color Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Attach Created Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Created Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Download Color Image",
+            "type": "main",
+            "index": 0
           }
         ]
       ]

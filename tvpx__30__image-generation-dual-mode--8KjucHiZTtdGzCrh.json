@@ -322,38 +322,6 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "string_1",
-              "leftValue": "={{$json.render_variant}}",
-              "rightValue": "color",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "cd976680-9755-49ff-a180-6803c24255c6",
-      "name": "Is Color Variant",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        688,
-        256
-      ]
-    },
-    {
-      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "ra2mY4yUOOtS4PHv",
@@ -376,46 +344,6 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 5000
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "ra2mY4yUOOtS4PHv",
-          "mode": "list",
-          "cachedResultName": "TVPX__30A__Fal Render Submit And Poll",
-          "cachedResultUrl": "/workflow/ra2mY4yUOOtS4PHv"
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      },
-      "id": "de399038-7558-464a-b398-449dde6ec3ae",
-      "name": "Render B W Via Fal",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        912,
-        352
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 5000
-    },
-    {
-      "parameters": {
-        "mode": "append",
-        "numberInputs": 2,
-        "options": {}
-      },
-      "id": "fc179617-83dc-4a38-bc99-6267f0df287b",
-      "name": "Merge Color And B W",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1136,
-        256
-      ]
     },
     {
       "parameters": {
@@ -745,67 +673,6 @@
       "position": [
         1808,
         256
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/**\n * Failure Audit Builder\n * Use this on any branch you decide to wire into it.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ctx,\n    failure: {\n      failure_id: `tvpx_fail_${ctx.trace_id}_${now.replace(/[:.]/g,'')}`,\n      trace_id: ctx.trace_id,\n      stage_name: 'TVPX__30__Image Generation Dual Mode',\n      entity_type: 'concept',\n      entity_id: String(base.concept_id || ''),\n      severity: 'error',\n      payload_snapshot_json: JSON.stringify(base).slice(0, 18000),\n      error_text: 'See execution logs (n8n).',\n      retry_count: 0,\n      status: 'open',\n      created_at: now\n    }\n  }\n}];"
-      },
-      "id": "4e172281-4211-4adb-998e-241f4d82ba9a",
-      "name": "Build Failure Audit",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2128,
-        592
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "upsert",
-        "dataTableId": {
-          "__rl": true,
-          "value": "N16VM5U0EMaPVs0E",
-          "mode": "list",
-          "cachedResultName": "tvpx_failure_audit",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/N16VM5U0EMaPVs0E"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "failure_id",
-              "keyValue": "={{$json.failure.failure_id}}"
-            }
-          ]
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "failure_id": "={{$json.failure.failure_id}}",
-            "trace_id": "={{$json.failure.trace_id}}",
-            "stage_name": "={{$json.failure.stage_name}}",
-            "entity_type": "={{$json.failure.entity_type}}",
-            "entity_id": "={{$json.failure.entity_id}}",
-            "severity": "={{$json.failure.severity}}",
-            "payload_snapshot_json": "={{$json.failure.payload_snapshot_json}}",
-            "error_text": "={{$json.failure.error_text}}",
-            "retry_count": "={{$json.failure.retry_count}}",
-            "status": "={{$json.failure.status}}",
-            "created_at": "={{$json.failure.created_at}}"
-          },
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "a4f55031-cca3-447c-a854-4a5d0bbd644c",
-      "name": "Upsert Failure Audit",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        -2128,
-        816
       ]
     },
     {

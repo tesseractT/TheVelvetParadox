@@ -77,7 +77,12 @@
     {
       "parameters": {
         "authentication": "oAuth2",
+        "binaryData": true,
+        "binaryPropertyName": "image",
         "name": "={{$json.filename}}",
+        "parents": [
+          "={{$json.ctx.drive_folder_id}}"
+        ],
         "options": {}
       },
       "id": "6bc9fc08-78e2-4d6d-86a0-90d4c6bde3a7",
@@ -311,6 +316,171 @@
         -96
       ],
       "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Family Drive Folder Plan (TVPX__41)\n * Reuses the same deterministic family folder as the source image\n */\nfunction safe(s) {\n  return String(s || '')\n    .replace(/[^a-zA-Z0-9_-]+/g, '_')\n    .replace(/_+/g, '_')\n    .replace(/^_|_$/g, '')\n    .slice(0, 100);\n}\n\nconst j = $json || {};\nconst ctx = (j.ctx && typeof j.ctx === 'object') ? { ...j.ctx } : {};\nconst assetFamilyId = String(j.asset_family_id || ctx.asset_family_id || '').trim();\nif (!assetFamilyId) {\n  throw new Error('TVPX__41: asset_family_id is required for Drive folder planning.');\n}\nctx.asset_family_id = assetFamilyId;\nctx.drive_folder_name = String(ctx.drive_folder_name || '').trim() || safe(`TVPX__${assetFamilyId}`);\nreturn [{ json: { ...j, ctx, asset_family_id: assetFamilyId } }];"
+      },
+      "id": "359db7e0-ed19-4e34-bbca-07a08ec6d541",
+      "name": "Build Family Drive Folder Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1984,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.drive_folder_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10c222fd-d4c6-422f-a9ee-505fd6e7ed4f",
+      "name": "Has Existing Family Drive Folder",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{$json.ctx.drive_folder_name}}",
+        "filter": {
+          "whatToSearch": "folders",
+          "folderId": "root"
+        },
+        "options": {}
+      },
+      "id": "a5ce21e8-38a7-40ae-a63e-0b5006b8fc13",
+      "name": "Search Family Drive Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1536,
+        256
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qf75UASR5hw79O6L",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Build Family Drive Folder Plan')[0]?.json || {};\nconst folderName = String(base.ctx?.drive_folder_name || '').trim();\nconst hits = $input.all().map(i => i.json || {}).filter(row => String(row.id || row.fileId || row.data?.id || '').trim());\nconst exact = hits.find(row => String(row.name || row.title || '').trim() === folderName) || hits[0] || null;\nconst folderId = String(exact?.id || exact?.fileId || exact?.data?.id || '').trim();\nreturn [{\n  json: {\n    ...base,\n    ctx: {\n      ...(base.ctx || {}),\n      drive_folder_id: folderId || null\n    }\n  }\n}];"
+      },
+      "id": "4fe26ffd-9242-4037-baf4-cb7717ecee22",
+      "name": "Attach Searched Family Drive Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "string_1",
+              "leftValue": "={{$json.ctx.drive_folder_id ? 'true' : 'false'}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5321ee38-9407-4406-b0b4-91f4fc297230",
+      "name": "Has Resolved Family Drive Folder",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "folder",
+        "name": "={{$json.ctx.drive_folder_name}}",
+        "driveId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list",
+          "cachedResultName": "root"
+        },
+        "options": {}
+      },
+      "id": "9ecea4de-ad09-4a1d-8878-f899fc1d0e84",
+      "name": "Create Family Drive Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -864,
+        352
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Qf75UASR5hw79O6L",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $items('Build Family Drive Folder Plan')[0]?.json || {};\nconst r = $json || {};\nconst folderId = String(r.id || r.fileId || r.data?.id || '').trim();\nif (!folderId) {\n  throw new Error('TVPX__41: Google Drive folder create returned no folder id.');\n}\nreturn [{\n  json: {\n    ...base,\n    ctx: {\n      ...(base.ctx || {}),\n      drive_folder_id: folderId\n    }\n  }\n}];"
+      },
+      "id": "31c2a3ae-7d85-4bec-8c48-c0088ee4eaeb",
+      "name": "Attach Created Family Drive Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        352
+      ]
     }
   ],
   "connections": {
@@ -329,7 +499,7 @@
       "main": [
         [
           {
-            "node": "Download B W Image",
+            "node": "Build Family Drive Folder Plan",
             "type": "main",
             "index": 0
           }
@@ -452,6 +622,97 @@
           }
         ],
         []
+      ]
+    },
+    "Build Family Drive Folder Plan": {
+      "main": [
+        [
+          {
+            "node": "Has Existing Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Existing Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Download B W Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Attach Searched Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Searched Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Has Resolved Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Resolved Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Download B W Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Attach Created Family Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Created Family Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Download B W Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
