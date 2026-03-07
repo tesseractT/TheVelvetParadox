@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-07T00:59:44.578Z",
+  "updatedAt": "2026-03-07T01:30:40.759Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "50icbBfGoLwcHdTL",
   "name": "TVPX__20__Latent Tension To Scene Seed Pool",
@@ -13,7 +13,7 @@
       "typeVersion": 1,
       "position": [
         -1760,
-        340
+        412
       ],
       "id": "9a380e72-6761-4951-9567-0f3bd1732be9",
       "name": "When clicking ‘Execute workflow’"
@@ -25,8 +25,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        6400,
-        460
+        7296,
+        532
       ]
     },
     {
@@ -38,7 +38,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -640,
+        -192,
         340
       ]
     },
@@ -154,7 +154,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6176,
+        6848,
         336
       ]
     },
@@ -167,7 +167,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5952,
+        6624,
         336
       ]
     },
@@ -603,7 +603,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6176,
+        6848,
         144
       ]
     },
@@ -616,7 +616,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5952,
+        6624,
         144
       ]
     },
@@ -649,7 +649,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        5728,
+        6400,
         240
       ]
     },
@@ -662,7 +662,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5504,
+        6176,
         240
       ]
     },
@@ -675,7 +675,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5280,
+        5952,
         240
       ]
     },
@@ -698,7 +698,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        4928,
+        5600,
         240
       ]
     },
@@ -711,7 +711,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4704,
+        5376,
         240
       ]
     },
@@ -734,7 +734,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        4352,
+        5024,
         240
       ]
     },
@@ -747,7 +747,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4128,
+        4800,
         240
       ]
     },
@@ -770,7 +770,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        3776,
+        4448,
         240
       ]
     },
@@ -783,7 +783,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3552,
+        4224,
         240
       ]
     },
@@ -806,7 +806,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        3200,
+        3872,
         240
       ]
     },
@@ -819,7 +819,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2752,
+        3424,
         240
       ]
     },
@@ -842,7 +842,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2400,
+        3072,
         240
       ]
     },
@@ -1025,7 +1025,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2464,
+        3136,
         48
       ]
     },
@@ -1038,7 +1038,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2176,
+        2848,
         144
       ]
     },
@@ -1051,7 +1051,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1952,
+        2624,
         144
       ]
     },
@@ -1074,7 +1074,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        1600,
+        2272,
         144
       ]
     },
@@ -1087,7 +1087,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1376,
+        2048,
         144
       ]
     },
@@ -1117,8 +1117,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1152,
-        360
+        1824,
+        312
       ],
       "alwaysOutputData": true
     },
@@ -1132,7 +1132,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        1736,
+        2408,
         368
       ],
       "credentials": {
@@ -1152,7 +1152,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        1608,
+        2280,
         368
       ],
       "credentials": {
@@ -1171,7 +1171,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        928,
+        1600,
         144
       ]
     },
@@ -1287,21 +1287,21 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6176,
-        556
+        1824,
+        532
       ]
     },
     {
       "parameters": {
-        "jsCode": "/** Build No Fragments Reject */\nconst base = $json || {};\nconst ctx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst now = new Date().toISOString();\nreturn [{\n  json: {\n    ...base,\n    reject: {\n      reject_id: 'tvpx_rej_' + (ctx.trace_id || 'missing') + '_no_fragments',\n      trace_id: ctx.trace_id,\n      stage_name: 'concept_forge_ingress',\n      rejection_reason: 'No eligible fragments were found for concept forging. The selected crawl run may be empty, already consumed, or missing clean fragments.',\n      raw_output_json: JSON.stringify({\n        crawl_run_id: ctx.crawl_run_id,\n        source_id: ctx.source_id,\n        candidate_debug: base.candidate_debug || null,\n      }),\n      created_at: now,\n    },\n  },\n}];"
+        "jsCode": "const base = $json || {};\nconst ctx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ...base,\n    reject: {\n      reject_id: 'tvpx_rej_' + (ctx.trace_id || 'missing') + '_no_fragments_' + (ctx.crawl_run_id || 'missing'),\n      trace_id: ctx.trace_id,\n      stage_name: 'fragment_lookup',\n      rejection_reason: 'Candidate crawl run was selected, but no clean fragments were found in tvpx_text_fragment_bank for that crawl_run_id.',\n      raw_output_json: JSON.stringify({\n        crawl_run_id: ctx.crawl_run_id || null,\n        source_id: ctx.source_id || null,\n        candidate_run: base.candidate_run || null,\n        candidate_debug: base.candidate_debug || null,\n      }),\n      created_at: now,\n    },\n  },\n}];"
       },
       "id": "83fd6a90-9672-4e9f-aa77-5e4d9196910b",
       "name": "Build No Fragments Reject",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5952,
-        556
+        1600,
+        532
       ]
     },
     {
@@ -1316,7 +1316,7 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{Array.isArray($json.fragments) && $json.fragments.length > 0 ? 'true' : 'false'}}",
+              "leftValue": "={{ Array.isArray($json.fragments) && $json.fragments.some(f => String(f.fragment_id || f.id || f.dt_row_id || f.cleaned_text || f.text || '').trim()) ? 'true' : 'false' }}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
@@ -1333,20 +1333,20 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        704,
+        1376,
         268
       ]
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Reattach Context After Fragments\n * Rebuilds the runtime packet from the active candidate plus the fetched fragment rows.\n */\nconst envelope = $items('Initialize Envelope')[0]?.json || {};\nconst base = $items('Attach Source To Candidate')[0]?.json || {};\nconst inputRows = $input.all().map((item) => item.json || {});\n\nconst fragments = inputRows.filter((row) => row && String(row.fragment_id || row.id || row.dt_row_id || '').trim());\nconst providedFragments = Array.isArray(base.provided_fragments)\n  ? base.provided_fragments\n  : (Array.isArray(envelope.provided_fragments) ? envelope.provided_fragments : []);\n\nconst ctx = (base.ctx && typeof base.ctx === 'object')\n  ? base.ctx\n  : ((envelope.ctx && typeof envelope.ctx === 'object') ? envelope.ctx : {});\n\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst envelopeSource = (envelope.source && typeof envelope.source === 'object') ? envelope.source : {};\nconst source = Object.keys(baseSource).length ? baseSource : envelopeSource;\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    fragments: fragments.length ? fragments : providedFragments,\n    candidate_run: base.candidate_run || null,\n    candidate_debug: base.candidate_debug || null,\n  },\n}];"
+        "jsCode": "/**\n * Reattach Context After Fragments\n * Rebuilds the runtime packet from the active candidate plus the fetched fragment rows.\n */\nconst envelope = $items('Initialize Envelope')[0]?.json || {};\nconst base = $items('Attach Source To Candidate')[0]?.json || {};\nconst inputRows = $input.all().map((item) => item.json || {});\n\nconst fragments = inputRows.filter((row) => {\n  const id = String(row.fragment_id || row.id || row.dt_row_id || '').trim();\n  const text = String(row.cleaned_text || row.text || row.raw_text || '').trim();\n  return Boolean(id || text);\n});\n\nconst providedFragments = Array.isArray(base.provided_fragments)\n  ? base.provided_fragments\n  : (Array.isArray(envelope.provided_fragments) ? envelope.provided_fragments : []);\n\nconst ctx = (base.ctx && typeof base.ctx === 'object')\n  ? base.ctx\n  : ((envelope.ctx && typeof envelope.ctx === 'object') ? envelope.ctx : {});\n\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst envelopeSource = (envelope.source && typeof envelope.source === 'object') ? envelope.source : {};\nconst source = Object.keys(baseSource).length ? baseSource : envelopeSource;\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    fragments: fragments.length ? fragments : providedFragments,\n    candidate_run: base.candidate_run || null,\n    candidate_debug: {\n      ...(base.candidate_debug || {}),\n      fragment_rows_received: inputRows.length,\n      fragment_rows_usable: fragments.length,\n      provided_fragments_count: providedFragments.length,\n      crawl_run_id: String(ctx.crawl_run_id || '').trim(),\n    },\n  },\n}];"
       },
       "id": "ee925050-b69c-497b-95e0-0d7a08784efd",
       "name": "Reattach Context After Fragments",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        480,
+        1152,
         268
       ]
     },
@@ -1359,7 +1359,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        32,
+        480,
         268
       ]
     },
@@ -1389,35 +1389,35 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -192,
+        256,
         268
       ],
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Prepare Active Candidate Run\n * Materializes the active split-in-batches item onto $json for downstream DataTable lookups.\n */\nconst item = $json || {};\nconst ctx = (item.ctx && typeof item.ctx === 'object') ? item.ctx : {};\nconst source = (item.source && typeof item.source === 'object') ? item.source : {};\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    provided_fragments: Array.isArray(item.provided_fragments) ? item.provided_fragments : [],\n    candidate_run: item.candidate_run || null,\n    candidate_debug: item.candidate_debug || null,\n  },\n}];"
+        "jsCode": "/**\n * Prepare Active Candidate Run\n * Only acts on real candidate packets.\n * Drops loop feedback/control packets safely.\n */\nconst item = $json || {};\n\nconst providedFragments = Array.isArray(item.provided_fragments) ? item.provided_fragments : [];\n\n// Ignore feedback/control packets leaking from the loop\nif (item.loop_continue === true) {\n  return [];\n}\n\nif (!item || !Object.keys(item).length) {\n  return [];\n}\n\nif (item.loop_packet_kind !== 'candidate_run') {\n  return [];\n}\n\nconst ctx = (item.ctx && typeof item.ctx === 'object') ? item.ctx : {};\nconst source = (item.source && typeof item.source === 'object') ? item.source : {};\nconst candidateRun = (item.candidate_run && typeof item.candidate_run === 'object') ? item.candidate_run : {};\n\nconst crawlRunId = String(ctx.crawl_run_id || candidateRun.crawl_run_id || '').trim();\nconst sourceId = String(ctx.source_id || candidateRun.source_id || '').trim();\n\nif (!crawlRunId && !providedFragments.length) {\n  throw new Error(\n    'TVPX__20: candidate packet reached Prepare Active Candidate Run without crawl_run_id. ' +\n    JSON.stringify({\n      loop_packet_kind: item.loop_packet_kind || null,\n      candidate_packet_id: item.candidate_packet_id || null,\n      candidate_run_keys: Object.keys(candidateRun || {}),\n      ctx_keys: Object.keys(ctx || {}),\n      candidate_debug: item.candidate_debug || null,\n    })\n  );\n}\n\nreturn [{\n  json: {\n    loop_packet_kind: 'candidate_run',\n    candidate_packet_id: String(item.candidate_packet_id || '').trim() || null,\n    ctx: {\n      ...ctx,\n      crawl_run_id: crawlRunId,\n      source_id: sourceId,\n    },\n    source,\n    provided_fragments: providedFragments,\n    candidate_run: {\n      ...candidateRun,\n      crawl_run_id: crawlRunId,\n      source_id: sourceId,\n    },\n    candidate_debug: item.candidate_debug || null,\n  },\n}];"
       },
       "id": "3d6e8f7b-1b26-4d69-a5f9-773214bf6a2e",
       "name": "Prepare Active Candidate Run",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -416,
+        32,
         268
       ]
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build Candidate Run Packets\n * Hydrates the same crawl-run context TVPX__10 would have handed downstream.\n */\nfunction toInt(value, fallback = 0) {\n  const n = Number(value);\n  return Number.isFinite(n) ? Math.round(n) : fallback;\n}\n\nfunction stampOf(row) {\n  return String(\n    row.completed_at ||\n    row.started_at ||\n    row.updated_at ||\n    row.created_at ||\n    ''\n  ).trim();\n}\n\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst providedFragments = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\nconst requestedRunId = String(baseCtx.crawl_run_id || '').trim();\nconst requestedSourceId = String(baseCtx.source_id || '').trim();\nconst maxRuns = Math.max(1, Math.min(Number(baseCtx.autonomous_run_limit || 3), 12));\nconst minFragmentsPerRun = Math.max(1, Math.min(Number(baseCtx.min_fragments_per_run || 3), 20));\nconst allowReprocess = Boolean(baseCtx.allow_reprocess_runs);\n\nconst runRows = $items('Get Candidate Crawl Runs')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length)\n  .map((row) => ({\n    crawl_run_id: String(row.crawl_run_id || '').trim(),\n    trace_id: String(row.trace_id || '').trim(),\n    source_id: String(row.source_id || '').trim(),\n    trigger_mode: String(row.trigger_mode || '').trim(),\n    status: String(row.status || '').trim().toLowerCase(),\n    started_at: String(row.started_at || '').trim(),\n    completed_at: String(row.completed_at || '').trim(),\n    fragment_count: toInt(row.fragment_count, 0),\n    page_count: toInt(row.page_count, 0),\n    raw_item_count: toInt(row.raw_item_count, 0),\n  }))\n  .filter((row) => row.crawl_run_id);\n\nconst existingSceneSeedRows = $items('Get Existing Scene Seeds')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length);\n\nconst consumedRunIds = allowReprocess\n  ? new Set()\n  : new Set(\n      existingSceneSeedRows\n        .map((row) => String(row.crawl_run_id || '').trim())\n        .filter(Boolean)\n    );\n\nif (providedFragments.length) {\n  const inferredRunId = requestedRunId || String(providedFragments[0]?.crawl_run_id || '').trim();\n  const inferredSourceId = requestedSourceId || String(providedFragments[0]?.source_id || '').trim();\n\n  return [{\n    json: {\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n      },\n      source: baseSource,\n      provided_fragments: providedFragments,\n      candidate_run: {\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n        trace_id: String(baseCtx.trace_id || '').trim(),\n        trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n        status: 'provided_fragments',\n        fragment_count: providedFragments.length,\n      },\n      candidate_debug: {\n        selection_mode: 'provided_fragments',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 1,\n        selected_rank: 1,\n        run_rows_scanned: runRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n    },\n  }];\n}\n\nlet selectedRuns = [];\nif (requestedRunId) {\n  const exact = runRows.find((row) => row.crawl_run_id === requestedRunId);\n  selectedRuns = [exact || {\n    crawl_run_id: requestedRunId,\n    trace_id: String(baseCtx.trace_id || '').trim(),\n    source_id: requestedSourceId,\n    trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n    status: 'requested_manual',\n    fragment_count: 0,\n    page_count: 0,\n    raw_item_count: 0,\n    started_at: '',\n    completed_at: '',\n  }];\n} else {\n  selectedRuns = runRows\n    .filter((row) => !requestedSourceId || row.source_id === requestedSourceId)\n    .filter((row) => !row.status || ['completed', 'ready', 'done'].includes(row.status))\n    .filter((row) => allowReprocess || !consumedRunIds.has(row.crawl_run_id))\n    .filter((row) => row.fragment_count >= minFragmentsPerRun)\n    .sort((a, b) => {\n      if (b.fragment_count !== a.fragment_count) return b.fragment_count - a.fragment_count;\n      return stampOf(b).localeCompare(stampOf(a));\n    })\n    .slice(0, maxRuns);\n}\n\nif (!selectedRuns.length) {\n  return [{\n    json: {\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: requestedRunId,\n        source_id: requestedSourceId,\n      },\n      source: baseSource,\n      provided_fragments: [],\n      candidate_run: null,\n      candidate_debug: {\n        selection_mode: requestedRunId ? 'requested_run' : 'crawl_run_ledger',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 0,\n        selected_rank: 0,\n        run_rows_scanned: runRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n    },\n  }];\n}\n\nreturn selectedRuns.map((run, index) => ({\n  json: {\n    ctx: {\n      ...baseCtx,\n      trace_id: String(run.trace_id || baseCtx.trace_id || '').trim() || baseCtx.trace_id,\n      trigger_mode: String(run.trigger_mode || baseCtx.trigger_mode || 'internal').trim(),\n      crawl_run_id: String(run.crawl_run_id || '').trim(),\n      source_id: String(run.source_id || requestedSourceId || '').trim(),\n    },\n    source: baseSource,\n    provided_fragments: [],\n    candidate_run: run,\n    candidate_debug: {\n      selection_mode: requestedRunId ? 'requested_run' : 'crawl_run_ledger',\n      requested_crawl_run_id: requestedRunId || null,\n      requested_source_id: requestedSourceId || null,\n      selected_run_count: selectedRuns.length,\n      selected_rank: index + 1,\n      run_rows_scanned: runRows.length,\n      existing_scene_seed_rows: existingSceneSeedRows.length,\n      allow_reprocess_runs: allowReprocess,\n    },\n  },\n}));"
+        "jsCode": "/**\n * Build Candidate Run Packets\n * Standalone-safe candidate discovery.\n *\n * Primary source of truth: fragment bank\n * Secondary enrichment: crawl ledger\n * Consumed-run filtering: scene seed pool\n *\n * IMPORTANT:\n * - never emits a fake runnable packet with blank crawl_run_id\n * - emits one explicit no_candidate packet when nothing is eligible\n * - tags real loop packets with loop_packet_kind='candidate_run'\n */\nfunction toInt(value, fallback = 0) {\n  const n = Number(value);\n  return Number.isFinite(n) ? Math.round(n) : fallback;\n}\n\nfunction stampOf(row) {\n  return String(\n    row.last_fragment_at ||\n    row.completed_at ||\n    row.started_at ||\n    row.updated_at ||\n    row.created_at ||\n    ''\n  ).trim();\n}\n\nconst base = $items('Initialize Envelope')[0]?.json || {};\nconst baseCtx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst baseSource = (base.source && typeof base.source === 'object') ? base.source : {};\nconst providedFragments = Array.isArray(base.provided_fragments) ? base.provided_fragments : [];\n\nconst requestedRunId = String(baseCtx.crawl_run_id || '').trim();\nconst requestedSourceId = String(baseCtx.source_id || '').trim();\nconst maxRuns = Math.max(1, Math.min(Number(baseCtx.autonomous_run_limit || 3), 12));\nconst minFragmentsPerRun = Math.max(1, Math.min(Number(baseCtx.min_fragments_per_run || 3), 20));\nconst allowReprocess = Boolean(baseCtx.allow_reprocess_runs);\n\n// --------------------------------------------------\n// Fragment bank = primary truth\n// --------------------------------------------------\nconst fragmentRows = $items('Get Candidate Fragment Universe')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length)\n  .map((row) => ({\n    fragment_id: String(row.fragment_id || row.id || row.dt_row_id || '').trim(),\n    crawl_run_id: String(row.crawl_run_id || '').trim(),\n    source_id: String(row.source_id || '').trim(),\n    trace_id: String(row.trace_id || '').trim(),\n    cleaned_text: String(row.cleaned_text || row.text || row.raw_text || '').trim(),\n    page_url: String(row.page_url || row.url || '').trim(),\n    page_title: String(row.page_title || row.title || '').trim(),\n    created_at: String(row.created_at || '').trim(),\n    updated_at: String(row.updated_at || '').trim(),\n  }))\n  .filter((row) => row.crawl_run_id && row.cleaned_text);\n\nconst runMap = new Map();\n\nfor (const frag of fragmentRows) {\n  const key = frag.crawl_run_id;\n  if (!runMap.has(key)) {\n    runMap.set(key, {\n      crawl_run_id: frag.crawl_run_id,\n      source_id: frag.source_id,\n      trace_id: frag.trace_id,\n      clean_fragment_count: 0,\n      last_fragment_at: '',\n      sample_fragment_ids: [],\n      sample_page_titles: [],\n    });\n  }\n\n  const run = runMap.get(key);\n  run.clean_fragment_count += 1;\n\n  const stamp = String(frag.updated_at || frag.created_at || '').trim();\n  if (stamp && stamp > run.last_fragment_at) run.last_fragment_at = stamp;\n\n  if (frag.fragment_id && run.sample_fragment_ids.length < 8) {\n    run.sample_fragment_ids.push(frag.fragment_id);\n  }\n  if (frag.page_title && run.sample_page_titles.length < 4) {\n    run.sample_page_titles.push(frag.page_title);\n  }\n\n  if (!run.source_id && frag.source_id) run.source_id = frag.source_id;\n  if (!run.trace_id && frag.trace_id) run.trace_id = frag.trace_id;\n}\n\n// --------------------------------------------------\n// Crawl ledger = optional enrichment\n// --------------------------------------------------\nconst ledgerRows = $items('Get Candidate Crawl Runs')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length)\n  .map((row) => ({\n    crawl_run_id: String(row.crawl_run_id || '').trim(),\n    trace_id: String(row.trace_id || '').trim(),\n    source_id: String(row.source_id || '').trim(),\n    trigger_mode: String(row.trigger_mode || '').trim(),\n    status: String(row.status || '').trim().toLowerCase(),\n    started_at: String(row.started_at || '').trim(),\n    completed_at: String(row.completed_at || '').trim(),\n    fragment_count: toInt(row.fragment_count, 0),\n    page_count: toInt(row.page_count, 0),\n    raw_item_count: toInt(row.raw_item_count, 0),\n  }))\n  .filter((row) => row.crawl_run_id);\n\nconst ledgerMap = new Map(ledgerRows.map((row) => [row.crawl_run_id, row]));\n\n// --------------------------------------------------\n// Existing scene seeds = consumed runs\n// --------------------------------------------------\nconst existingSceneSeedRows = $items('Get Existing Scene Seeds')\n  .map((item) => item.json || {})\n  .filter((row) => row && Object.keys(row).length);\n\nconst consumedRunIds = allowReprocess\n  ? new Set()\n  : new Set(\n      existingSceneSeedRows\n        .map((row) => String(row.crawl_run_id || '').trim())\n        .filter(Boolean)\n    );\n\n// --------------------------------------------------\n// Explicit provided fragments bypass everything\n// --------------------------------------------------\nif (providedFragments.length) {\n  const inferredRunId = requestedRunId || String(providedFragments[0]?.crawl_run_id || '').trim();\n  const inferredSourceId = requestedSourceId || String(providedFragments[0]?.source_id || '').trim();\n\n  return [{\n    json: {\n      loop_packet_kind: 'candidate_run',\n      candidate_packet_id: `tvpx_candidate_${inferredRunId || 'provided'}_1`,\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n      },\n      source: baseSource,\n      provided_fragments: providedFragments,\n      candidate_run: {\n        crawl_run_id: inferredRunId,\n        source_id: inferredSourceId,\n        trace_id: String(baseCtx.trace_id || '').trim(),\n        trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n        status: 'provided_fragments',\n        clean_fragment_count: providedFragments.length,\n      },\n      candidate_debug: {\n        selection_mode: 'provided_fragments',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 1,\n        selected_rank: 1,\n        fragment_rows_scanned: fragmentRows.length,\n        discovered_fragment_runs: runMap.size,\n        ledger_rows_scanned: ledgerRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n      },\n      no_candidate: false,\n    },\n  }];\n}\n\n// --------------------------------------------------\n// Build run candidates from fragment groups first\n// --------------------------------------------------\nlet discoveredRuns = Array.from(runMap.values()).map((group) => {\n  const ledger = ledgerMap.get(group.crawl_run_id) || {};\n  return {\n    crawl_run_id: group.crawl_run_id,\n    trace_id: group.trace_id || String(ledger.trace_id || '').trim(),\n    source_id: group.source_id || String(ledger.source_id || '').trim(),\n    trigger_mode: String(ledger.trigger_mode || baseCtx.trigger_mode || 'internal').trim(),\n    status: String(ledger.status || 'fragment_bank_discovered').trim().toLowerCase(),\n    started_at: String(ledger.started_at || '').trim(),\n    completed_at: String(ledger.completed_at || '').trim(),\n    fragment_count: Number(group.clean_fragment_count || 0),\n    clean_fragment_count: Number(group.clean_fragment_count || 0),\n    page_count: Number(ledger.page_count || 0),\n    raw_item_count: Number(ledger.raw_item_count || 0),\n    last_fragment_at: String(group.last_fragment_at || '').trim(),\n    sample_fragment_ids: group.sample_fragment_ids || [],\n    sample_page_titles: group.sample_page_titles || [],\n  };\n});\n\nif (requestedRunId && !discoveredRuns.find((r) => r.crawl_run_id === requestedRunId)) {\n  const ledgerOnly = ledgerMap.get(requestedRunId);\n  if (ledgerOnly) {\n    discoveredRuns.push({\n      crawl_run_id: ledgerOnly.crawl_run_id,\n      trace_id: ledgerOnly.trace_id,\n      source_id: ledgerOnly.source_id,\n      trigger_mode: ledgerOnly.trigger_mode || String(baseCtx.trigger_mode || 'internal').trim(),\n      status: ledgerOnly.status || 'ledger_only',\n      started_at: ledgerOnly.started_at || '',\n      completed_at: ledgerOnly.completed_at || '',\n      fragment_count: ledgerOnly.fragment_count || 0,\n      clean_fragment_count: ledgerOnly.fragment_count || 0,\n      page_count: ledgerOnly.page_count || 0,\n      raw_item_count: ledgerOnly.raw_item_count || 0,\n      last_fragment_at: ledgerOnly.completed_at || ledgerOnly.started_at || '',\n      sample_fragment_ids: [],\n      sample_page_titles: [],\n    });\n  }\n}\n\n// --------------------------------------------------\n// Selection\n// --------------------------------------------------\nlet selectedRuns = [];\n\nif (requestedRunId) {\n  const exact = discoveredRuns.find((row) => row.crawl_run_id === requestedRunId);\n\n  if (exact) {\n    selectedRuns = [exact];\n  } else {\n    selectedRuns = [{\n      crawl_run_id: requestedRunId,\n      trace_id: String(baseCtx.trace_id || '').trim(),\n      source_id: requestedSourceId,\n      trigger_mode: String(baseCtx.trigger_mode || 'internal').trim(),\n      status: 'requested_manual',\n      fragment_count: 0,\n      clean_fragment_count: 0,\n      page_count: 0,\n      raw_item_count: 0,\n      started_at: '',\n      completed_at: '',\n      last_fragment_at: '',\n      sample_fragment_ids: [],\n      sample_page_titles: [],\n    }];\n  }\n} else {\n  selectedRuns = discoveredRuns\n    .filter((row) => !requestedSourceId || !row.source_id || row.source_id === requestedSourceId)\n    .filter((row) => allowReprocess || !consumedRunIds.has(row.crawl_run_id))\n    .filter((row) => row.clean_fragment_count >= minFragmentsPerRun)\n    .sort((a, b) => {\n      if (b.clean_fragment_count !== a.clean_fragment_count) {\n        return b.clean_fragment_count - a.clean_fragment_count;\n      }\n      const stampCompare = stampOf(b).localeCompare(stampOf(a));\n      if (stampCompare !== 0) return stampCompare;\n      if (b.page_count !== a.page_count) return b.page_count - a.page_count;\n      return b.raw_item_count - a.raw_item_count;\n    })\n    .slice(0, maxRuns);\n}\n\n// --------------------------------------------------\n// Explicit no-candidate packet\n// --------------------------------------------------\nif (!selectedRuns.length) {\n  return [{\n    json: {\n      loop_packet_kind: 'no_candidate',\n      ctx: {\n        ...baseCtx,\n        crawl_run_id: '',\n        source_id: requestedSourceId || '',\n      },\n      source: baseSource,\n      provided_fragments: [],\n      candidate_run: null,\n      candidate_debug: {\n        selection_mode: requestedRunId ? 'requested_run' : 'fragment_bank_primary',\n        requested_crawl_run_id: requestedRunId || null,\n        requested_source_id: requestedSourceId || null,\n        selected_run_count: 0,\n        selected_rank: 0,\n        fragment_rows_scanned: fragmentRows.length,\n        discovered_fragment_runs: runMap.size,\n        ledger_rows_scanned: ledgerRows.length,\n        existing_scene_seed_rows: existingSceneSeedRows.length,\n        allow_reprocess_runs: allowReprocess,\n        consumed_run_ids_sample: Array.from(consumedRunIds).slice(0, 20),\n        min_fragments_per_run: minFragmentsPerRun,\n      },\n      no_candidate: true,\n      no_candidate_reason: requestedRunId\n        ? 'requested crawl_run_id not found in fragment bank or ledger'\n        : 'no eligible crawl runs discovered from fragment bank',\n    },\n  }];\n}\n\n// --------------------------------------------------\n// Emit real runnable packets only\n// --------------------------------------------------\nreturn selectedRuns.map((run, index) => ({\n  json: {\n    loop_packet_kind: 'candidate_run',\n    candidate_packet_id: `tvpx_candidate_${String(run.crawl_run_id || 'missing')}_${index + 1}`,\n    ctx: {\n      ...baseCtx,\n      trace_id: String(run.trace_id || baseCtx.trace_id || '').trim() || baseCtx.trace_id,\n      trigger_mode: String(run.trigger_mode || baseCtx.trigger_mode || 'internal').trim(),\n      crawl_run_id: String(run.crawl_run_id || '').trim(),\n      source_id: String(run.source_id || requestedSourceId || '').trim(),\n    },\n    source: baseSource,\n    provided_fragments: [],\n    candidate_run: run,\n    candidate_debug: {\n      selection_mode: requestedRunId ? 'requested_run' : 'fragment_bank_primary',\n      requested_crawl_run_id: requestedRunId || null,\n      requested_source_id: requestedSourceId || null,\n      selected_run_count: selectedRuns.length,\n      selected_rank: index + 1,\n      fragment_rows_scanned: fragmentRows.length,\n      discovered_fragment_runs: runMap.size,\n      ledger_rows_scanned: ledgerRows.length,\n      existing_scene_seed_rows: existingSceneSeedRows.length,\n      allow_reprocess_runs: allowReprocess,\n      min_fragments_per_run: minFragmentsPerRun,\n    },\n    no_candidate: false,\n  },\n}));"
       },
       "id": "b8f3f949-6ff2-4582-9f02-1bc3ecb0ac4b",
       "name": "Build Candidate Run Packets",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -864,
-        340
+        -640,
+        412
       ]
     },
     {
@@ -1437,8 +1437,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -1088,
-        340
+        -864,
+        412
       ],
       "alwaysOutputData": true,
       "executeOnce": true
@@ -1469,8 +1469,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -1312,
-        340
+        -1088,
+        412
       ],
       "alwaysOutputData": true
     },
@@ -1504,7 +1504,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        256,
+        928,
         268
       ],
       "alwaysOutputData": true
@@ -1519,7 +1519,7 @@
       "typeVersion": 2,
       "position": [
         -1536,
-        340
+        412
       ]
     },
     {
@@ -1545,7 +1545,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1152,
+        1824,
         48
       ],
       "id": "8ff45d07-f0c1-42fc-960b-af9273bc514a",
@@ -1558,11 +1558,114 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2976,
+        3648,
         240
       ],
       "id": "b9c8a4f8-764d-440f-a276-815c78f40b5d",
       "name": "Hydrate Selected Guardrail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json || {};\nconst crawlRunId = String(j.ctx?.crawl_run_id || '').trim();\nconst provided = Array.isArray(j.provided_fragments) ? j.provided_fragments : [];\n\nif (!crawlRunId && !provided.length) {\n  throw new Error('TVPX__20: no crawl_run_id available before fragment lookup.');\n}\n\nreturn [{ json: j }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        268
+      ],
+      "id": "804efa3e-063f-4571-bc50-7ea7c509a0f9",
+      "name": "Validate Active Crawl Run"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "DOpMQGynGFn8U3vb",
+          "mode": "list",
+          "cachedResultName": "tvpx_text_fragment_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/DOpMQGynGFn8U3vb"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "qa_status",
+              "keyValue": "clean"
+            }
+          ]
+        },
+        "limit": "={{$items(\"Initialize Envelope\")[0].json.ctx.autonomous_scan_limit}}"
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1312,
+        412
+      ],
+      "id": "5e3b85f3-9965-49dd-81c8-c8a77b97da88",
+      "name": "Get Candidate Fragment Universe"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "21a57de1-cebb-4276-b272-bd838c076a6f",
+              "leftValue": "={{$json.loop_packet_kind === \"candidate_run\" ? \"true\" : \"false\"}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -416,
+        412
+      ],
+      "id": "51da672f-49ca-4efe-8864-5e3624ef8acd",
+      "name": "Has Candidate Runs"
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $json || {};\nconst ctx = (base.ctx && typeof base.ctx === 'object') ? base.ctx : {};\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    ...base,\n    reject: {\n      reject_id: 'tvpx_rej_' + (ctx.trace_id || 'missing') + '_no_candidate_runs',\n      trace_id: ctx.trace_id,\n      stage_name: 'candidate_run_discovery',\n      rejection_reason: String(base.no_candidate_reason || 'No eligible crawl runs were discovered.'),\n      raw_output_json: JSON.stringify({\n        crawl_run_id: ctx.crawl_run_id || null,\n        source_id: ctx.source_id || null,\n        candidate_debug: base.candidate_debug || null,\n      }),\n      created_at: now,\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        820
+      ],
+      "id": "6d6e0b49-e4c1-4884-810b-4d9a108cbe56",
+      "name": "Build No Candidate Reject"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json || {};\n\nreturn [{\n  json: {\n    loop_continue: true,\n    loop_feedback_stage:\n      String(j.reject?.stage_name || '').trim() ||\n      (j.scene_seed_row ? 'scene_seed_pool_upsert' : 'unknown'),\n    trace_id:\n      String(j.ctx?.trace_id || j.trace_id || '').trim() || null,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7072,
+        336
+      ],
+      "id": "0c2d62ea-fe9b-4318-8ef1-3acfb23983a3",
+      "name": "Build Loop Continue Signal"
     }
   ],
   "connections": {
@@ -1604,7 +1707,7 @@
       "main": [
         [
           {
-            "node": "Next Candidate Run",
+            "node": "Build Loop Continue Signal",
             "type": "main",
             "index": 0
           }
@@ -1626,7 +1729,7 @@
       "main": [
         [
           {
-            "node": "Next Candidate Run",
+            "node": "Build Loop Continue Signal",
             "type": "main",
             "index": 0
           }
@@ -1935,7 +2038,7 @@
       "main": [
         [
           {
-            "node": "Next Candidate Run",
+            "node": "Build Loop Continue Signal",
             "type": "main",
             "index": 0
           }
@@ -1986,7 +2089,7 @@
       "main": [
         [
           {
-            "node": "Get Fragments For Run",
+            "node": "Validate Active Crawl Run",
             "type": "main",
             "index": 0
           }
@@ -2019,7 +2122,7 @@
       "main": [
         [
           {
-            "node": "Loop Candidate Runs",
+            "node": "Has Candidate Runs",
             "type": "main",
             "index": 0
           }
@@ -2063,7 +2166,7 @@
       "main": [
         [
           {
-            "node": "Get Candidate Crawl Runs",
+            "node": "Get Candidate Fragment Universe",
             "type": "main",
             "index": 0
           }
@@ -2091,6 +2194,68 @@
           }
         ]
       ]
+    },
+    "Validate Active Crawl Run": {
+      "main": [
+        [
+          {
+            "node": "Get Fragments For Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Candidate Fragment Universe": {
+      "main": [
+        [
+          {
+            "node": "Get Candidate Crawl Runs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Candidate Runs": {
+      "main": [
+        [
+          {
+            "node": "Loop Candidate Runs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build No Candidate Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build No Candidate Reject": {
+      "main": [
+        [
+          {
+            "node": "Upsert Reject Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Loop Continue Signal": {
+      "main": [
+        [
+          {
+            "node": "Next Candidate Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2103,9 +2268,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "1d09e074-500a-457a-9fe8-ae3c456213d7",
+  "versionId": "ecdc9749-dd9f-4dd9-bd25-c329d11f6467",
   "activeVersionId": null,
-  "versionCounter": 86,
+  "versionCounter": 147,
   "triggerCount": 0,
   "tags": [],
   "shared": [
