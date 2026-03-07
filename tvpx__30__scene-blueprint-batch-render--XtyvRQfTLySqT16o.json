@@ -72,7 +72,7 @@
           "conditions": [
             {
               "id": "has_scene_seed_id_cond",
-              "leftValue": "={{ Boolean(String($json.scene_seed_id || '').trim()) === true ? \"true\" : \"false\" }}",
+              "leftValue": "={{$json.scene_seed_id ? \"true\" : \"false\"}}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
