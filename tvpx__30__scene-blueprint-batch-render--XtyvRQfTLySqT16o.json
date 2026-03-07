@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T23:48:40.502Z",
+  "updatedAt": "2026-03-07T00:59:35.967Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "XtyvRQfTLySqT16o",
   "name": "TVPX__30__Scene Blueprint Batch Render",
@@ -17,7 +17,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        312,
+        536,
         424
       ],
       "credentials": {
@@ -37,7 +37,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        440,
+        664,
         424
       ],
       "credentials": {
@@ -153,7 +153,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const base = $items('Initialize Envelope')[0]?.json || {};\nconst ctx = base.ctx || {};\n\nconst rows = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no ready scene seeds found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nfunction text(row) {\n  return [\n    row.scene_kernel,\n    row.concept_thesis,\n    row.symbolic_tension,\n    row.material_anchor,\n    row.spatial_directive,\n    row.dominant_subject,\n  ].map((v) => String(v || '')).join(' ');\n}\n\nfunction normalizeTokens(value) {\n  return String(value || '')\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, ' ')\n    .trim();\n}\n\nfunction hasWholeTerm(blob, term) {\n  const hay = ` ${normalizeTokens(blob)} `;\n  const needle = ` ${normalizeTokens(term)} `;\n  return Boolean(needle.trim()) && hay.includes(needle);\n}\n\nconst banned = ['mri', 'brain scan', 'graph', 'chart', 'diagram', 'lease', 'contract', 'form', 'dashboard', 'monitor', 'paperwork'];\n\nconst scored = rows.map((row) => {\n  const quality = n(row.quality_score, 0);\n  const brandFit = n(row.brand_fit_score, 0);\n  const align = n(row.reference_alignment_score, 0);\n  const used = n(row.used_count, 0);\n  const mode = String(row.subject_mode || '').trim();\n\n  let modeBonus = -1.5;\n  if (mode === 'pair') modeBonus = 0.8;\n  else if (mode === 'single_figure') modeBonus = 0.6;\n  else if (mode === 'small_group') modeBonus = 0.7;\n  else if (mode === 'implied_absence') modeBonus = 0.25;\n\n  const blob = text(row);\n  const bannedHits = banned.filter((term) => hasWholeTerm(blob, term)).length;\n  const articlePenalty = bannedHits * 0.8;\n  const reusePenalty = Math.min(used * 0.45, 2.0);\n  const selectorScore = (quality * 0.42) + (brandFit * 0.23) + (align * 0.35) + modeBonus - articlePenalty - reusePenalty;\n\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst picked = scored[0]?.row;\nif (!picked) throw new Error('TVPX__30: failed to select scene seed.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(picked.scene_seed_id || '').trim(),\n    concept_id: String(picked.scene_seed_id || '').trim(),\n    scene_seed_row: picked,\n    selector_audit: scored.slice(0, 8).map((entry) => ({\n      scene_seed_id: entry.row.scene_seed_id,\n      selector_score: entry.selectorScore,\n      quality_score: entry.row.quality_score,\n      brand_fit_score: entry.row.brand_fit_score,\n      reference_alignment_score: entry.row.reference_alignment_score,\n      subject_mode: entry.row.subject_mode,\n    })),\n  },\n}];"
+        "jsCode": "const base = $items('Initialize Envelope')[0]?.json || {};\nconst ctx = base.ctx || {};\n\nconst rows = $input.all().map(i => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no ready scene seeds found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nfunction clean(v) {\n  return String(v || '').toLowerCase().replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\nconst hardBans = [\n  'mri', 'brain scan', 'graph', 'chart', 'diagram', 'spreadsheet',\n  'dashboard', 'monitor', 'contract', 'lease', 'form', 'paperwork'\n];\n\nconst scored = rows.map((row) => {\n  const positiveBlob = clean([\n    row.scene_kernel,\n    row.material_anchor,\n    row.spatial_directive,\n    row.dominant_subject,\n    row.setting_family,\n    row.surreal_mechanism\n  ].join(' '));\n\n  const hardBanHits = hardBans.filter(term => (` ${positiveBlob} `).includes(` ${clean(term)} `)).length;\n\n  const selectorScore =\n    n(row.quality_score) * 0.22 +\n    n(row.brand_fit_score) * 0.16 +\n    n(row.reference_alignment_score) * 0.20 +\n    n(row.family_guardrail_score) * 0.16 +\n    n(row.negative_space_force_score) * 0.14 +\n    n(row.prop_discipline_score) * 0.12 -\n    Math.min(n(row.used_count) * 0.35, 2.0) -\n    hardBanHits * 1.2;\n\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst picked = scored[0]?.row;\nif (!picked) throw new Error('TVPX__30: failed to select scene seed.');\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_id: String(picked.scene_seed_id || '').trim(),\n    concept_id: String(picked.scene_seed_id || '').trim(),\n    scene_seed_row: picked,\n    selector_audit: scored.slice(0, 8).map(entry => ({\n      scene_seed_id: entry.row.scene_seed_id,\n      selector_score: Number(entry.selectorScore.toFixed(3)),\n      quality_score: entry.row.quality_score,\n      brand_fit_score: entry.row.brand_fit_score,\n      reference_alignment_score: entry.row.reference_alignment_score,\n      family_guardrail_score: entry.row.family_guardrail_score,\n      negative_space_force_score: entry.row.negative_space_force_score,\n      prop_discipline_score: entry.row.prop_discipline_score\n    }))\n  }\n}];"
       },
       "id": "5ad7b2e3-afb8-45b3-a7c2-afac2fa0ea20",
       "name": "Select Best Scene Seed",
@@ -302,33 +302,33 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -144,
+        80,
         200
       ],
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "const seedBase = $items('Verify Lock Ownership')[0]?.json;\nif (!seedBase) throw new Error('TVPX__30: missing locked scene seed payload.');\n\nconst row = seedBase.scene_seed_row || {};\nconst archetype = $input.all()[0]?.json || {};\nif (!archetype || !String(archetype.archetype_id || '').trim()) {\n  throw new Error('TVPX__30: archetype lookup failed.');\n}\n\nreturn [{\n  json: {\n    ctx: seedBase.ctx,\n    scene_seed_id: seedBase.scene_seed_id,\n    concept_id: seedBase.scene_seed_id,\n    scene_seed_row: row,\n    archetype_row: archetype,\n  },\n}];"
+        "jsCode": "const seedBase = $items('Verify Lock Ownership')[0]?.json;\nif (!seedBase) throw new Error('TVPX__30: missing locked scene seed payload.');\n\nconst row = seedBase.scene_seed_row || {};\nconst archetype = $items('Get Archetype By Id')[0]?.json || {};\nconst guardrail = $items('Get Archetype Guardrail By Id')[0]?.json || {};\n\nif (!String(archetype.archetype_id || '').trim()) {\n  throw new Error('TVPX__30: archetype lookup failed.');\n}\nif (!String(guardrail.archetype_id || '').trim()) {\n  throw new Error('TVPX__30: guardrail lookup failed.');\n}\n\nreturn [{\n  json: {\n    ctx: seedBase.ctx,\n    scene_seed_id: seedBase.scene_seed_id,\n    concept_id: seedBase.scene_seed_id,\n    scene_seed_row: row,\n    archetype_row: archetype,\n    archetype_guardrail_row: guardrail\n  }\n}];"
       },
       "id": "ee84f74f-09c9-4011-a36d-bd663f104ed0",
       "name": "Assemble Scene Seed Packet",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        80,
+        304,
         200
       ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nReference rule:\nThe result must feel like one of the uploaded reference families: cinematic, authored, sparse, tactile, image-native.\n\nBuild three blueprints only.",
+        "text": "=Archetype row:\n{{ JSON.stringify($json.archetype_row, null, 2) }}\n\nGuardrail row:\n{{ JSON.stringify($json.archetype_guardrail_row, null, 2) }}\n\nScene seed row:\n{{ JSON.stringify($json.scene_seed_row, null, 2) }}\n\nBuild three blueprints only.",
         "needsFallback": true,
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Scene_Blueprint_Director for The Velvet Paradox.\n\nYour job is to turn one scene seed into three candidate shot blueprints.\n\nThe three labels must be:\n- grounded\n- hero\n- wildcard\n\nAll three must remain inside the same archetype family.\nDo not change the concept.\nChange only:\n- camera logic\n- distance\n- arrangement\n- emphasis\n- one controlled surreal lift\n\nThe blueprint must think like a cinematographer and production designer, not a critic.\n\nHard bans:\n- article summary language\n- symbolism explanation\n- focal documents\n- prop clutter\n- multiple surreal mechanisms\n- text carrying the image unless the archetype explicitly allows minimal signage\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"blueprints\": [\n    {\n      \"blueprint_label\": \"grounded\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    },\n    {\n      \"blueprint_label\": \"hero\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    },\n    {\n      \"blueprint_label\": \"wildcard\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    }\n  ]\n}"
+              "message": "=You are TVPX__LLM__Scene_Blueprint_Director_V2 for The Velvet Paradox.\n\nYour job is to turn one scene seed into three candidate shot blueprints.\n\nThe three labels must be:\n- grounded\n- hero\n- wildcard\n\nRules:\n- all three must remain inside the same archetype family\n- obey the selected guardrail row\n- do not change the concept\n- do not add props\n- do not swap the primary gesture\n- do not change subject count\n- grounded = most faithful and safest\n- hero = strongest authored still while remaining fully in-family\n- wildcard = only one controlled shift, still inside family\n- one surreal mechanism only\n- candidate_prompt_core must be short and image-native, not essay-like\n- no drone logic unless the family already supports it\n- no fashion-editorial upgrade\n- no studio logic\n- no explanatory composition\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"blueprints\": [\n    {\n      \"blueprint_label\": \"grounded\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    },\n    {\n      \"blueprint_label\": \"hero\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    },\n    {\n      \"blueprint_label\": \"wildcard\",\n      \"shot_type\": \"...\",\n      \"camera_height\": \"...\",\n      \"camera_distance\": \"...\",\n      \"subject_arrangement\": \"...\",\n      \"environment\": \"...\",\n      \"light_weather\": \"...\",\n      \"wardrobe_surface_logic\": \"...\",\n      \"palette_weather\": \"...\",\n      \"one_surreal_lift\": \"...\",\n      \"what_is_not_shown\": \"...\",\n      \"candidate_prompt_core\": \"...\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -339,7 +339,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        304,
+        528,
         200
       ]
     },
@@ -352,7 +352,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        656,
+        880,
         200
       ]
     },
@@ -365,7 +365,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        880,
+        1328,
         200
       ]
     },
@@ -702,7 +702,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1104,
+        1552,
         128
       ]
     },
@@ -714,7 +714,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V3 for The Velvet Paradox.\n\nYour job is to convert one locked prompt-smith packet into one render-ready still-image brief.\n\nYou are not inventing a new scene.\nYou are preserving the locked blueprint and expressing it in image-native language.\n\nNon-negotiable fidelity rules:\n- preserve the same shot family\n- preserve the same subject count\n- preserve the same primary gesture\n- preserve the same main props\n- preserve the same surreal mechanism\n- preserve the same negative-space logic\n- do not upgrade the scene into a different composition\n- do not swap the camera angle for a more dramatic one\n- do not replace the blueprint’s material world with a prettier one\n- do not add props that are not already required\n- do not let archetype DNA override the visible scene; it should only tune it\n\nWriting rules:\n- 90 to 120 words preferred\n- 130 words hard ceiling\n- one coherent paragraph only\n- write as one shot, not an inventory\n- begin with frame, subject, gesture, and atmosphere\n- use the locked blueprint candidate_prompt_core as the backbone\n- densify only with visibly decisive details from visible_scene and reference_family\n- preserve restraint\n- keep the surreal lift slight, plausible, and materially grounded\n- the surreal lift must read like a slightly strange fact inside the scene, not a narrated event\n- do not give equal descriptive weight to every prop\n- one or two props may carry the image; the rest remain subordinate\n- avoid checklist rhythm\n- avoid “beautiful”, “haunting”, “evocative”, “symbolic”, “allegorical”, “ominous”\n- no symbolism language\n- no article language\n- no concept explanation\n- no thesis language\n- no “representing,” “evoking,” “suggesting,” or “symbolizing”\n\nAvoid these words and phrases:\nunnaturally, improbably, surgical precision, mirror-flat, exact ceremony, ghostly, ominous, symbolic, allegorical\n\nPrefer:\nslightly, subtly, faintly, barely, almost imperceptibly\n\nKeep the negative prompt short and project-specific.\nPrefer one compact exclusion list, not exhaustive safety laundry lists.\n\nDefault negative prompt style:\ntext, logos, memorial markers, religious iconography, glowing effects, fantasy elements, studio lighting, strong chiaroscuro, crowds, vehicles, animals, fences, urban clutter, oversaturated color, glossy retouching, prop clutter\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 2\n  }\n}"
+              "message": "=You are TVPX__LLM__Final_Prompt_Smith_V4 for The Velvet Paradox.\n\nYour job is to convert one locked prompt-smith packet into one render-ready still-image brief.\n\nYou are not inventing a new scene.\nYou are preserving the locked blueprint and expressing it in image-native language.\n\nNon-negotiable fidelity rules:\n- preserve the same shot family\n- preserve the same subject count\n- preserve the same primary gesture\n- preserve the same main props\n- preserve the same surreal mechanism\n- preserve the same negative-space logic\n- obey the family_guardrail section\n- do not upgrade the scene into a prettier or more dramatic version\n- do not swap the camera angle for a more cinematic one\n- do not add props\n- do not add weather events\n- do not let archetype DNA override the visible scene\n\nWriting rules:\n- 95 to 115 words target\n- 120 words hard ceiling\n- one coherent paragraph only\n- begin with frame + subject + gesture\n- use the locked blueprint candidate_prompt_core as the backbone\n- include 1 hero prop clearly, supporting props only if truly needed\n- end with light / atmosphere / negative space, not meaning\n- write like a camera instruction, not a concept paragraph\n- no checklist rhythm\n- no symbolism language\n- no editorial language\n- no thesis language\n- no “representing”, “evoking”, “suggesting”, “symbolizing”\n\nNegative prompt rules:\n- compact, comma-separated\n- keep it family-specific\n- include forbidden style tells from the guardrail\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"master_prompt\": \"...\",\n  \"negative_prompt\": \"...\",\n  \"image_size\": \"1024x1536\",\n  \"provider_controls\": {\n    \"quality\": \"high\",\n    \"background\": \"opaque\",\n    \"output_format\": \"png\",\n    \"num_images\": 4\n  }\n}"
             }
           ]
         },
@@ -725,20 +725,20 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        1328,
+        1776,
         464
       ]
     },
     {
       "parameters": {
-        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const text = cleanText(v);\n  return text ? text.split(/\\s+/).length : 0;\n}\n\nfunction trimToSentenceBoundary(v, maxWords = 130) {\n  const text = cleanText(v);\n  const words = text.split(/\\s+/);\n  if (words.length <= maxWords) return text;\n\n  const clipped = words.slice(0, maxWords).join(' ');\n  const lastSentenceEnd = Math.max(\n    clipped.lastIndexOf('.'),\n    clipped.lastIndexOf('!'),\n    clipped.lastIndexOf('?')\n  );\n\n  if (lastSentenceEnd > 40) {\n    return clipped.slice(0, lastSentenceEnd + 1).trim();\n  }\n\n  const lastComma = clipped.lastIndexOf(',');\n  if (lastComma > 40) {\n    return clipped.slice(0, lastComma).trim() + '.';\n  }\n\n  return clipped.trim() + '.';\n}\n\nfunction normalizeNegative(v) {\n  const defaults = [\n    'text',\n    'logos',\n    'memorial markers',\n    'religious iconography',\n    'glowing effects',\n    'fantasy elements',\n    'studio lighting',\n    'strong chiaroscuro',\n    'crowds',\n    'vehicles',\n    'animals',\n    'fences',\n    'urban clutter',\n    'oversaturated color',\n    'glossy retouching',\n    'prop clutter',\n  ];\n\n  const incoming = String(v || '')\n    .split(',')\n    .map((part) => cleanText(part).toLowerCase())\n    .filter(Boolean);\n\n  const uniq = [...new Set(incoming)];\n  return (uniq.length ? uniq : defaults).join(', ');\n}\n\nconst STOP = new Set([\n  'with','from','into','onto','over','under','near','just','than','then','that','this','those','these',\n  'their','there','where','while','which','along','across','toward','towards','around','through',\n  'holds','holding','frame','camera','shot','cinematic','filmic','realism','realistic','image','native',\n  'static','slight','slightly','subtle','subtly','faint','faintly','barely','almost','imperceptibly',\n  'late','thirties','woman','figure','field','scene','subject'\n]);\n\nfunction tokenArray(v) {\n  return cleanText(v)\n    .toLowerCase()\n    .replace(/[^a-z0-9\\s-]/g, ' ')\n    .split(/\\s+/)\n    .map((t) => t.trim())\n    .filter((t) => t.length >= 4 && !STOP.has(t));\n}\n\nfunction tokenSet(v) {\n  return new Set(tokenArray(v));\n}\n\nfunction buildAnchorTokens(base) {\n  const packet = base.prompt_smith_packet || {};\n  const source = [\n    packet.locked_blueprint?.candidate_prompt_core,\n    packet.locked_blueprint?.environment,\n    packet.locked_blueprint?.subject_arrangement,\n    packet.locked_blueprint?.one_surreal_lift,\n    packet.visible_scene?.material_anchor,\n    packet.visible_scene?.dominant_subject,\n    packet.visible_scene?.setting_family,\n    packet.visible_scene?.spatial_directive,\n    base.blueprint?.candidate_prompt_core,\n    base.scene_seed_row?.material_anchor,\n    base.scene_seed_row?.dominant_subject,\n    base.scene_seed_row?.setting_family,\n  ]\n    .filter(Boolean)\n    .join(' ');\n\n  const freq = {};\n  for (const token of tokenArray(source)) {\n    freq[token] = (freq[token] || 0) + 1;\n  }\n\n  return Object.entries(freq)\n    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)\n    .map(([token]) => token)\n    .slice(0, 14);\n}\n\nfunction ensureShotFamily(prompt, base) {\n  const blueprintText = [\n    base.blueprint?.shot_type,\n    base.blueprint?.camera_height,\n    base.blueprint?.camera_distance,\n    base.prompt_smith_packet?.locked_blueprint?.shot_type,\n    base.prompt_smith_packet?.locked_blueprint?.camera_height,\n    base.prompt_smith_packet?.locked_blueprint?.camera_distance,\n  ].join(' ').toLowerCase();\n\n  const p = prompt.toLowerCase();\n\n  const rules = [\n    { source: /medium-wide|medium wide/, prompt: /\\bmedium\\b|\\bwide\\b/ },\n    { source: /wide/, prompt: /\\bwide\\b/ },\n    { source: /close-up|close up|medium close-up|medium close up/, prompt: /\\bclose\\b/ },\n    { source: /overhead/, prompt: /\\boverhead\\b|\\bhigh\\b/ },\n    { source: /profile/, prompt: /\\bprofile\\b/ },\n    { source: /static/, prompt: /\\bstatic\\b/ },\n    { source: /low|ground-level|ground level/, prompt: /\\blow\\b|\\bground\\b/ },\n    { source: /high/, prompt: /\\bhigh\\b|\\boverhead\\b/ },\n  ];\n\n  for (const rule of rules) {\n    if (rule.source.test(blueprintText) && !rule.prompt.test(p)) {\n      return false;\n    }\n  }\n\n  return true;\n}\n\nfunction ensureRequiredMaterialPresence(prompt, base) {\n  const source = [\n    base.prompt_smith_packet?.visible_scene?.material_anchor,\n    base.prompt_smith_packet?.locked_blueprint?.candidate_prompt_core,\n    base.scene_seed_row?.material_anchor,\n    base.blueprint?.candidate_prompt_core,\n  ].join(' ').toLowerCase();\n\n  const p = prompt.toLowerCase();\n\n  const groups = [\n    { detect: /\\bbowl\\b|\\bceramic\\b/, require: /\\bbowl\\b|\\bceramic\\b/ },\n    { detect: /\\bglass\\b|\\bwater\\b|\\bpour\\b|\\bstream\\b/, require: /\\bglass\\b|\\bwater\\b|\\bpour\\b|\\bstream\\b/ },\n    { detect: /\\bblanket\\b|\\bcloth\\b|\\bfrayed\\b/, require: /\\bblanket\\b|\\bcloth\\b|\\bfrayed\\b/ },\n  ];\n\n  for (const group of groups) {\n    if (group.detect.test(source) && !group.require.test(p)) {\n      return false;\n    }\n  }\n\n  return true;\n}\n\nconst base = $json || {};\nconst raw = base.text || base.output || base.result || base;\nconst parsed = extractJson(raw);\n\nlet masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nmasterPrompt = trimToSentenceBoundary(masterPrompt, 130);\n\nif (wordCount(masterPrompt) < 55) {\n  throw new Error('TVPX__30: master_prompt too short.');\n}\n\nif (!/[.!?]$/.test(masterPrompt)) {\n  throw new Error('TVPX__30: master_prompt appears truncated.');\n}\n\nconst badEndingPatterns = [\n  /\\bechoing\\.?$/i,\n  /\\bsuggesting\\.?$/i,\n  /\\bshowing\\.?$/i,\n  /\\bwith\\.?$/i,\n  /\\band\\.?$/i,\n  /\\bof\\.?$/i,\n  /\\ba\\.?$/i,\n];\n\nfor (const rx of badEndingPatterns) {\n  if (rx.test(masterPrompt)) {\n    throw new Error('TVPX__30: master_prompt appears clipped at the end.');\n  }\n}\n\nconst overExplicitSurreal = [\n  'unnaturally',\n  'improbably',\n  'surgical precision',\n  'mirror-flat',\n  'no splash',\n  'ghostly',\n  'ominous',\n  'allegorical',\n  'symbolic',\n];\n\nconst lowered = masterPrompt.toLowerCase();\nfor (const phrase of overExplicitSurreal) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: surreal lift phrased too explicitly: ${phrase}`);\n  }\n}\n\nconst bannedPhrases = [\n  'metaphor',\n  'symbolic tension',\n  'clinical fixation',\n  'domestic rehearsal',\n  'article illustration',\n  'thesis',\n  'invisible meaning',\n  'symbolizing',\n  'representing',\n  'evoking',\n  'suggesting',\n];\n\nfor (const phrase of bannedPhrases) {\n  if (lowered.includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nif (!ensureShotFamily(masterPrompt, base)) {\n  throw new Error('TVPX__30: prompt drifted away from blueprint shot family.');\n}\n\nif (!ensureRequiredMaterialPresence(masterPrompt, base)) {\n  throw new Error('TVPX__30: prompt dropped a required material anchor.');\n}\n\nconst anchors = buildAnchorTokens(base);\nconst promptTokens = tokenSet(masterPrompt);\nconst overlap = anchors.filter((token) => promptTokens.has(token));\nconst minOverlap = anchors.length ? Math.max(5, Math.ceil(Math.min(anchors.length, 12) * 0.45)) : 0;\n\nif (anchors.length && overlap.length < minOverlap) {\n  throw new Error(\n    `TVPX__30: prompt fidelity too low. Anchor overlap ${overlap.length}/${anchors.length}. Missing anchors: ${anchors.filter((t) => !promptTokens.has(t)).slice(0, 8).join(', ')}`\n  );\n}\n\nconst providerControls = parsed.provider_controls || {};\n\nreturn [\n  {\n    json: {\n      ...base,\n      prompt_spec: {\n        master_prompt: masterPrompt,\n        negative_prompt: normalizeNegative(parsed.negative_prompt || ''),\n        image_size: String(parsed.image_size || base.ctx?.image_size || '1024x1536'),\n        provider_controls: {\n          quality: String(providerControls.quality || base.ctx?.quality || 'high'),\n          background: String(providerControls.background || base.ctx?.background || 'opaque'),\n          output_format: String(providerControls.output_format || base.ctx?.output_format || 'png'),\n          num_images: Number(providerControls.num_images || 2),\n        },\n      },\n    },\n  },\n];"
+        "jsCode": "function extractJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX__30: empty prompt-spec output.');\n\n  const candidates = [\n    text,\n    text.replace(/```json\\s*/gi, '').replace(/```/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try { return JSON.parse(candidate); } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX__30: could not parse prompt-spec JSON.');\n}\n\nfunction cleanText(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .replace(/\\s+([,.;:!?])/g, '$1')\n    .trim();\n}\n\nfunction wordCount(v) {\n  const t = cleanText(v);\n  return t ? t.split(/\\s+/).length : 0;\n}\n\nfunction parseJsonMaybe(value, fallback) {\n  if (Array.isArray(value) || (value && typeof value === 'object')) return value;\n  const text = String(value || '').trim();\n  if (!text) return fallback;\n  try { return JSON.parse(text); } catch { return fallback; }\n}\n\nconst base = $json || {};\nconst packet = base.prompt_smith_packet || {};\nconst parsed = extractJson(base.text || base.output || base.result || base);\n\nconst masterPrompt = cleanText(parsed.master_prompt || '');\nif (!masterPrompt) throw new Error('TVPX__30: master_prompt missing.');\n\nconst wc = wordCount(masterPrompt);\nconst hardCeiling = Number(packet.family_guardrail?.render_prompt_word_ceiling || packet.render_limits?.max_prompt_words || 115);\n\nif (wc < 80) throw new Error(`TVPX__30: master_prompt too short (${wc} words).`);\nif (wc > hardCeiling) throw new Error(`TVPX__30: master_prompt too long (${wc} words). Do not trim; regenerate.`);\n\nconst shotType = cleanText(packet.locked_blueprint?.shot_type || '').toLowerCase();\nconst firstWords = masterPrompt.toLowerCase().split(/\\s+/).slice(0, 20).join(' ');\nif (shotType.includes('overhead') && !firstWords.includes('overhead')) {\n  throw new Error('TVPX__30: prompt lost the locked shot family near the opening.');\n}\nif (shotType.includes('medium-wide') && !(firstWords.includes('medium-wide') || firstWords.includes('medium wide'))) {\n  throw new Error('TVPX__30: prompt lost the locked medium-wide framing near the opening.');\n}\n\nconst heroProps = parseJsonMaybe(packet.visible_scene?.prop_manifest, { hero_props: [], supporting_props: [] }).hero_props || [];\nfor (const prop of heroProps) {\n  const needle = cleanText(prop).toLowerCase();\n  if (needle && !masterPrompt.toLowerCase().includes(needle.split(' ')[0])) {\n    throw new Error(`TVPX__30: hero prop missing from prompt: ${prop}`);\n  }\n}\n\nconst bannedPhrases = [\n  'symbolic', 'allegorical', 'evoking', 'suggesting', 'representing',\n  'ghostly', 'ominous', 'beautiful portrait', 'fashion editorial',\n  'studio portrait', 'product shot', 'cgi sheen'\n];\n\nfor (const phrase of bannedPhrases) {\n  if (masterPrompt.toLowerCase().includes(phrase)) {\n    throw new Error(`TVPX__30: banned phrase leaked into prompt: ${phrase}`);\n  }\n}\n\nconst forbiddenStyleTerms = Array.isArray(packet.family_guardrail?.forbidden_style_terms)\n  ? packet.family_guardrail.forbidden_style_terms\n  : [];\n\nconst negParts = []\n  .concat(String(parsed.negative_prompt || '').split(',').map(s => cleanText(s)).filter(Boolean))\n  .concat(forbiddenStyleTerms.map(cleanText).filter(Boolean));\n\nconst negativePrompt = [...new Set(negParts)].join(', ');\n\nreturn [{\n  json: {\n    ...base,\n    prompt_spec: {\n      master_prompt: masterPrompt,\n      negative_prompt: negativePrompt,\n      image_size: String(parsed.image_size || base.ctx?.image_size || '1024x1536'),\n      provider_controls: {\n        quality: String(parsed.provider_controls?.quality || base.ctx?.quality || 'high'),\n        background: String(parsed.provider_controls?.background || base.ctx?.background || 'opaque'),\n        output_format: String(parsed.provider_controls?.output_format || base.ctx?.output_format || 'png'),\n        num_images: Number(parsed.provider_controls?.num_images || 4)\n      }\n    }\n  }\n}];"
       },
       "id": "33b1f7b3-73ca-4a00-ab27-1de19b98ebee",
       "name": "Parse Prompt Spec V2",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1904,
+        2352,
         320
       ]
     },
@@ -751,7 +751,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2128,
+        2576,
         320
       ]
     },
@@ -796,7 +796,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2352,
+        2800,
         320
       ]
     },
@@ -1044,7 +1044,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2576,
+        3088,
         128
       ]
     },
@@ -1381,41 +1381,9 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        2576,
+        3088,
         320
       ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.openai.com/v1/responses",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{({\n        model: 'gpt-4.1',\n        input: [\n          {\n            role: 'developer',\n            content: [\n              {\n                type: 'input_text',\n                text: \"You are TVPX__LLM__Render_Vision_Critic for The Velvet Paradox.\\n\\nJudge the rendered image against the scene seed and archetype family.\\n\\nReward:\\n- strong reference-family resemblance\\n- cinematic authorship\\n- negative space pressure\\n- tactile richness\\n- one clean surreal lift\\n- human or ceremonial charge\\n- anti-stock quality\\n- anti-editorial quality\\n\\nPenalize:\\n- article-illustration feel\\n- goofy symbolism\\n- flat prompt literalism\\n- CGI sheen\\n- overexplained props\\n- weak composition\\n- dead atmosphere\\n\\nReturn JSON only.\\n\\nReturn exactly:\\n{\\n  \\\"reference_alignment_score\\\": 0.0,\\n  \\\"ceremonial_force_score\\\": 0.0,\\n  \\\"anti_editorial_score\\\": 0.0,\\n  \\\"tactile_score\\\": 0.0,\\n  \\\"surreal_restraint_score\\\": 0.0,\\n  \\\"stock_risk_score\\\": 0.0,\\n  \\\"overall_score\\\": 0.0,\\n  \\\"verdict\\\": \\\"pass\\\",\\n  \\\"notes\\\": \\\"...\\\"\\n}\",\n              },\n            ],\n          },\n          {\n            role: 'user',\n            content: [\n              {\n                type: 'input_text',\n                text: 'Archetype:\\n' + JSON.stringify($json.archetype_row || {}, null, 2) + '\\n\\nScene seed:\\n' + JSON.stringify($json.scene_seed_row || {}, null, 2) + '\\n\\nBlueprint label:\\n' + String($json.blueprint_label || '') + '\\n\\nJudge the attached candidate image as a member of this family.',\n              },\n              {\n                type: 'input_image',\n                image_url: $json.image_url,\n                detail: 'high',\n              },\n            ],\n          },\n        ],\n        max_output_tokens: 900,\n      })}}",
-        "options": {
-          "response": {},
-          "timeout": 120000
-        }
-      },
-      "id": "61177d83-7f4a-4769-aad9-8c31dd3c05c2",
-      "name": "LLM Render Vision Critic",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2576,
-        608
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "9hbcIyr3JmvWgxPb",
-          "name": "OpenAI bearer"
-        }
-      }
     },
     {
       "parameters": {
@@ -1428,7 +1396,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2800,
+        3376,
         536
       ]
     },
@@ -1441,7 +1409,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3024,
+        3600,
         536
       ]
     },
@@ -1472,7 +1440,25 @@
             "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
             "archetype_id": "={{$json.archetype_id}}",
             "created_at": "={{$now}}",
-            "critic_id": "={{$json.critic_run_id}}"
+            "critic_id": "={{$json.critic_run_id}}",
+            "trace_id": "={{$json.ctx.trace_id}}",
+            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "critic_model": "gpt-4.1",
+            "critic_stage": "render_vision",
+            "score_overall": "={{$json.render_critic.overall_score}}",
+            "score_reference_match": "={{$json.render_critic.family_fidelity_score}}",
+            "score_composition": "={{$json.render_critic.composition_score}}",
+            "score_blueprint_fidelity": "={{$json.render_critic.blueprint_fidelity_score}}",
+            "score_negative_space": "={{$json.render_critic.negative_space_score}}",
+            "score_material_honesty": "={{$json.render_critic.material_honesty_score}}",
+            "score_prop_discipline": "={{$json.render_critic.prop_discipline_score}}",
+            "score_surreal_restraint": "={{$json.render_critic.surreal_restraint_score}}",
+            "approve": "={{$json.render_critic.verdict === \"pass\" ? \"true\" : \"false\"}}",
+            "reject_reason": "={{$json.render_critic.drift_flags?.join(\", \") || \"\"}}",
+            "critic_notes": "={{$json.render_critic.notes}}",
+            "drift_flags_json": "={{JSON.stringify($json.render_critic.drift_flags || [])}}",
+            "state": "critiqued",
+            "updated_at": "={{$now}}"
           },
           "matchingColumns": [],
           "schema": [
@@ -1604,7 +1590,7 @@
               "display": true,
               "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "score_stylization_control",
@@ -1614,7 +1600,7 @@
               "display": true,
               "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "score_photographic_credibility",
@@ -1624,7 +1610,7 @@
               "display": true,
               "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "score_symbolic_pressure",
@@ -1634,7 +1620,7 @@
               "display": true,
               "type": "string",
               "readOnly": false,
-              "removed": false
+              "removed": true
             },
             {
               "id": "approve",
@@ -1695,6 +1681,66 @@
               "type": "string",
               "readOnly": false,
               "removed": false
+            },
+            {
+              "id": "score_blueprint_fidelity",
+              "displayName": "score_blueprint_fidelity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_negative_space",
+              "displayName": "score_negative_space",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_material_honesty",
+              "displayName": "score_material_honesty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_prop_discipline",
+              "displayName": "score_prop_discipline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score_surreal_restraint",
+              "displayName": "score_surreal_restraint",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "drift_flags_json",
+              "displayName": "drift_flags_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -1707,7 +1753,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3248,
+        3824,
         248
       ]
     },
@@ -1955,20 +2001,20 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3248,
+        3824,
         440
       ]
     },
     {
       "parameters": {
-        "jsCode": "const rows = $input.all().map((i) => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no critiqued render candidates found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nconst scored = rows.map((row) => {\n  const critic = row.render_critic || row.vision_critic || {};\n  const overall = n(critic.overall_score, 0);\n  const align = n(critic.reference_alignment_score, 0);\n  const antiEditorial = n(critic.anti_editorial_score, 0);\n  const tactile = n(critic.tactile_score, 0);\n  const stockRisk = n(critic.stock_risk_score, 10);\n\n  const selectorScore = (overall * 0.45) + (align * 0.25) + (antiEditorial * 0.20) + (tactile * 0.10) - (stockRisk * 0.30);\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst winner = scored[0]?.row;\nif (!winner) throw new Error('TVPX__30: winner selection failed.');\nif (Number((winner.render_critic || winner.vision_critic || {}).overall_score || 0) < 8.4) {\n  throw new Error('TVPX__30: best candidate still below release threshold. Do not finalize.');\n}\n\nreturn [{\n  json: {\n    ...winner,\n    winner_selector_score: scored[0].selectorScore,\n    winner_audit: scored.map((entry) => ({\n      render_candidate_id: entry.row.render_candidate_id,\n      selectorScore: entry.selectorScore,\n      overall_score: Number((entry.row.render_critic || entry.row.vision_critic || {}).overall_score || 0),\n      reference_alignment_score: Number((entry.row.render_critic || entry.row.vision_critic || {}).reference_alignment_score || 0),\n      stock_risk_score: Number((entry.row.render_critic || entry.row.vision_critic || {}).stock_risk_score || 0),\n    })),\n  },\n}];"
+        "jsCode": "const rows = $input.all().map(i => i.json || {}).filter(Boolean);\nif (!rows.length) throw new Error('TVPX__30: no critiqued render candidates found.');\n\nfunction n(v, d = 0) {\n  const x = Number(v);\n  return Number.isFinite(x) ? x : d;\n}\n\nconst scored = rows.map((row) => {\n  const c = row.render_critic || {};\n  const label = String(row.blueprint_label || '').toLowerCase();\n  const driftFlags = Array.isArray(c.drift_flags) ? c.drift_flags : [];\n\n  let labelBias = 0;\n  if (label.includes('grounded')) labelBias = 0.12;\n  else if (label.includes('hero')) labelBias = 0.04;\n  else if (label.includes('wildcard')) labelBias = -0.10;\n\n  const selectorScore =\n    n(c.overall_score) * 0.30 +\n    n(c.family_fidelity_score) * 0.20 +\n    n(c.blueprint_fidelity_score) * 0.20 +\n    n(c.composition_score) * 0.10 +\n    n(c.negative_space_score) * 0.08 +\n    n(c.material_honesty_score) * 0.07 +\n    n(c.prop_discipline_score) * 0.05 -\n    n(c.stock_risk_score) * 0.25 -\n    driftFlags.length * 0.40 +\n    labelBias;\n\n  return { row, selectorScore };\n}).sort((a, b) => b.selectorScore - a.selectorScore);\n\nconst winner = scored[0]?.row;\nif (!winner) throw new Error('TVPX__30: winner selection failed.');\n\nconst c = winner.render_critic || {};\nif (n(c.overall_score) < 8.7) throw new Error('TVPX__30: best candidate overall_score below release floor.');\nif (n(c.family_fidelity_score) < 8.6) throw new Error('TVPX__30: best candidate family_fidelity_score below release floor.');\nif (n(c.blueprint_fidelity_score) < 8.3) throw new Error('TVPX__30: best candidate blueprint_fidelity_score below release floor.');\nif (n(c.stock_risk_score) > 3.5) throw new Error('TVPX__30: best candidate still too stock-like.');\n\nreturn [{\n  json: {\n    ...winner,\n    winner_selector_score: Number(scored[0].selectorScore.toFixed(4)),\n    winner_audit: scored.map(entry => ({\n      render_candidate_id: entry.row.render_candidate_id,\n      blueprint_label: entry.row.blueprint_label,\n      selector_score: Number(entry.selectorScore.toFixed(4)),\n      overall_score: n(entry.row.render_critic?.overall_score),\n      family_fidelity_score: n(entry.row.render_critic?.family_fidelity_score),\n      blueprint_fidelity_score: n(entry.row.render_critic?.blueprint_fidelity_score),\n      stock_risk_score: n(entry.row.render_critic?.stock_risk_score)\n    }))\n  }\n}];"
       },
       "id": "92ce0295-80ef-49ff-abe4-d2ef95139596",
       "name": "Select Winning Candidate",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3248,
+        3824,
         632
       ]
     },
@@ -1977,10 +2023,10 @@
         "operation": "upsert",
         "dataTableId": {
           "__rl": true,
-          "value": "iIAkutR0qSvPi5fX",
+          "value": "tb5enwr7N1RFgRsg",
           "mode": "list",
-          "cachedResultName": "tvpx_prompt_blueprint_bank",
-          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/iIAkutR0qSvPi5fX"
+          "cachedResultName": "tvpx_scene_blueprint_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/tb5enwr7N1RFgRsg"
         },
         "matchType": "allConditions",
         "filters": {
@@ -1994,16 +2040,319 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "scene_blueprint_id": "={{$json.scene_blueprint_id}}",
-            "scene_seed_id": "={{$json.scene_seed_id}}",
             "trace_id": "={{$json.ctx.trace_id}}",
-            "asset_family_id": "={{$json.ctx.asset_family_id}}",
+            "updated_at": "={{$now}}",
+            "winner_score": "={{$json.render_critic.overall_score}}",
+            "scene_seed_id": "={{$json.scene_seed_id}}",
             "archetype_id": "={{$json.archetype_id}}",
             "blueprint_label": "={{$json.blueprint_label}}",
-            "blueprint_score": "={{$json.render_critic.overall_score}}",
-            "state": "winner",
-            "updated_at": "={{$now}}"
+            "winner_candidate_id": "={{$json.render_candidate_id}}",
+            "winner_notes": "={{$json.render_critic.notes}}",
+            "state": "winner"
           },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "scene_blueprint_id",
+              "displayName": "scene_blueprint_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "trace_id",
+              "displayName": "trace_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scene_seed_id",
+              "displayName": "scene_seed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "archetype_id",
+              "displayName": "archetype_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_label",
+              "displayName": "blueprint_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_rank",
+              "displayName": "blueprint_rank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_mode",
+              "displayName": "blueprint_mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reference_family",
+              "displayName": "reference_family",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "person_count",
+              "displayName": "person_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "subject_grouping",
+              "displayName": "subject_grouping",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "environment_type",
+              "displayName": "environment_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "composition_formula",
+              "displayName": "composition_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "camera_formula",
+              "displayName": "camera_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lens_formula",
+              "displayName": "lens_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lighting_formula",
+              "displayName": "lighting_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "palette_formula",
+              "displayName": "palette_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "texture_formula",
+              "displayName": "texture_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "negative_space_formula",
+              "displayName": "negative_space_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "symbolic_pressure_formula",
+              "displayName": "symbolic_pressure_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "realism_guardrails_json",
+              "displayName": "realism_guardrails_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prop_budget",
+              "displayName": "prop_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "background_motif_budget",
+              "displayName": "background_motif_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_prompt_core",
+              "displayName": "blueprint_prompt_core",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blueprint_notes",
+              "displayName": "blueprint_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "winner_candidate_id",
+              "displayName": "winner_candidate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "winner_score",
+              "displayName": "winner_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "winner_notes",
+              "displayName": "winner_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -2014,7 +2363,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3472,
+        4048,
         536
       ]
     },
@@ -2027,7 +2376,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3472,
+        4048,
         728
       ]
     },
@@ -2070,7 +2419,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3696,
+        4272,
         728
       ],
       "retryOnFail": true,
@@ -2079,14 +2428,14 @@
     },
     {
       "parameters": {
-        "jsCode": "const winner = $items('Select Winning Candidate')[0]?.json || {};\nconst prompt = String(winner.prompt_final || '').trim();\nif (!prompt) throw new Error('TVPX__30: winner prompt missing.');\n\nreturn [{\n  json: {\n    ctx: winner.ctx || {},\n    concept_id: String(winner.scene_seed_id || '').trim(),\n    scene_seed_id: String(winner.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(winner.scene_blueprint_id || '').trim(),\n    archetype_id: String(winner.archetype_id || '').trim(),\n    blueprint_label: String(winner.blueprint_label || '').trim(),\n    render_variant: 'bw',\n    prompt: `${prompt} Black-and-white only. Rich silver-gelatin tonal realism, tactile midtones, restrained contrast, photographic grain only if natural, no stylized monochrome gimmicks.`,\n    negative_prompt: String(winner.negative_prompt_raw || '').trim(),\n    provider_controls: {\n      image_size: String(winner.ctx?.image_size || '1024x1536'),\n      background: String(winner.ctx?.background || 'opaque'),\n      quality: String(winner.ctx?.quality || 'high'),\n      output_format: String(winner.ctx?.output_format || 'png'),\n      num_images: 1,\n    },\n  },\n}];"
+        "jsCode": "const winner = $items('Select Winning Candidate')[0]?.json || {};\nconst prompt = String(winner.prompt_final || '').trim();\nif (!prompt) throw new Error('TVPX__30: winner prompt missing.');\n\nreturn [{\n  json: {\n    ctx: winner.ctx || {},\n    concept_id: String(winner.scene_seed_id || '').trim(),\n    scene_seed_id: String(winner.scene_seed_id || '').trim(),\n    scene_blueprint_id: String(winner.scene_blueprint_id || '').trim(),\n    archetype_id: String(winner.archetype_id || '').trim(),\n    blueprint_label: String(winner.blueprint_label || '').trim(),\n    render_variant: 'bw',\n    prompt: `${prompt} Black-and-white only. Silver-gelatin tonal separation, tactile midtones, restrained contrast, no stylized monochrome gimmicks.`,\n    negative_prompt: String(winner.negative_prompt_raw || '').trim(),\n    provider_controls: {\n      image_size: String(winner.ctx?.image_size || '1024x1536'),\n      background: String(winner.ctx?.background || 'opaque'),\n      quality: String(winner.ctx?.quality || 'high'),\n      output_format: String(winner.ctx?.output_format || 'png'),\n      num_images: 1,\n    },\n  },\n}];"
       },
       "id": "8f60642b-30a6-4474-a8e1-8a9466842d03",
       "name": "Build Winner B W Render Packet",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3920,
+        4496,
         728
       ]
     },
@@ -2127,7 +2476,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4144,
+        4720,
         728
       ]
     },
@@ -2140,7 +2489,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4368,
+        4944,
         728
       ]
     },
@@ -2181,7 +2530,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4592,
+        5168,
         728
       ]
     },
@@ -2194,7 +2543,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4816,
+        5392,
         728
       ]
     },
@@ -2245,7 +2594,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        5040,
+        5616,
         728
       ]
     },
@@ -2269,7 +2618,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1680,
+        2128,
         320
       ],
       "id": "f5656b41-e034-44a6-b2a6-93d5cf650b06",
@@ -2277,16 +2626,86 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseJsonMaybe(value, fallback) {\n  if (Array.isArray(value) || (value && typeof value === 'object')) return value;\n  const text = String(value || '').trim();\n  if (!text) return fallback;\n  try {\n    return JSON.parse(text);\n  } catch {\n    return fallback;\n  }\n}\n\nfunction clean(v) {\n  return String(v || '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nconst seed = $json.scene_seed_row || {};\nconst arch = $json.archetype_row || {};\nconst bp = $json.blueprint || {};\n\nconst renderBudget = parseJsonMaybe(seed.render_budget_json, {});\nconst forbiddenExcess = parseJsonMaybe(seed.forbidden_excess_json, []);\nconst materialDNA = parseJsonMaybe(arch.material_dna_json, []);\nconst surrealLiftRules = parseJsonMaybe(arch.surreal_lift_rules_json, []);\nconst forbiddenTells = parseJsonMaybe(arch.forbidden_tells_json, []);\n\nreturn [\n  {\n    json: {\n      ...$json,\n      prompt_smith_packet: {\n        reference_family: {\n          archetype_id: clean(arch.archetype_id),\n          archetype_name: clean(arch.archetype_name),\n          camera_dna: clean(arch.camera_dna),\n          palette_dna: clean(arch.palette_dna),\n          material_dna: materialDNA.map(clean).filter(Boolean),\n          negative_space_dna: clean(arch.negative_space_dna),\n          surreal_lift_rules: surrealLiftRules.map(clean).filter(Boolean),\n          forbidden_tells: forbiddenTells.map(clean).filter(Boolean),\n          notes: clean(arch.notes),\n        },\n        visible_scene: {\n          dominant_subject: clean(seed.dominant_subject),\n          material_anchor: clean(seed.material_anchor),\n          setting_family: clean(seed.setting_family),\n          spatial_directive: clean(seed.spatial_directive),\n          palette_directive: clean(seed.palette_directive),\n          texture_directive: clean(seed.texture_directive),\n          negative_space_note: clean(seed.negative_space_note),\n          omission_notes: clean(seed.omission_notes),\n        },\n        locked_blueprint: {\n          blueprint_label: clean(bp.blueprint_label),\n          shot_type: clean(bp.shot_type),\n          camera_height: clean(bp.camera_height),\n          camera_distance: clean(bp.camera_distance),\n          subject_arrangement: clean(bp.subject_arrangement),\n          environment: clean(bp.environment),\n          light_weather: clean(bp.light_weather),\n          wardrobe_surface_logic: clean(bp.wardrobe_surface_logic),\n          palette_weather: clean(bp.palette_weather),\n          one_surreal_lift: clean(bp.one_surreal_lift),\n          what_is_not_shown: clean(bp.what_is_not_shown),\n          candidate_prompt_core: clean(bp.candidate_prompt_core),\n        },\n        render_limits: {\n          max_named_props: Number(renderBudget.max_named_props || 0),\n          max_background_motifs: Number(renderBudget.max_background_motifs || 0),\n          max_prompt_words: Number(renderBudget.max_prompt_words || 0),\n          forbidden_excess: forbiddenExcess.map(clean).filter(Boolean),\n        },\n      },\n    },\n  },\n];"
+        "jsCode": "function parseJsonMaybe(value, fallback) {\n  if (Array.isArray(value) || (value && typeof value === 'object')) return value;\n  const text = String(value || '').trim();\n  if (!text) return fallback;\n  try { return JSON.parse(text); } catch { return fallback; }\n}\n\nfunction clean(v) {\n  return String(v || '').replace(/\\s+/g, ' ').trim();\n}\n\nconst seed = $json.scene_seed_row || {};\nconst arch = $json.archetype_row || {};\nconst bp = $json.blueprint || {};\nconst guard = $json.archetype_guardrail_row || {};\n\nconst renderBudget = parseJsonMaybe(seed.render_budget_json, {});\nconst forbiddenExcess = parseJsonMaybe(seed.forbidden_excess_json, []);\nconst materialDNA = parseJsonMaybe(arch.material_dna_json, []);\nconst surrealLiftRules = parseJsonMaybe(arch.surreal_lift_rules_json, []);\nconst forbiddenTells = parseJsonMaybe(arch.forbidden_tells_json, []);\nconst propManifest = parseJsonMaybe(seed.prop_manifest_json, { hero_props: [], supporting_props: [] });\n\nreturn [{\n  json: {\n    ...$json,\n    prompt_smith_packet: {\n      reference_family: {\n        archetype_id: clean(arch.archetype_id),\n        archetype_name: clean(arch.archetype_name),\n        camera_dna: clean(arch.camera_dna),\n        palette_dna: clean(arch.palette_dna),\n        material_dna: materialDNA.map(clean).filter(Boolean),\n        negative_space_dna: clean(arch.negative_space_dna),\n        surreal_lift_rules: surrealLiftRules.map(clean).filter(Boolean),\n        forbidden_tells: forbiddenTells.map(clean).filter(Boolean),\n        notes: clean(arch.notes)\n      },\n      family_guardrail: {\n        allowed_subject_modes: parseJsonMaybe(guard.allowed_subject_modes_json || guard.allowed_subject_modes, []),\n        anchor_environment_terms: parseJsonMaybe(guard.anchor_environment_terms_json || guard.anchor_environment_terms, []),\n        anchor_material_terms: parseJsonMaybe(guard.anchor_material_terms_json || guard.anchor_material_terms, []),\n        anchor_gesture_terms: parseJsonMaybe(guard.anchor_gesture_terms_json || guard.anchor_gesture_terms, []),\n        forbidden_prop_terms: parseJsonMaybe(guard.forbidden_prop_terms_json || guard.forbidden_prop_terms, []),\n        forbidden_style_terms: parseJsonMaybe(guard.forbidden_style_terms_json || guard.forbidden_style_terms, []),\n        forbidden_palette_terms: parseJsonMaybe(guard.forbidden_palette_terms_json || guard.forbidden_palette_terms, []),\n        critic_score_floor: Number(guard.critic_score_floor || 8.6),\n        render_prompt_word_ceiling: Number(guard.render_prompt_word_ceiling || 115)\n      },\n      visible_scene: {\n        dominant_subject: clean(seed.dominant_subject),\n        material_anchor: clean(seed.material_anchor),\n        setting_family: clean(seed.setting_family),\n        spatial_directive: clean(seed.spatial_directive),\n        palette_directive: clean(seed.palette_directive),\n        texture_directive: clean(seed.texture_directive),\n        negative_space_note: clean(seed.negative_space_note),\n        omission_notes: clean(seed.omission_notes),\n        surreal_mechanism: clean(seed.surreal_mechanism),\n        prop_manifest: propManifest\n      },\n      locked_blueprint: {\n        blueprint_label: clean(bp.blueprint_label),\n        shot_type: clean(bp.shot_type),\n        camera_height: clean(bp.camera_height),\n        camera_distance: clean(bp.camera_distance),\n        subject_arrangement: clean(bp.subject_arrangement),\n        environment: clean(bp.environment),\n        light_weather: clean(bp.light_weather),\n        wardrobe_surface_logic: clean(bp.wardrobe_surface_logic),\n        palette_weather: clean(bp.palette_weather),\n        one_surreal_lift: clean(bp.one_surreal_lift),\n        what_is_not_shown: clean(bp.what_is_not_shown),\n        candidate_prompt_core: clean(bp.candidate_prompt_core)\n      },\n      render_limits: {\n        max_named_props: Number(renderBudget.max_named_props || 4),\n        max_background_motifs: Number(renderBudget.max_background_motifs || 2),\n        max_prompt_words: Number(renderBudget.max_prompt_words || 115),\n        forbidden_excess: forbiddenExcess.map(clean).filter(Boolean)\n      }\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        320
+      ],
+      "id": "79c8e867-1f9c-4b56-8380-3c43efabb1c4",
+      "name": "Build Prompt Smith Packet"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "5KpLfqhCa6qq2q1v",
+          "mode": "list",
+          "cachedResultName": "tvpx_archetype_guardrail_bank",
+          "cachedResultUrl": "/projects/NK3VX1YKPgfTJeSY/datatables/5KpLfqhCa6qq2q1v"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "archetype_id",
+              "keyValue": "={{$json.scene_seed_row.archetype_id}}"
+            },
+            {
+              "keyName": "active",
+              "condition": "isTrue"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        200
+      ],
+      "id": "42dad561-bb3a-4003-8e49-429471edea58",
+      "name": "Get Archetype Guardrail By Id"
+    },
+    {
+      "parameters": {
+        "jsCode": "function clean(v) {\n  return String(v || '').toLowerCase().replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\nconst base = $json || {};\nconst pack = base.scene_blueprint_pack || {};\nconst guardrail = base.archetype_guardrail_row || {};\nconst blueprints = Array.isArray(pack.blueprints) ? pack.blueprints : [];\n\nif (!blueprints.length) throw new Error('TVPX__30: no blueprints returned.');\n\nconst forbiddenStyleTerms = Array.isArray(JSON.parse(JSON.stringify(guardrail.forbidden_style_terms || []))) ? guardrail.forbidden_style_terms : [];\nconst envTerms = Array.isArray(guardrail.anchor_environment_terms) ? guardrail.anchor_environment_terms : [];\n\nconst filtered = blueprints.filter((bp) => {\n  const shot = clean(bp.shot_type);\n  const core = clean(bp.candidate_prompt_core);\n  const env = clean(bp.environment);\n  const full = `${shot} ${core} ${env}`;\n\n  if (forbiddenStyleTerms.some(t => full.includes(clean(t)))) return false;\n  if ((core.split(/\\s+/).filter(Boolean).length) > 70) return false;\n  if (envTerms.length && !envTerms.some(t => full.includes(clean(t)))) return false;\n  if (full.includes('studio') || full.includes('fashion editorial') || full.includes('product shot')) return false;\n  return true;\n});\n\nif (!filtered.length) {\n  throw new Error('TVPX__30: all blueprint candidates failed deterministic family guard.');\n}\n\nreturn [{\n  json: {\n    ...base,\n    scene_blueprint_pack: {\n      ...pack,\n      blueprints: filtered\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         1104,
-        320
+        200
       ],
-      "id": "79c8e867-1f9c-4b56-8380-3c43efabb1c4",
-      "name": "Build Prompt Smith Packet"
+      "id": "c1559555-665d-4e27-a210-51f32772ad91",
+      "name": "Deterministic Blueprint Guard"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Archetype:\n{{ JSON.stringify($json.archetype_row || {}, null, 2) }}\n\nGuardrail:\n{{ JSON.stringify($json.archetype_guardrail_row || {}, null, 2) }}\n\nScene seed:\n{{ JSON.stringify($json.scene_seed_row || {}, null, 2) }}\n\nBlueprint:\n{{ JSON.stringify($json.blueprint || {}, null, 2) }}\n\nSubmitted prompt:\n{{ String($json.prompt_final || '') }}\n\nJudge the attached candidate image against the full locked packet.",
+        "needsFallback": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are TVPX__LLM__Render_Vision_Critic_V2 for The Velvet Paradox.\n\nJudge the rendered image against:\n1. the selected archetype family\n2. the locked blueprint\n3. the scene seed\n4. the actual submitted prompt\n\nReward:\n- family fidelity\n- blueprint fidelity\n- composition pressure\n- negative space force\n- material honesty\n- prop discipline\n- one controlled surreal mechanism\n- anti-stock authorship\n\nPenalize:\n- family drift\n- blueprint drift\n- over-stylization\n- prop clutter\n- glossy CGI feel\n- editorial illustration feel\n- dead atmosphere\n- image that fits the family but ignores the actual locked shot\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"family_fidelity_score\": 0.0,\n  \"blueprint_fidelity_score\": 0.0,\n  \"composition_score\": 0.0,\n  \"negative_space_score\": 0.0,\n  \"material_honesty_score\": 0.0,\n  \"prop_discipline_score\": 0.0,\n  \"surreal_restraint_score\": 0.0,\n  \"stock_risk_score\": 0.0,\n  \"overall_score\": 0.0,\n  \"drift_flags\": [\"...\"],\n  \"verdict\": \"pass\",\n  \"notes\": \"...\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3024,
+        608
+      ],
+      "id": "d958d0a8-af60-42de-9874-65989500425f",
+      "name": "Basic LLM Chain"
     }
   ],
   "connections": {
@@ -2400,7 +2819,7 @@
       "main": [
         [
           {
-            "node": "Get Archetype By Id",
+            "node": "Get Archetype Guardrail By Id",
             "type": "main",
             "index": 0
           }
@@ -2444,7 +2863,7 @@
       "main": [
         [
           {
-            "node": "Explode Blueprint Pack",
+            "node": "Deterministic Blueprint Guard",
             "type": "main",
             "index": 0
           }
@@ -2514,25 +2933,14 @@
             "index": 0
           },
           {
-            "node": "LLM Render Vision Critic",
+            "node": "Merge Candidate And Critic Raw",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Merge Candidate And Critic Raw",
+            "node": "Basic LLM Chain",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "LLM Render Vision Critic": {
-      "main": [
-        [
-          {
-            "node": "Merge Candidate And Critic Raw",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -2663,6 +3071,11 @@
             "node": "LLM Final Prompt Smith V2",
             "type": "ai_languageModel",
             "index": 0
+          },
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
           }
         ]
       ]
@@ -2677,6 +3090,11 @@
           },
           {
             "node": "LLM Final Prompt Smith V2",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "Basic LLM Chain",
             "type": "ai_languageModel",
             "index": 1
           }
@@ -2731,6 +3149,39 @@
           }
         ]
       ]
+    },
+    "Get Archetype Guardrail By Id": {
+      "main": [
+        [
+          {
+            "node": "Get Archetype By Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Blueprint Guard": {
+      "main": [
+        [
+          {
+            "node": "Explode Blueprint Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge Candidate And Critic Raw",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -2743,9 +3194,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "cfeb3dd2-651c-47cb-b5f9-7f0e0bc24f6b",
+  "versionId": "ecba61e3-cc59-49ee-abb7-f1d4869abcca",
   "activeVersionId": null,
-  "versionCounter": 122,
+  "versionCounter": 191,
   "triggerCount": 0,
   "tags": [],
   "shared": [

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T22:48:43.670Z",
+  "updatedAt": "2026-03-07T00:54:13.998Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "2uSefQgL3Y5q90Vc",
   "name": "TVPX__30A__Fal Batch Render Submit And Poll",
@@ -15,12 +15,12 @@
       "typeVersion": 1,
       "position": [
         -3200,
-        152
+        160
       ]
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst prompt = String(incoming.prompt || '').trim();\nconst variant = String(incoming.render_variant || '').trim();\nif (!prompt || prompt.length < 40) throw new Error('TVPX__30A: prompt missing or too short.');\nif (!variant) throw new Error('TVPX__30A: render_variant missing.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() || \\`tvpx_\\${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}\\`;\nconst assetFamilyId = String(baseCtx.asset_family_id || incoming.asset_family_id || \\`tvpxfam_\\${fnv1a(traceId + '::assetfam')}\\`).trim();\n\nconst jobId = \\`tvpx_job_\\${fnv1a([\n  traceId,\n  incoming.scene_seed_id,\n  incoming.scene_blueprint_id,\n  incoming.blueprint_label,\n  variant,\n  prompt,\n].join('::'))}\\`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: assetFamilyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: String(baseCtx.fal_endpoint_url || incoming.fal_endpoint_url || '').trim(),\n  image_size: String(baseCtx.image_size || incoming.provider_controls?.image_size || '1024x1536'),\n  output_format: String(baseCtx.output_format || incoming.provider_controls?.output_format || 'png'),\n  background: String(baseCtx.background || incoming.provider_controls?.background || 'opaque'),\n  quality: String(baseCtx.quality || incoming.provider_controls?.quality || 'high'),\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n};\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: incoming.scene_seed_row || null,\n    archetype_row: incoming.archetype_row || null,\n    blueprint: incoming.blueprint || null,\n    job: {\n      job_id: jobId,\n      concept_id: String(incoming.concept_id || incoming.scene_seed_id || '').trim(),\n      scene_seed_id: String(incoming.scene_seed_id || '').trim(),\n      scene_blueprint_id: String(incoming.scene_blueprint_id || '').trim(),\n      archetype_id: String(incoming.archetype_id || '').trim(),\n      blueprint_label: String(incoming.blueprint_label || '').trim(),\n      render_variant: variant,\n      provider_name: 'fal',\n      candidate_index: null,\n      request: {\n        prompt,\n        image_size: ctx.image_size,\n        background: ctx.background,\n        quality: ctx.quality,\n        output_format: ctx.output_format,\n        num_images: Number(incoming.provider_controls?.num_images || 1),\n        sync_mode: false,\n      },\n      prompt_raw: prompt,\n      negative_prompt_raw: String(incoming.negative_prompt || '').trim(),\n      state: 'queued',\n      created_at: now,\n      updated_at: now,\n    },\n  },\n}];"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst incoming = $json || {};\nconst now = new Date().toISOString();\nconst baseCtx = (incoming.ctx && typeof incoming.ctx === 'object') ? incoming.ctx : {};\n\nconst prompt = String(incoming.prompt || '').trim();\nconst neg = String(incoming.negative_prompt || '').trim();\nconst variant = String(incoming.render_variant || '').trim();\nconst conceptId = String(incoming.concept_id || incoming.scene_seed_id || '').trim();\n\nif (!conceptId) throw new Error('TVPX__30A: concept_id missing.');\nif (!variant) throw new Error('TVPX__30A: render_variant missing.');\nif (!prompt || prompt.length < 40) throw new Error('TVPX__30A: prompt missing or too short.');\n\nconst traceId = String(baseCtx.trace_id || '').trim() ||\n  `tvpx_${fnv1a(JSON.stringify(incoming).slice(0, 5000) + '::' + now)}`;\n\nconst assetFamilyId = String(baseCtx.asset_family_id || incoming.asset_family_id || '').trim() ||\n  `tvpxfam_${fnv1a(traceId + '::assetfam')}`;\n\nconst controls = (incoming.provider_controls && typeof incoming.provider_controls === 'object')\n  ? incoming.provider_controls\n  : {};\n\nconst imageSize = String(controls.image_size || incoming.image_size || baseCtx.image_size || '1024x1536').trim();\nconst background = String(controls.background || incoming.background || baseCtx.background || 'opaque').trim();\nconst quality = String(controls.quality || incoming.quality || baseCtx.quality || 'high').trim();\nconst outputFormat = String(controls.output_format || incoming.output_format || baseCtx.output_format || 'png').trim();\nconst numImages = Math.max(1, Math.min(Number(controls.num_images || 1), 6));\n\nconst endpointUrl = String(\n  incoming.fal_endpoint_url ||\n  baseCtx.fal_endpoint_url ||\n  'https://queue.fal.run/fal-ai/gpt-image-1.5'\n).trim();\n\nconst finalPrompt = neg\n  ? `${prompt}\\n\\nAvoid: ${neg}`\n  : prompt;\n\nconst jobId = `tvpx_job_${fnv1a([\n  traceId,\n  incoming.scene_seed_id,\n  incoming.scene_blueprint_id,\n  incoming.blueprint_label,\n  variant,\n  prompt,\n  now\n].join('::'))}`;\n\nconst ctx = {\n  project_ns: 'TVPX',\n  brand_name: 'The Velvet Paradox',\n  trace_id: traceId,\n  asset_family_id: assetFamilyId,\n  trigger_mode: baseCtx.trigger_mode || incoming.trigger_mode || 'internal',\n  route_mode: 'fal_submit_poll',\n  received_at: now,\n  fal_api_key: String(baseCtx.fal_api_key || incoming.fal_api_key || '').trim(),\n  fal_endpoint_url: endpointUrl,\n  image_size: imageSize,\n  output_format: outputFormat,\n  background,\n  quality,\n  poll_max: Number(baseCtx.poll_max || incoming.poll_max || 24),\n  poll_interval_seconds: Number(baseCtx.poll_interval_seconds || incoming.poll_interval_seconds || 8)\n};\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: incoming.scene_seed_row || null,\n    archetype_row: incoming.archetype_row || null,\n    blueprint: incoming.blueprint || null,\n    job: {\n      job_id: jobId,\n      concept_id: conceptId,\n      scene_seed_id: String(incoming.scene_seed_id || '').trim(),\n      scene_blueprint_id: String(incoming.scene_blueprint_id || '').trim(),\n      archetype_id: String(incoming.archetype_id || '').trim(),\n      blueprint_label: String(incoming.blueprint_label || '').trim(),\n      render_variant: variant,\n      provider_name: 'fal',\n      candidate_index: null,\n      request: {\n        prompt: finalPrompt,\n        image_size: imageSize,\n        background,\n        quality,\n        output_format: outputFormat,\n        num_images: numImages,\n        sync_mode: false\n      },\n      prompt_raw: prompt,\n      negative_prompt_raw: neg,\n      state: 'queued',\n      created_at: now,\n      updated_at: now\n    }\n  }\n}];"
       },
       "id": "cc050267-f722-4d9e-a7b1-304179b93724",
       "name": "Initialize Envelope",
@@ -28,7 +28,7 @@
       "typeVersion": 2,
       "position": [
         -2976,
-        152
+        160
       ]
     },
     {
@@ -83,7 +83,7 @@
       "typeVersion": 1,
       "position": [
         -2752,
-        152
+        160
       ]
     },
     {
@@ -96,7 +96,7 @@
       "typeVersion": 2,
       "position": [
         -2528,
-        152
+        160
       ]
     },
     {
@@ -119,7 +119,7 @@
       "typeVersion": 4.2,
       "position": [
         -2304,
-        152
+        160
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -141,7 +141,7 @@
       "typeVersion": 2,
       "position": [
         -2080,
-        152
+        160
       ]
     },
     {
@@ -182,7 +182,7 @@
       "typeVersion": 1,
       "position": [
         -1856,
-        56
+        64
       ]
     },
     {
@@ -195,7 +195,7 @@
       "typeVersion": 2,
       "position": [
         -1856,
-        248
+        256
       ]
     },
     {
@@ -209,7 +209,7 @@
       "typeVersion": 1,
       "position": [
         -1632,
-        248
+        256
       ],
       "webhookId": "3fec0836-edc8-4b26-a9c7-4472c6473df1"
     },
@@ -440,7 +440,7 @@
       "typeVersion": 1,
       "position": [
         -64,
-        440
+        448
       ]
     },
     {
@@ -561,7 +561,7 @@
       "typeVersion": 2,
       "position": [
         -64,
-        632
+        640
       ]
     },
     {
@@ -775,7 +775,7 @@
       "typeVersion": 1,
       "position": [
         160,
-        632
+        640
       ]
     },
     {
@@ -799,7 +799,7 @@
       "typeVersion": 2,
       "position": [
         384,
-        632
+        640
       ],
       "id": "9b4c0da3-19e8-42e2-b6e3-337a603fc96f",
       "name": "Return Timed Out Payload"
@@ -812,7 +812,7 @@
       "typeVersion": 2,
       "position": [
         -64,
-        824
+        832
       ],
       "id": "2456bb01-130c-4221-9523-6cd71e5f79aa",
       "name": "Return Failed Payload"
@@ -1106,9 +1106,9 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "d72f41a6-083b-4bc6-a7c0-1fe3a58bdada",
+  "versionId": "2f49fa6a-b810-48b4-bfb3-6c49462ba6fa",
   "activeVersionId": null,
-  "versionCounter": 20,
+  "versionCounter": 22,
   "triggerCount": 0,
   "tags": [],
   "shared": [
