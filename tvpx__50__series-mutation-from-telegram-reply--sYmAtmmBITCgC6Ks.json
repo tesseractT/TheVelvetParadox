@@ -136,7 +136,7 @@
           "conditions": [
             {
               "keyName": "scene_seed_id",
-              "keyValue": "={{$json.reply_index.scene_seed_id || $json.reply_index.concept_id || $json.reply_index.asset_id}}"
+              "keyValue": "={{$json.scene_seed_id || $items('Reattach After Reply Lookup')[0]?.json?.reply_index?.scene_seed_id || $json.asset_id}}"
             }
           ]
         }
@@ -699,7 +699,7 @@
           "conditions": [
             {
               "keyName": "asset_family_id",
-              "keyValue": "={{$json.parent.asset.asset_family_id}}"
+              "keyValue": "={{$json.parent_asset.asset_family_id}}"
             },
             {
               "keyName": "variant_key",
@@ -720,7 +720,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const base = $items('Assemble Parent Packet')[0]?.json || {};\nconst rows = $input.all().map(i => i.json).filter(r => r && Object.keys(r).length);\nconst existing = rows.find(r => String(r.asset_id || '').trim()) || null;\nreturn [{ json: { ...base, existing_bw_asset: existing } }];"
+        "jsCode": "const base = $items('Assemble Parent Image DNA Packet')[0]?.json || {};\nconst rows = $input.all().map(i => i.json).filter(r => r && Object.keys(r).length);\nconst existing = rows.find(r => String(r.asset_id || '').trim()) || null;\nreturn [{ json: { ...base, existing_bw_asset: existing } }];"
       },
       "id": "9de7dfe0-7ad3-4c26-a4eb-3f4b90bbf356",
       "name": "Reattach B W Lookup",
@@ -742,10 +742,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.existing_bw_asset?.asset_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.existing_bw_asset?.asset_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -843,10 +843,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.telegram.bw_message_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.telegram?.bw_message_id ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -944,10 +944,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.prompt ? \"true\" : \"false\"}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.ctx?.fal_api_key || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -1029,10 +1029,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.image_url ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.image_url || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -1130,7 +1130,7 @@
           "conditions": [
             {
               "keyName": "asset_id",
-              "keyValue": "={{$json.parent.asset.asset_id}}"
+              "keyValue": "={{$json.parent_asset.asset_id}}"
             }
           ]
         }
@@ -1169,10 +1169,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.video_plan.should_upsert ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.video_plan?.should_upsert === true ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -1263,10 +1263,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.video_plan.should_prepare ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.video_plan?.should_prepare === true ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -1680,13 +1680,7 @@
             "node": "Upsert Series Lineage",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Upsert Series Lineage": {
-      "main": [
-        [
+          },
           {
             "node": "Call Image Generation",
             "type": "main",
@@ -1698,6 +1692,11 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Upsert Series Lineage": {
+      "main": [
+        []
       ]
     },
     "Next Variation": {

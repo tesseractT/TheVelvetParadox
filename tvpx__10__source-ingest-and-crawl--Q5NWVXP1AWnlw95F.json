@@ -455,10 +455,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.fragment?.fragment_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.fragment?.fragment_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }

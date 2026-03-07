@@ -72,10 +72,10 @@
           "conditions": [
             {
               "id": "has_scene_seed_id_cond",
-              "leftValue": "={{$json.scene_seed_id ? \"true\" : \"false\"}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.scene_seed_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -120,7 +120,8 @@
       "position": [
         -1488,
         128
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -149,7 +150,8 @@
       "position": [
         -1488,
         320
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -232,7 +234,8 @@
       "position": [
         -816,
         200
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -261,7 +264,8 @@
       "position": [
         -592,
         200
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -291,7 +295,7 @@
           "conditions": [
             {
               "keyName": "archetype_id",
-              "keyValue": "={{$json.scene_seed_row.archetype_id}}"
+              "keyValue": "={{$json.archetype_id || $items('Verify Lock Ownership')[0]?.json?.scene_seed_row?.archetype_id}}"
             }
           ]
         },
@@ -358,7 +362,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $json || {};\nconst ctx = base.ctx || {};\nconst pack = base.scene_blueprint_pack || {};\nconst blueprints = Array.isArray(pack.blueprints) ? pack.blueprints : [];\nif (!blueprints.length) throw new Error('TVPX__30: no blueprints returned.');\n\nconst now = new Date().toISOString();\n\nreturn blueprints.map((bp, idx) => {\n  const label = String(bp.blueprint_label || `bp_${idx + 1}`).trim();\n  const sceneBlueprintId = `tvpx_sb_${fnv1a([\n    ctx.trace_id,\n    base.scene_seed_id,\n    label,\n    bp.candidate_prompt_core,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx,\n      scene_seed_id: base.scene_seed_id,\n      concept_id: base.scene_seed_id,\n      scene_seed_row: base.scene_seed_row,\n      archetype_row: base.archetype_row,\n      scene_blueprint_id: sceneBlueprintId,\n      blueprint: {\n        blueprint_label: label,\n        shot_type: String(bp.shot_type || '').trim(),\n        camera_height: String(bp.camera_height || '').trim(),\n        camera_distance: String(bp.camera_distance || '').trim(),\n        subject_arrangement: String(bp.subject_arrangement || '').trim(),\n        environment: String(bp.environment || '').trim(),\n        light_weather: String(bp.light_weather || '').trim(),\n        wardrobe_surface_logic: String(bp.wardrobe_surface_logic || '').trim(),\n        palette_weather: String(bp.palette_weather || '').trim(),\n        one_surreal_lift: String(bp.one_surreal_lift || '').trim(),\n        what_is_not_shown: String(bp.what_is_not_shown || '').trim(),\n        candidate_prompt_core: String(bp.candidate_prompt_core || '').trim(),\n        created_at: now,\n        updated_at: now,\n      },\n    },\n  };\n});"
+        "jsCode": "function fnv1a(str) {\n  let h = 0x811c9dc5;\n  for (let i = 0; i < str.length; i++) {\n    h ^= str.charCodeAt(i);\n    h = (h >>> 0) * 0x01000193;\n  }\n  return (h >>> 0).toString(16);\n}\n\nconst base = $json || {};\nconst ctx = base.ctx || {};\nconst pack = base.scene_blueprint_pack || {};\nconst blueprints = Array.isArray(pack.blueprints) ? pack.blueprints : [];\nif (!blueprints.length) throw new Error('TVPX__30: no blueprints returned.');\n\nconst now = new Date().toISOString();\n\nreturn blueprints.map((bp, idx) => {\n  const label = String(bp.blueprint_label || `bp_${idx + 1}`).trim();\n  const sceneBlueprintId = `tvpx_sb_${fnv1a([\n    ctx.trace_id,\n    base.scene_seed_id,\n    label,\n    bp.candidate_prompt_core,\n  ].join('::'))}`;\n\n  return {\n    json: {\n      ctx,\n      scene_seed_id: base.scene_seed_id,\n      concept_id: base.scene_seed_id,\n      scene_seed_row: base.scene_seed_row,\n      archetype_row: base.archetype_row,\n      archetype_guardrail_row: base.archetype_guardrail_row || {},\n      scene_blueprint_id: sceneBlueprintId,\n      blueprint: {\n        blueprint_label: label,\n        shot_type: String(bp.shot_type || '').trim(),\n        camera_height: String(bp.camera_height || '').trim(),\n        camera_distance: String(bp.camera_distance || '').trim(),\n        subject_arrangement: String(bp.subject_arrangement || '').trim(),\n        environment: String(bp.environment || '').trim(),\n        light_weather: String(bp.light_weather || '').trim(),\n        wardrobe_surface_logic: String(bp.wardrobe_surface_logic || '').trim(),\n        palette_weather: String(bp.palette_weather || '').trim(),\n        one_surreal_lift: String(bp.one_surreal_lift || '').trim(),\n        what_is_not_shown: String(bp.what_is_not_shown || '').trim(),\n        candidate_prompt_core: String(bp.candidate_prompt_core || '').trim(),\n        created_at: now,\n        updated_at: now,\n      },\n    },\n  };\n});"
       },
       "id": "1e5b232f-89d1-4b5a-ad84-7ef480ef9d44",
       "name": "Explode Blueprint Pack",
@@ -2669,11 +2673,12 @@
         200
       ],
       "id": "42dad561-bb3a-4003-8e49-429471edea58",
-      "name": "Get Archetype Guardrail By Id"
+      "name": "Get Archetype Guardrail By Id",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "function clean(v) {\n  return String(v || '').toLowerCase().replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\nconst base = $json || {};\nconst pack = base.scene_blueprint_pack || {};\nconst guardrail = base.archetype_guardrail_row || {};\nconst blueprints = Array.isArray(pack.blueprints) ? pack.blueprints : [];\n\nif (!blueprints.length) throw new Error('TVPX__30: no blueprints returned.');\n\nconst forbiddenStyleTerms = Array.isArray(JSON.parse(JSON.stringify(guardrail.forbidden_style_terms || []))) ? guardrail.forbidden_style_terms : [];\nconst envTerms = Array.isArray(guardrail.anchor_environment_terms) ? guardrail.anchor_environment_terms : [];\n\nconst filtered = blueprints.filter((bp) => {\n  const shot = clean(bp.shot_type);\n  const core = clean(bp.candidate_prompt_core);\n  const env = clean(bp.environment);\n  const full = `${shot} ${core} ${env}`;\n\n  if (forbiddenStyleTerms.some(t => full.includes(clean(t)))) return false;\n  if ((core.split(/\\s+/).filter(Boolean).length) > 70) return false;\n  if (envTerms.length && !envTerms.some(t => full.includes(clean(t)))) return false;\n  if (full.includes('studio') || full.includes('fashion editorial') || full.includes('product shot')) return false;\n  return true;\n});\n\nif (!filtered.length) {\n  throw new Error('TVPX__30: all blueprint candidates failed deterministic family guard.');\n}\n\nreturn [{\n  json: {\n    ...base,\n    scene_blueprint_pack: {\n      ...pack,\n      blueprints: filtered\n    }\n  }\n}];"
+        "jsCode": "function clean(v) {\n  return String(v || '').toLowerCase().replace(/[^a-z0-9\\s-]/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\nconst base = $json || {};\nconst pack = base.scene_blueprint_pack || {};\nconst guardrail = base.archetype_guardrail_row || {};\nconst blueprints = Array.isArray(pack.blueprints) ? pack.blueprints : [];\n\nif (!blueprints.length) throw new Error('TVPX__30: no blueprints returned.');\n\nfunction parseJsonMaybe(v, fb) { if (Array.isArray(v)) return v; if (v && typeof v === 'object') return fb; try { return JSON.parse(v); } catch { return fb; } }\nconst forbiddenStyleTerms = parseJsonMaybe(guardrail.forbidden_style_terms, []);\nconst envTerms = parseJsonMaybe(guardrail.anchor_environment_terms, []);\n\nconst filtered = blueprints.filter((bp) => {\n  const shot = clean(bp.shot_type);\n  const core = clean(bp.candidate_prompt_core);\n  const env = clean(bp.environment);\n  const full = `${shot} ${core} ${env}`;\n\n  if (forbiddenStyleTerms.some(t => full.includes(clean(t)))) return false;\n  if ((core.split(/\\s+/).filter(Boolean).length) > 70) return false;\n  if (envTerms.length && !envTerms.some(t => full.includes(clean(t)))) return false;\n  if (full.includes('studio') || full.includes('fashion editorial') || full.includes('product shot')) return false;\n  return true;\n});\n\nif (!filtered.length) {\n  throw new Error('TVPX__30: all blueprint candidates failed deterministic family guard.');\n}\n\nreturn [{\n  json: {\n    ...base,\n    scene_blueprint_pack: {\n      ...pack,\n      blueprints: filtered\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

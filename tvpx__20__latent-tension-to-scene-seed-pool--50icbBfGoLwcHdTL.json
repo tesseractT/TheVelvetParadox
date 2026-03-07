@@ -632,10 +632,10 @@
           "conditions": [
             {
               "id": "approve_scene_seed_cond",
-              "leftValue": "={{$json.gate.approve ? \"true\" : \"false\"}}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.gate.approve === true ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -776,7 +776,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Parse Archetype Router JSON')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Parse Archetype Router JSON\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    human_situation: parsed,\n  },\n}];"
+        "jsCode": "function parseStrictJson(raw) {\n  const source = typeof raw === 'string'\n    ? raw\n    : raw?.text ?? raw?.output ?? raw?.result ?? raw?.body?.output_text ?? JSON.stringify(raw);\n\n  const text = String(source || '').trim();\n  if (!text) throw new Error('TVPX parser: empty LLM output.');\n\n  const candidates = [\n    text,\n    text.replace(/\\`\\`\\`json\\s*/gi, '').replace(/\\`\\`\\`/g, '').trim(),\n  ];\n\n  for (const candidate of candidates) {\n    try {\n      return JSON.parse(candidate);\n    } catch {}\n  }\n\n  const stripped = candidates[1];\n  const start = stripped.indexOf('{');\n  const end = stripped.lastIndexOf('}');\n  if (start >= 0 && end > start) {\n    const slice = stripped.slice(start, end + 1)\n      .replace(/[\\u201C\\u201D]/g, '\"')\n      .replace(/[\\u2018\\u2019]/g, \"'\")\n      .replace(/,\\s*}/g, '}')\n      .replace(/,\\s*]/g, ']');\n\n    return JSON.parse(slice);\n  }\n\n  throw new Error('TVPX parser: could not locate valid JSON.');\n}\n\nconst base = $items('Hydrate Selected Guardrail')[0]?.json;\nif (!base) throw new Error('TVPX parser: base node \"Parse Archetype Router JSON\" missing.');\n\nconst parsed = parseStrictJson($json);\n\nreturn [{\n  json: {\n    ...base,\n    human_situation: parsed,\n  },\n}];"
       },
       "id": "d1d0b104-09eb-4808-aea3-ccb4026e2906",
       "name": "Parse Human Situation JSON",
@@ -1316,10 +1316,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{ Array.isArray($json.fragments) && $json.fragments.some(f => String(f.fragment_id || f.id || f.dt_row_id || f.cleaned_text || f.text || '').trim()) ? 'true' : 'false' }}",
-              "rightValue": "true",
+              "leftValue": "={{ Array.isArray($json.fragments) && $json.fragments.some(f => String(f.fragment_id || f.id || f.dt_row_id || f.cleaned_text || f.text || '').trim()) ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -1549,7 +1549,8 @@
         48
       ],
       "id": "8ff45d07-f0c1-42fc-960b-af9273bc514a",
-      "name": "Get Archetype Guardrail Registry"
+      "name": "Get Archetype Guardrail Registry",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1605,7 +1606,8 @@
         412
       ],
       "id": "5e3b85f3-9965-49dd-81c8-c8a77b97da88",
-      "name": "Get Candidate Fragment Universe"
+      "name": "Get Candidate Fragment Universe",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1619,10 +1621,10 @@
           "conditions": [
             {
               "id": "21a57de1-cebb-4276-b272-bd838c076a6f",
-              "leftValue": "={{$json.loop_packet_kind === \"candidate_run\" ? \"true\" : \"false\"}}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.loop_packet_kind === 'candidate_run' ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals",
                 "name": "filter.operator.equals"
               }

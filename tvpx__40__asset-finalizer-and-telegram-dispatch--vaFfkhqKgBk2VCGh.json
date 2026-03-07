@@ -42,10 +42,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.ctx?.telegram_chat_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -490,10 +490,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.ctx?.telegram_chat_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -522,10 +522,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.telegram.color_message_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.telegram?.color_message_id ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -554,10 +554,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.ctx.telegram_chat_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.ctx?.telegram_chat_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -618,10 +618,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.ctx.drive_folder_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.ctx?.drive_folder_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
@@ -691,10 +691,10 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.ctx.drive_folder_id ? 'true' : 'false'}}",
-              "rightValue": "true",
+              "leftValue": "={{ String($json.ctx?.drive_folder_id || '').trim() ? 1 : 0 }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
