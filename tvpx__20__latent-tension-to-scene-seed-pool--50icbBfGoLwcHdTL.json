@@ -1080,7 +1080,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function clean(v) {\n  return String(v || '').replace(/\\s+/g, ' ').trim();\n}\n\nfunction parseJsonMaybe(value, fallback) {\n  if (Array.isArray(value) || (value && typeof value === 'object')) return value;\n  const text = String(value || '').trim();\n  if (!text) return fallback;\n  try { return JSON.parse(text); } catch { return fallback; }\n}\n\nconst base = $items('Assemble Fragment Bundle')[0]?.json;\nif (!base) throw new Error('TVPX__20: missing Assemble Fragment Bundle payload.');\n\nconst archetypeRows = $items('Get Archetype Registry').map(i => i.json || {}).filter(Boolean);\nconst guardrailRows = $items('Get Archetype Guardrail Registry').map(i => i.json || {}).filter(Boolean);\n\nconst archetypes = archetypeRows.map((r) => ({\n  archetype_id: clean(r.archetype_id),\n  archetype_name: clean(r.archetype_name),\n  allowed_text_role: clean(r.allowed_text_role || 'none'),\n  subject_mode_bias_json: String(r.subject_mode_bias_json || '[]'),\n  camera_dna: clean(r.camera_dna),\n  palette_dna: clean(r.palette_dna),\n  material_dna_json: String(r.material_dna_json || '[]'),\n  surreal_lift_rules_json: String(r.surreal_lift_rules_json || '[]'),\n  negative_space_dna: clean(r.negative_space_dna),\n  forbidden_tells_json: String(r.forbidden_tells_json || '[]'),\n  notes: clean(r.notes),\n})).filter(x => x.archetype_id);\n\nconst guardrails = guardrailRows.map((r) => ({\n  archetype_id: clean(r.archetype_id),\n  archetype_name: clean(r.archetype_name),\n  active: clean(r.active || 'true'),\n  allowed_subject_modes: parseJsonMaybe(r.allowed_subject_modes_json, []),\n  anchor_environment_terms: parseJsonMaybe(r.anchor_environment_terms_json, []),\n  anchor_material_terms: parseJsonMaybe(r.anchor_material_terms_json, []),\n  anchor_gesture_terms: parseJsonMaybe(r.anchor_gesture_terms_json, []),\n  forbidden_prop_terms: parseJsonMaybe(r.forbidden_prop_terms_json, []),\n  forbidden_style_terms: parseJsonMaybe(r.forbidden_style_terms_json, []),\n  forbidden_palette_terms: parseJsonMaybe(r.forbidden_palette_terms_json, []),\n  surreal_mechanism_policy: parseJsonMaybe(r.surreal_mechanism_policy_json, {}),\n  negative_space_policy: parseJsonMaybe(r.negative_space_policy_json, {}),\n  critic_score_floor: Number(r.critic_score_floor || 8.6),\n  render_prompt_word_ceiling: Number(r.render_prompt_word_ceiling || 115),\n})).filter(x => x.archetype_id);\n\nreturn [{\n  json: {\n    ...base,\n    archetype_registry_json: JSON.stringify(archetypes, null, 2),\n    archetype_guardrail_rows: guardrails,\n  },\n}];"
+        "jsCode": "function clean(v) {\n  return String(v || '').replace(/\\s+/g, ' ').trim();\n}\n\nfunction parseJsonMaybe(value, fallback) {\n  if (Array.isArray(value) || (value && typeof value === 'object')) return value;\n  const text = String(value || '').trim();\n  if (!text) return fallback;\n  try { return JSON.parse(text); } catch { return fallback; }\n}\n\nfunction getItemsFromNode(nodeName) {\n  try {\n    const items = $items(nodeName);\n    return Array.isArray(items) ? items : [];\n  } catch (e) {\n    const msg = (e && e.message) ? String(e.message) : String(e);\n    if (/hasn't been executed/i.test(msg)) {\n      throw new Error('TVPX__20: Node \"' + nodeName + '\" must run before Attach Archetype Registry. Ensure Assemble Fragment Bundle connects to Get Archetype Registry, Get Archetype Guardrail Registry, and Attach Archetype Registry.');\n    }\n    throw e;\n  }\n}\n\nconst base = getItemsFromNode('Assemble Fragment Bundle')[0]?.json;\nif (!base) throw new Error('TVPX__20: missing Assemble Fragment Bundle payload.');\n\nconst archetypeRows = getItemsFromNode('Get Archetype Registry').map(i => i.json || {}).filter(Boolean);\nconst guardrailRows = getItemsFromNode('Get Archetype Guardrail Registry').map(i => i.json || {}).filter(Boolean);\n\nconst archetypes = archetypeRows.map((r) => ({\n  archetype_id: clean(r.archetype_id),\n  archetype_name: clean(r.archetype_name),\n  allowed_text_role: clean(r.allowed_text_role || 'none'),\n  subject_mode_bias_json: String(r.subject_mode_bias_json || '[]'),\n  camera_dna: clean(r.camera_dna),\n  palette_dna: clean(r.palette_dna),\n  material_dna_json: String(r.material_dna_json || '[]'),\n  surreal_lift_rules_json: String(r.surreal_lift_rules_json || '[]'),\n  negative_space_dna: clean(r.negative_space_dna),\n  forbidden_tells_json: String(r.forbidden_tells_json || '[]'),\n  notes: clean(r.notes),\n})).filter(x => x.archetype_id);\n\nconst guardrails = guardrailRows.map((r) => ({\n  archetype_id: clean(r.archetype_id),\n  archetype_name: clean(r.archetype_name),\n  active: clean(r.active || 'true'),\n  allowed_subject_modes: parseJsonMaybe(r.allowed_subject_modes_json, []),\n  anchor_environment_terms: parseJsonMaybe(r.anchor_environment_terms_json, []),\n  anchor_material_terms: parseJsonMaybe(r.anchor_material_terms_json, []),\n  anchor_gesture_terms: parseJsonMaybe(r.anchor_gesture_terms_json, []),\n  forbidden_prop_terms: parseJsonMaybe(r.forbidden_prop_terms_json, []),\n  forbidden_style_terms: parseJsonMaybe(r.forbidden_style_terms_json, []),\n  forbidden_palette_terms: parseJsonMaybe(r.forbidden_palette_terms_json, []),\n  surreal_mechanism_policy: parseJsonMaybe(r.surreal_mechanism_policy_json, {}),\n  negative_space_policy: parseJsonMaybe(r.negative_space_policy_json, {}),\n  critic_score_floor: Number(r.critic_score_floor || 8.6),\n  render_prompt_word_ceiling: Number(r.render_prompt_word_ceiling || 115),\n})).filter(x => x.archetype_id);\n\nreturn [{\n  json: {\n    ...base,\n    archetype_registry_json: JSON.stringify(archetypes, null, 2),\n    archetype_guardrail_rows: guardrails,\n  },\n}];"
       },
       "id": "f0527603-adda-4f82-ac6c-eeb69422321a",
       "name": "Attach Archetype Registry",
@@ -1089,6 +1089,34 @@
       "position": [
         2048,
         144
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      },
+      "id": "tvpx20-merge-registries-a",
+      "name": "Merge Registries For Attach",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1936,
+        228
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      },
+      "id": "tvpx20-merge-registries-b",
+      "name": "Merge All For Attach",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1992,
+        228
       ]
     },
     {
@@ -1941,9 +1969,9 @@
       "main": [
         [
           {
-            "node": "Attach Archetype Registry",
+            "node": "Merge Registries For Attach",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -2030,6 +2058,11 @@
           },
           {
             "node": "Get Archetype Guardrail Registry",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Registries For Attach",
             "type": "main",
             "index": 0
           }
@@ -2179,7 +2212,29 @@
       "main": [
         [
           {
+            "node": "Merge All For Attach",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All For Attach": {
+      "main": [
+        [
+          {
             "node": "Attach Archetype Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Registries For Attach": {
+      "main": [
+        [
+          {
+            "node": "Merge All For Attach",
             "type": "main",
             "index": 0
           }
