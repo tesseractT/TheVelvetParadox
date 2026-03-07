@@ -133,7 +133,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Normalize Submit Response\n * Expected (typical fal queue): { request_id / id?, status_url, response_url }\n * We store status_url + response_url and move into polling.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\n\nconst statusUrl = String(body.status_url || body.statusUrl || body.data?.status_url || '').trim();\nconst responseUrl = String(body.response_url || body.responseUrl || body.data?.response_url || '').trim();\nconst providerJobId = String(body.request_id || body.id || body.requestId || '').trim();\n\nif (!statusUrl && !responseUrl) {\n  // Some fal endpoints may return only status_url; accept either, but require at least one.\n  throw new Error('Fal submit did not return status_url or response_url. Check endpoint and auth.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job: {\n      ...job,\n      provider_job_id: providerJobId,\n      status_url: statusUrl,\n      response_url: responseUrl,\n      state: 'queued'\n    }\n  }\n}];"
+        "jsCode": "/**\n * Normalize Submit Response\n * Expected (typical fal queue): { request_id / id?, status_url, response_url }\n * We store status_url + response_url and move into polling.\n */\n\nconst base = $items('Initialize Envelope')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\nconst sceneSeedRow = base.scene_seed_row || null;\nconst archetypeRow = base.archetype_row || null;\nconst blueprint = base.blueprint || null;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\n\nconst statusUrl = String(body.status_url || body.statusUrl || body.data?.status_url || '').trim();\nconst responseUrl = String(body.response_url || body.responseUrl || body.data?.response_url || '').trim();\nconst providerJobId = String(body.request_id || body.id || body.requestId || '').trim();\n\nif (!statusUrl && !responseUrl) {\n  // Some fal endpoints may return only status_url; accept either, but require at least one.\n  throw new Error('Fal submit did not return status_url or response_url. Check endpoint and auth.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: sceneSeedRow,\n    archetype_row: archetypeRow,\n    blueprint,\n    job: {\n      ...job,\n      provider_job_id: providerJobId,\n      status_url: statusUrl,\n      response_url: responseUrl,\n      state: 'queued'\n    }\n  }\n}];"
       },
       "id": "f111111e-4bf4-45fb-bd4e-1c1eccd09377",
       "name": "Normalize Submit Response",
@@ -187,7 +187,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Initialize Poll State\n * Rehydrate from normalized submit payload so Data Table side effects cannot strip context.\n */\nconst normalized = $items('Normalize Submit Response')[0]?.json || {};\nconst j = ($json && $json.ctx && $json.job) ? $json : normalized;\nconst ctx = j.ctx;\nconst job = j.job;\n\nif (!ctx || !job) {\n  throw new Error('TVPX__30A: missing ctx/job while initializing poll state.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    job,\n    poll: {\n      tries: 0,\n      max: Number(ctx.poll_max || 24),\n      interval_seconds: Number(ctx.poll_interval_seconds || 8)\n    }\n  }\n}];"
+        "jsCode": "/**\n * Initialize Poll State\n * Rehydrate from normalized submit payload so Data Table side effects cannot strip context.\n */\nconst normalized = $items('Normalize Submit Response')[0]?.json || {};\nconst j = ($json && $json.ctx && $json.job) ? $json : normalized;\nconst ctx = j.ctx;\nconst job = j.job;\nconst sceneSeedRow = j.scene_seed_row || normalized.scene_seed_row || null;\nconst archetypeRow = j.archetype_row || normalized.archetype_row || null;\nconst blueprint = j.blueprint || normalized.blueprint || null;\n\nif (!ctx || !job) {\n  throw new Error('TVPX__30A: missing ctx/job while initializing poll state.');\n}\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: sceneSeedRow,\n    archetype_row: archetypeRow,\n    blueprint,\n    job,\n    poll: {\n      tries: 0,\n      max: Number(ctx.poll_max || 24),\n      interval_seconds: Number(ctx.poll_interval_seconds || 8)\n    }\n  }\n}];"
       },
       "id": "c657b3b5-7ef6-4831-8b13-4c8c12db3438",
       "name": "Initialize Poll State",
@@ -200,7 +200,7 @@
     },
     {
       "parameters": {
-        "amount": "={{$json.poll.interval_seconds}}",
+        "amount": "={{$json.poll?.interval_seconds || $items(\"Increment Poll\")[0]?.json?.poll?.interval_seconds || $items(\"Initialize Poll State\")[0]?.json?.poll?.interval_seconds || 8}}",
         "unit": "seconds"
       },
       "id": "f97276a2-ff41-4123-b506-e2abeaff2e2f",
@@ -215,7 +215,7 @@
     },
     {
       "parameters": {
-        "url": "={{$json.job.status_url || $json.job.response_url}}",
+        "url": "={{$json.job?.status_url || $json.job?.response_url || $items(\"Increment Poll\")[0]?.json?.job?.status_url || $items(\"Increment Poll\")[0]?.json?.job?.response_url || $items(\"Initialize Poll State\")[0]?.json?.job?.status_url || $items(\"Initialize Poll State\")[0]?.json?.job?.response_url || \"\"}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {
@@ -243,7 +243,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function extractImageUrls(body) {\n  const urls = [];\n  const add = (value) => {\n    const text = String(value || '').trim();\n    if (text && !urls.includes(text)) urls.push(text);\n  };\n  const walkArray = (arr) => {\n    if (!Array.isArray(arr)) return;\n    for (const item of arr) {\n      if (typeof item === 'string') add(item);\n      else if (item && typeof item === 'object') add(item.url || item.href || item.image_url);\n    }\n  };\n  walkArray(body.images);\n  walkArray(body?.data?.images);\n  walkArray(body?.result?.images);\n  walkArray(body?.output?.images);\n  if (body.image) add(body.image?.url || body.image);\n  if (body?.data?.image) add(body.data.image?.url || body.data.image);\n  return urls;\n}\n\nconst base = $items('Initialize Poll State')[0].json;\nconst ctx = base.ctx;\nconst job = base.job;\nconst poll = base.poll;\nconst sceneSeedRow = base.scene_seed_row || null;\nconst archetypeRow = base.archetype_row || null;\nconst blueprint = base.blueprint || null;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\nconst statusRaw = String(body.status || body.data?.status || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: sceneSeedRow,\n    archetype_row: archetypeRow,\n    blueprint,\n    job: {\n      ...job,\n      polled_status: statusRaw ? statusRaw.toUpperCase() : '',\n      provider_image_urls: extractImageUrls(body),\n      error_text: String(body.error || body.message || body.data?.error || '').trim(),\n    },\n    poll,\n  },\n}];"
+        "jsCode": "function extractImageUrls(body) {\n  const urls = [];\n  const add = (value) => {\n    const text = String(value || '').trim();\n    if (text && !urls.includes(text)) urls.push(text);\n  };\n  const walkArray = (arr) => {\n    if (!Array.isArray(arr)) return;\n    for (const item of arr) {\n      if (typeof item === 'string') add(item);\n      else if (item && typeof item === 'object') add(item.url || item.href || item.image_url);\n    }\n  };\n  walkArray(body.images);\n  walkArray(body?.data?.images);\n  walkArray(body?.result?.images);\n  walkArray(body?.output?.images);\n  if (body.image) add(body.image?.url || body.image);\n  if (body?.data?.image) add(body.data.image?.url || body.data.image);\n  return urls;\n}\n\nfunction pickEnvelope(...candidates) {\n  for (const candidate of candidates) {\n    if (candidate && candidate.ctx && candidate.job && candidate.poll) return candidate;\n  }\n  return null;\n}\n\nconst base = pickEnvelope(\n  $items('Wait Poll Interval')[0]?.json,\n  $items('Increment Poll')[0]?.json,\n  $items('Initialize Poll State')[0]?.json,\n);\n\nif (!base) {\n  throw new Error('TVPX__30A: missing poll envelope while normalizing poll response.');\n}\n\nconst ctx = base.ctx;\nconst job = (base.job && typeof base.job === 'object') ? base.job : {};\nconst poll = (base.poll && typeof base.poll === 'object') ? { ...base.poll } : {};\nconst sceneSeedRow = base.scene_seed_row || null;\nconst archetypeRow = base.archetype_row || null;\nconst blueprint = base.blueprint || null;\n\nconst resp = $json || {};\nconst body = resp.body ?? resp.data ?? resp;\nconst statusRaw = String(body.status || body.data?.status || '').trim();\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: sceneSeedRow,\n    archetype_row: archetypeRow,\n    blueprint,\n    job: {\n      ...job,\n      polled_status: statusRaw ? statusRaw.toUpperCase() : '',\n      provider_image_urls: extractImageUrls(body),\n      error_text: String(body.error || body.message || body.data?.error || '').trim(),\n    },\n    poll,\n  },\n}];"
       },
       "id": "308701ae-171e-47de-b9d4-c13619df7ae0",
       "name": "Normalize Poll Response",
@@ -361,7 +361,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Increment Poll\n * Loops until completed/failed/timeout.\n */\n\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst poll = $json.poll;\n\npoll.tries = Number(poll.tries || 0) + 1;\n\nconst max = Number(poll.max || 24);\nconst timedOut = poll.tries >= max;\n\nreturn [{\n  json: {\n    ctx,\n    job,\n    poll,\n    timed_out: timedOut\n  }\n}];"
+        "jsCode": "/**\n * Increment Poll\n * Loops until completed/failed/timeout.\n */\n\nconst ctx = $json.ctx;\nconst job = $json.job;\nconst poll = ($json.poll && typeof $json.poll === 'object') ? { ...$json.poll } : {};\n\npoll.tries = Number(poll.tries || 0) + 1;\n\nconst max = Number(poll.max || 24);\nconst timedOut = poll.tries >= max;\n\nreturn [{\n  json: {\n    ctx,\n    scene_seed_row: $json.scene_seed_row || null,\n    archetype_row: $json.archetype_row || null,\n    blueprint: $json.blueprint || null,\n    job,\n    poll,\n    timed_out: timedOut\n  }\n}];"
       },
       "id": "85e613cc-b4ea-4956-8432-5b66856ce0ee",
       "name": "Increment Poll",
@@ -383,7 +383,7 @@
           "conditions": [
             {
               "id": "string_1",
-              "leftValue": "={{$json.timed_out ? 'true' : 'false'}}",
+              "leftValue": "={{ Boolean($json.timed_out) === true ? 'true' : 'false' }}",
               "rightValue": "true",
               "operator": {
                 "type": "string",
