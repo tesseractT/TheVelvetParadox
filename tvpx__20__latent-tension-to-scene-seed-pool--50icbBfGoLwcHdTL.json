@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-07T01:30:40.759Z",
+  "updatedAt": "2026-03-07T03:18:54.129Z",
   "createdAt": "2026-03-06T19:52:04.092Z",
   "id": "50icbBfGoLwcHdTL",
   "name": "TVPX__20__Latent Tension To Scene Seed Pool",
@@ -13,10 +13,10 @@
       "typeVersion": 1,
       "position": [
         -1760,
-        412
+        532
       ],
       "id": "9a380e72-6761-4951-9567-0f3bd1732be9",
-      "name": "When clicking \u2018Execute workflow\u2019"
+      "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {},
@@ -25,8 +25,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        7296,
-        532
+        7744,
+        556
       ]
     },
     {
@@ -39,7 +39,7 @@
       "typeVersion": 3,
       "position": [
         -192,
-        340
+        460
       ]
     },
     {
@@ -154,8 +154,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6848,
-        336
+        7296,
+        360
       ]
     },
     {
@@ -167,8 +167,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6624,
-        336
+        7072,
+        360
       ]
     },
     {
@@ -603,8 +603,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6848,
-        144
+        7296,
+        168
       ]
     },
     {
@@ -616,8 +616,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6624,
-        144
+        7072,
+        168
       ]
     },
     {
@@ -649,8 +649,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        6400,
-        240
+        6848,
+        264
       ]
     },
     {
@@ -662,8 +662,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6176,
-        240
+        6624,
+        264
       ]
     },
     {
@@ -675,8 +675,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5952,
-        240
+        6400,
+        264
       ]
     },
     {
@@ -698,8 +698,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        5600,
-        240
+        6048,
+        264
       ]
     },
     {
@@ -711,8 +711,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5376,
-        240
+        5824,
+        264
       ]
     },
     {
@@ -734,8 +734,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        5024,
-        240
+        5472,
+        264
       ]
     },
     {
@@ -747,8 +747,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4800,
-        240
+        5248,
+        264
       ]
     },
     {
@@ -759,7 +759,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Prop_Suppressor_V2 for The Velvet Paradox.\n\nYour job is to strip away article residue and reduce the scene to image-native matter.\n\nRules:\n- obey the selected guardrail row\n- hero_props: maximum 2\n- supporting_props: maximum 3\n- total named props must stay sparse\n- remove explainers, diagrams, documents, institutional spectacle, and any prop that summarizes the article too directly\n- translate pressure into bodies, rooms, thresholds, weather, fabric, flowers, earth, obstruction, omission, repetition, worn domestic matter\n- do not make the image \u201cabout a prop\u201d\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"translated_core\": \"...\",\n  \"hero_props\": [\"...\"],\n  \"supporting_props\": [\"...\"],\n  \"removed_props\": [\"...\"],\n  \"ordinary_anchor\": \"...\",\n  \"surreal_lift\": \"...\",\n  \"do_not_literalize\": \"...\"\n}"
+              "message": "=You are TVPX__LLM__Prop_Suppressor_V2 for The Velvet Paradox.\n\nYour job is to strip away article residue and reduce the scene to image-native matter.\n\nRules:\n- obey the selected guardrail row\n- hero_props: maximum 2\n- supporting_props: maximum 3\n- total named props must stay sparse\n- remove explainers, diagrams, documents, institutional spectacle, and any prop that summarizes the article too directly\n- translate pressure into bodies, rooms, thresholds, weather, fabric, flowers, earth, obstruction, omission, repetition, worn domestic matter\n- do not make the image “about a prop”\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"translated_core\": \"...\",\n  \"hero_props\": [\"...\"],\n  \"supporting_props\": [\"...\"],\n  \"removed_props\": [\"...\"],\n  \"ordinary_anchor\": \"...\",\n  \"surreal_lift\": \"...\",\n  \"do_not_literalize\": \"...\"\n}"
             }
           ]
         },
@@ -770,8 +770,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        4448,
-        240
+        4896,
+        264
       ]
     },
     {
@@ -783,8 +783,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4224,
-        240
+        4672,
+        264
       ]
     },
     {
@@ -806,8 +806,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        3872,
-        240
+        4320,
+        264
       ]
     },
     {
@@ -819,8 +819,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3424,
-        240
+        3872,
+        264
       ]
     },
     {
@@ -831,7 +831,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=You are TVPX__LLM__Archetype_Router_V2 for The Velvet Paradox.\n\nYour job is to choose exactly one archetype family from the supplied registry.\n\nCRITICAL: archetype_id MUST be one of the ALLOWED archetype_ids listed in the prompt. Copy the exact string. Do not invent, paraphrase, or use a similar-sounding ID. Any other value causes a system error.\n\nChoose by visual family fit, not by conceptual cleverness.\nChoose the family that would most naturally produce an authored still image closest to the reference logic.\n\nHard rules:\n- choose one archetype only\n- archetype_id must be an exact match from the ALLOWED list\n- preserve the emotional engine, not article residue\n- reject any family that would require explanatory props to work\n- reject any family that pushes the image into editorial illustration\n- prefer families with a strong human, ceremonial, environmental, or absence charge\n- do not choose a family just because it can \u201csymbolize\u201d the source\n- use the guardrail rows as hard constraints, not flavor text\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"archetype_id\": \"...\",\n  \"visual_match_reasons\": [\"...\"],\n  \"primary_surreal_mechanism\": \"...\",\n  \"must_keep\": [\"...\"],\n  \"must_avoid\": [\"...\"]\n}"
+              "message": "=You are TVPX__LLM__Archetype_Router_V2 for The Velvet Paradox.\n\nYour job is to choose exactly one archetype family from the supplied registry.\n\nCRITICAL: archetype_id MUST be one of the ALLOWED archetype_ids listed in the prompt. Copy the exact string. Do not invent, paraphrase, or use a similar-sounding ID. Any other value causes a system error.\n\nChoose by visual family fit, not by conceptual cleverness.\nChoose the family that would most naturally produce an authored still image closest to the reference logic.\n\nHard rules:\n- choose one archetype only\n- archetype_id must be an exact match from the ALLOWED list\n- preserve the emotional engine, not article residue\n- reject any family that would require explanatory props to work\n- reject any family that pushes the image into editorial illustration\n- prefer families with a strong human, ceremonial, environmental, or absence charge\n- do not choose a family just because it can “symbolize” the source\n- use the guardrail rows as hard constraints, not flavor text\n\nReturn JSON only.\n\nReturn exactly:\n{\n  \"archetype_id\": \"...\",\n  \"visual_match_reasons\": [\"...\"],\n  \"primary_surreal_mechanism\": \"...\",\n  \"must_keep\": [\"...\"],\n  \"must_avoid\": [\"...\"]\n}"
             }
           ]
         },
@@ -842,8 +842,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        3072,
-        240
+        3520,
+        264
       ]
     },
     {
@@ -1025,8 +1025,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        3136,
-        48
+        3584,
+        72
       ]
     },
     {
@@ -1038,8 +1038,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2848,
-        144
+        3296,
+        168
       ]
     },
     {
@@ -1051,8 +1051,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2624,
-        144
+        3072,
+        168
       ]
     },
     {
@@ -1074,8 +1074,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        2272,
-        144
+        2720,
+        168
       ]
     },
     {
@@ -1087,36 +1087,30 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2048,
-        144
+        2496,
+        168
       ]
     },
     {
-      "parameters": {
-        "mode": "append",
-        "options": {}
-      },
+      "parameters": {},
       "id": "tvpx20-merge-registries-a",
       "name": "Merge Registries For Attach",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1936,
-        228
+        2048,
+        264
       ]
     },
     {
-      "parameters": {
-        "mode": "append",
-        "options": {}
-      },
+      "parameters": {},
       "id": "tvpx20-merge-registries-b",
       "name": "Merge All For Attach",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1992,
-        228
+        2272,
+        168
       ]
     },
     {
@@ -1146,7 +1140,7 @@
       "typeVersion": 1,
       "position": [
         1824,
-        312
+        336
       ],
       "alwaysOutputData": true
     },
@@ -1160,8 +1154,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
       "typeVersion": 1,
       "position": [
-        2408,
-        368
+        2856,
+        392
       ],
       "credentials": {
         "xAiApi": {
@@ -1180,8 +1174,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        2280,
-        368
+        2728,
+        392
       ],
       "credentials": {
         "openAiApi": {
@@ -1192,7 +1186,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Assemble Fragment Bundle\n * Selects high-signal fragments aligned with The Velvet Paradox creative DNA.\n */\nfunction clean(s) {\n  return String(s || '').replace(/\\r/g, '').replace(/[\\t ]+/g, ' ').trim();\n}\nfunction clip(s, n) {\n  const t = clean(s);\n  return t.length > n ? t.slice(0, n) + '\u2026' : t;\n}\nconst base = $json;\nconst ctx = base.ctx;\nconst source = base.source || {};\nconst frags = Array.isArray(base.fragments) ? base.fragments : [];\n\nconst SIGNAL = ['pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain','residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile','ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'];\nfunction scoreFrag(t) {\n  const s = t.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (s.includes(w)) score += 1;\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle|mirror|arch|stair)/i.test(t)) score += 3;\n  if (t.length > 500) score += 1;\n  return score;\n}\n\nconst normalized = frags.map(f => {\n  const cleaned = clean(f.cleaned_text || f.text || f.raw_text || '');\n  return {\n    fragment_id: String(f.fragment_id || f.id || f.dt_row_id || '').trim(),\n    page_url: String(f.page_url || f.url || '').trim(),\n    page_title: String(f.page_title || f.title || '').trim(),\n    cleaned_text: cleaned\n  };\n}).filter(x => x.cleaned_text);\n\nnormalized.sort((a,b) => scoreFrag(b.cleaned_text) - scoreFrag(a.cleaned_text));\n\nconst takeN = Math.max(3, Math.min(Number(ctx.max_fragments_for_llm || 10), 16));\nconst maxChars = Math.max(600, Math.min(Number(ctx.max_chars_per_fragment_for_llm || 1400), 2200));\n\nconst picked = normalized.slice(0, takeN).map(x => ({\n  fragment_id: x.fragment_id,\n  page_url: x.page_url,\n  page_title: x.page_title,\n  excerpt: clip(x.cleaned_text, maxChars)\n}));\n\nconst excerptBlock = picked.map((p, i) => {\n  const head = `[#${i+1}] ${p.page_title || 'Untitled'} | ${p.page_url || ''}`.trim();\n  return `${head}\\n${p.excerpt}`;\n}).join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    bundle: {\n      source_id: ctx.source_id,\n      crawl_run_id: ctx.crawl_run_id,\n      fragment_ids: picked.map(p => p.fragment_id).filter(Boolean),\n      excerpt_block: excerptBlock\n    }\n  }\n}];"
+        "jsCode": "/**\n * Assemble Fragment Bundle\n * Selects high-signal fragments aligned with The Velvet Paradox creative DNA.\n */\nfunction clean(s) {\n  return String(s || '').replace(/\\r/g, '').replace(/[\\t ]+/g, ' ').trim();\n}\nfunction clip(s, n) {\n  const t = clean(s);\n  return t.length > n ? t.slice(0, n) + '…' : t;\n}\nconst base = $json;\nconst ctx = base.ctx;\nconst source = base.source || {};\nconst frags = Array.isArray(base.fragments) ? base.fragments : [];\n\nconst SIGNAL = ['pressure','fracture','collapse','repair','restraint','rupture','erosion','threshold','damage','bruise','stain','residue','seep','crack','buckle','warp','misalign','aftermath','tension','constraint','weight','drift','fragile','ritual','memory','identity','veil','shadow','fog','silence','ruin','relic','static','paradox'];\nfunction scoreFrag(t) {\n  const s = t.toLowerCase();\n  let score = 0;\n  for (const w of SIGNAL) if (s.includes(w)) score += 1;\n  if (/(stone|plaster|velvet|metal|dust|smoke|haze|wet|rust|cloth|feather|fur|wax|candle|mirror|arch|stair)/i.test(t)) score += 3;\n  if (t.length > 500) score += 1;\n  return score;\n}\n\nconst normalized = frags.map(f => {\n  const cleaned = clean(f.cleaned_text || f.text || f.raw_text || '');\n  return {\n    fragment_id: String(f.fragment_id || f.id || f.dt_row_id || '').trim(),\n    page_url: String(f.page_url || f.url || '').trim(),\n    page_title: String(f.page_title || f.title || '').trim(),\n    cleaned_text: cleaned\n  };\n}).filter(x => x.cleaned_text);\n\nnormalized.sort((a,b) => scoreFrag(b.cleaned_text) - scoreFrag(a.cleaned_text));\n\nconst takeN = Math.max(3, Math.min(Number(ctx.max_fragments_for_llm || 10), 16));\nconst maxChars = Math.max(600, Math.min(Number(ctx.max_chars_per_fragment_for_llm || 1400), 2200));\n\nconst picked = normalized.slice(0, takeN).map(x => ({\n  fragment_id: x.fragment_id,\n  page_url: x.page_url,\n  page_title: x.page_title,\n  excerpt: clip(x.cleaned_text, maxChars)\n}));\n\nconst excerptBlock = picked.map((p, i) => {\n  const head = `[#${i+1}] ${p.page_title || 'Untitled'} | ${p.page_url || ''}`.trim();\n  return `${head}\\n${p.excerpt}`;\n}).join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    ctx,\n    source,\n    bundle: {\n      source_id: ctx.source_id,\n      crawl_run_id: ctx.crawl_run_id,\n      fragment_ids: picked.map(p => p.fragment_id).filter(Boolean),\n      excerpt_block: excerptBlock\n    }\n  }\n}];"
       },
       "id": "211f88cc-c34e-4468-94db-34eabc8090cb",
       "name": "Assemble Fragment Bundle",
@@ -1200,7 +1194,7 @@
       "typeVersion": 2,
       "position": [
         1600,
-        144
+        192
       ]
     },
     {
@@ -1316,7 +1310,7 @@
       "typeVersion": 1,
       "position": [
         1824,
-        532
+        556
       ]
     },
     {
@@ -1329,7 +1323,7 @@
       "typeVersion": 2,
       "position": [
         1600,
-        532
+        556
       ]
     },
     {
@@ -1362,7 +1356,7 @@
       "typeVersion": 2,
       "position": [
         1376,
-        268
+        388
       ]
     },
     {
@@ -1375,7 +1369,7 @@
       "typeVersion": 2,
       "position": [
         1152,
-        268
+        388
       ]
     },
     {
@@ -1388,7 +1382,7 @@
       "typeVersion": 2,
       "position": [
         480,
-        268
+        388
       ]
     },
     {
@@ -1418,7 +1412,7 @@
       "typeVersion": 1,
       "position": [
         256,
-        268
+        388
       ],
       "alwaysOutputData": true
     },
@@ -1432,7 +1426,7 @@
       "typeVersion": 2,
       "position": [
         32,
-        268
+        388
       ]
     },
     {
@@ -1445,7 +1439,7 @@
       "typeVersion": 2,
       "position": [
         -640,
-        412
+        532
       ]
     },
     {
@@ -1466,7 +1460,7 @@
       "typeVersion": 1,
       "position": [
         -864,
-        412
+        532
       ],
       "alwaysOutputData": true,
       "executeOnce": true
@@ -1498,7 +1492,7 @@
       "typeVersion": 1,
       "position": [
         -1088,
-        412
+        532
       ],
       "alwaysOutputData": true
     },
@@ -1533,7 +1527,7 @@
       "typeVersion": 1,
       "position": [
         928,
-        268
+        388
       ],
       "alwaysOutputData": true
     },
@@ -1547,7 +1541,7 @@
       "typeVersion": 2,
       "position": [
         -1536,
-        412
+        532
       ]
     },
     {
@@ -1573,7 +1567,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1824,
+        2048,
         48
       ],
       "id": "8ff45d07-f0c1-42fc-960b-af9273bc514a",
@@ -1587,8 +1581,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3648,
-        240
+        4096,
+        264
       ],
       "id": "b9c8a4f8-764d-440f-a276-815c78f40b5d",
       "name": "Hydrate Selected Guardrail"
@@ -1601,7 +1595,7 @@
       "typeVersion": 2,
       "position": [
         704,
-        268
+        388
       ],
       "id": "804efa3e-063f-4571-bc50-7ea7c509a0f9",
       "name": "Validate Active Crawl Run"
@@ -1631,7 +1625,7 @@
       "typeVersion": 1.1,
       "position": [
         -1312,
-        412
+        532
       ],
       "id": "5e3b85f3-9965-49dd-81c8-c8a77b97da88",
       "name": "Get Candidate Fragment Universe",
@@ -1666,7 +1660,7 @@
       "typeVersion": 2.3,
       "position": [
         -416,
-        412
+        532
       ],
       "id": "51da672f-49ca-4efe-8864-5e3624ef8acd",
       "name": "Has Candidate Runs"
@@ -1679,7 +1673,7 @@
       "typeVersion": 2,
       "position": [
         1600,
-        820
+        844
       ],
       "id": "6d6e0b49-e4c1-4884-810b-4d9a108cbe56",
       "name": "Build No Candidate Reject"
@@ -1691,15 +1685,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7072,
-        336
+        7520,
+        360
       ],
       "id": "0c2d62ea-fe9b-4318-8ef1-3acfb23983a3",
       "name": "Build Loop Continue Signal"
     }
   ],
   "connections": {
-    "When clicking \u2018Execute workflow\u2019": {
+    "When clicking ‘Execute workflow’": {
       "main": [
         [
           {
@@ -2325,9 +2319,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "ecdc9749-dd9f-4dd9-bd25-c329d11f6467",
+  "versionId": "602a026b-c594-43a5-bd29-ec989109a8c0",
   "activeVersionId": null,
-  "versionCounter": 147,
+  "versionCounter": 148,
   "triggerCount": 0,
   "tags": [],
   "shared": [

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "updatedAt": "2026-03-07T02:31:36.238Z",
   "createdAt": "2026-03-05T16:35:08.998Z",
   "id": "07jprNhHKOJ5CnPV",
   "name": "TVPX__90__Maintenance Reaper And Requeue",
@@ -12,8 +12,7 @@
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 1
+              "field": "hours"
             }
           ]
         }
@@ -23,8 +22,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -480,
-        184
+        -384,
+        48
       ]
     },
     {
@@ -35,7 +34,7 @@
       "typeVersion": 1,
       "position": [
         -480,
-        360
+        368
       ]
     },
     {
@@ -48,7 +47,7 @@
       "typeVersion": 2,
       "position": [
         -256,
-        360
+        368
       ]
     },
     {
@@ -223,7 +222,7 @@
       "typeVersion": 1,
       "position": [
         1312,
-        168
+        176
       ]
     },
     {
@@ -251,8 +250,7 @@
               "keyValue": "running"
             }
           ]
-        },
-        "matchType": "anyCondition"
+        }
       },
       "id": "29707145-4d53-4ea9-895a-bbc45572950c",
       "name": "Get In Flight Jobs",
@@ -274,8 +272,7 @@
       "position": [
         192,
         528
-      ],
-      "disabled": false
+      ]
     },
     {
       "parameters": {
@@ -525,7 +522,7 @@
       "typeVersion": 1,
       "position": [
         1312,
-        600
+        608
       ]
     },
     {
@@ -1268,9 +1265,9 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "3d7cdba2-e0d7-4a1f-ba61-51748a0a44c3",
+  "versionId": "04583d31-a80f-4552-8e0f-5f81e0a5a9b3",
   "activeVersionId": null,
-  "versionCounter": 32,
+  "versionCounter": 34,
   "triggerCount": 0,
   "tags": [],
   "shared": [

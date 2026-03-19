@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-06T19:52:04.092Z",
+  "updatedAt": "2026-03-07T02:31:28.349Z",
   "createdAt": "2026-03-05T16:30:11.594Z",
   "id": "1ik7wsmxCMqRD01E",
   "name": "TVPX__60__Video Seed Preparer",
@@ -14,8 +14,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [
-        -1872,
-        344
+        -1696,
+        624
       ]
     },
     {
@@ -28,7 +28,7 @@
       "typeVersion": 2,
       "position": [
         -1648,
-        344
+        352
       ]
     },
     {
@@ -57,7 +57,7 @@
       "typeVersion": 1,
       "position": [
         -1424,
-        344
+        352
       ]
     },
     {
@@ -70,7 +70,7 @@
       "typeVersion": 2,
       "position": [
         -1200,
-        344
+        352
       ]
     },
     {
@@ -83,7 +83,7 @@
       "typeVersion": 3,
       "position": [
         -976,
-        344
+        352
       ]
     },
     {
@@ -174,7 +174,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1,
       "position": [
-        -232,
+        -240,
         320
       ],
       "credentials": {
@@ -186,6 +186,9 @@
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nWinning asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nWinning scene seed:\n{{ JSON.stringify($json.scene_seed, null, 2) }}\n\nWinning scene blueprint:\n{{ JSON.stringify($json.scene_blueprint, null, 2) }}\n\nArchetype:\n{{ JSON.stringify($json.archetype, null, 2) }}\n\nTranslate the still into motion without breaking its dignity or collapsing the visual grammar into generic movement. The future video should still feel like a real photographed moment rather than synthetic AI animation.",
+        "needsFallback": true,
         "messages": {
           "messageValues": [
             {
@@ -193,10 +196,7 @@
             }
           ]
         },
-        "promptType": "define",
-        "needsFallback": true,
-        "batching": {},
-        "text": "=Motion brief:\n{{ JSON.stringify($json.motion_brief, null, 2) }}\n\nWinning asset:\n{{ JSON.stringify($json.asset, null, 2) }}\n\nWinning scene seed:\n{{ JSON.stringify($json.scene_seed, null, 2) }}\n\nWinning scene blueprint:\n{{ JSON.stringify($json.scene_blueprint, null, 2) }}\n\nArchetype:\n{{ JSON.stringify($json.archetype, null, 2) }}\n\nTranslate the still into motion without breaking its dignity or collapsing the visual grammar into generic movement. The future video should still feel like a real photographed moment rather than synthetic AI animation."
+        "batching": {}
       },
       "id": "6ce26d7c-c804-47ec-83f4-3875cc292e14",
       "name": "LLM Video Motion Translator",
@@ -283,18 +283,10 @@
       "typeVersion": 1,
       "position": [
         720,
-        344
+        352
       ]
     },
     {
-      "id": "20926f29-bb35-4590-ab86-a3278be67268",
-      "name": "Motion Model xAI Fallback Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
-      "typeVersion": 1,
-      "position": [
-        -232,
-        528
-      ],
       "parameters": {
         "model": {
           "__rl": true,
@@ -303,7 +295,15 @@
           "cachedResultName": "grok-4-1-fast-reasoning"
         },
         "options": {}
-      }
+      },
+      "id": "20926f29-bb35-4590-ab86-a3278be67268",
+      "name": "Motion Model xAI Fallback Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        528
+      ]
     },
     {
       "parameters": {
@@ -568,9 +568,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "3ea044c3-63ee-41a7-8023-c1978cf1365f",
+  "versionId": "a827adc7-a7c4-487f-af7b-fc850af07066",
   "activeVersionId": null,
-  "versionCounter": 33,
+  "versionCounter": 35,
   "triggerCount": 0,
   "tags": [],
   "shared": [
